@@ -1,8 +1,5 @@
-<div align="center">
-  <img src="public/High-Resolution-Color-Logo-Blue-on-Transparent-Background.png" alt="iHeard.ai Logo" width="300">
-</div>
 
-# 🤖 iHeard.ai - AI Sales Assistant for Shopify
+# AI Sales Assistant for Shopify
 
 An intelligent AI-powered sales assistant widget for Shopify stores that helps customers find products, answer questions, and provide personalized recommendations.
 
@@ -35,10 +32,7 @@ An intelligent AI-powered sales assistant widget for Shopify stores that helps c
 ### Installation
 
 1. **Clone the repository**
-   ```bash
-   git clone https://github.com/SankaiAI/iheard.ai.git
-   cd iheard.ai
-   ```
+  
 
 2. **Install dependencies**
    ```bash
@@ -286,5 +280,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ for the Shopify ecosystem**
 # shopibot-
