@@ -4,7 +4,17 @@ import {
   AppDistribution,
   shopifyApp,
 } from "@shopify/shopify-app-remix/server";
+import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import { MemorySessionStorage } from "@shopify/shopify-app-session-storage-memory";
+import prisma from "./db.server";
+
+// Use PrismaSessionStorage if DATABASE_URL is configured for PostgreSQL, otherwise use Memory
+const isPostgresConfigured = process.env.DATABASE_URL?.startsWith('postgresql://');
+const sessionStorage = isPostgresConfigured
+  ? new PrismaSessionStorage(prisma)
+  : new MemorySessionStorage();
+
+console.log(`🔧 Session Storage: ${isPostgresConfigured ? 'Prisma (PostgreSQL)' : 'Memory'}`);
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -13,7 +23,7 @@ const shopify = shopifyApp({
   scopes: process.env.SCOPES?.split(","),
   appUrl: process.env.SHOPIFY_APP_URL || "",
   authPathPrefix: "/auth",
-  sessionStorage: new MemorySessionStorage(),
+  sessionStorage: sessionStorage,
   distribution: AppDistribution.AppStore,
   future: {
     unstable_newEmbeddedAuthStrategy: true,
