@@ -233,18 +233,39 @@ The app runs in development mode with Shopify CLI:
 shopify app dev
 ```
 
+⚠️ **Note:** Tunnel URLs change on each restart. For production use, deploy to a hosting platform.
+
 ### Production Deployment
 
-For production deployment, you'll need to:
+Deploy to production for a stable URL and eliminate proxy URL issues:
 
-1. Set up a production server (Railway, Heroku, etc.)
-2. Configure production environment variables
-3. Set up a production database
-4. Deploy using Shopify CLI
+**Quick Deploy (5 minutes):**
+- 📘 [Quick Deploy Guide](QUICK_DEPLOY.md) - Railway deployment in 5 minutes
 
-```bash
-shopify app deploy
-```
+**Full Deployment Options:**
+- 📗 [Production Deployment Guide](PRODUCTION_DEPLOYMENT.md) - Railway, Render, Heroku
+  - Railway (Recommended) - Easiest with GitHub auto-deploy
+  - Render - Free tier available
+  - Heroku - Classic and reliable
+
+**What you get with production deployment:**
+- ✅ Stable URL (no more tunnel URL changes)
+- ✅ Automatic SSL certificate
+- ✅ PostgreSQL database
+- ✅ Auto-deploy from GitHub
+- ✅ Professional hosting
+- ✅ Monitoring and logs
+
+**Quick Railway Deploy:**
+1. Push code to GitHub
+2. Sign up at [railway.app](https://railway.app)
+3. Deploy from GitHub repo
+4. Add environment variables
+5. Generate domain
+6. Update Shopify Partner Dashboard
+7. Done! 🎉
+
+See [QUICK_DEPLOY.md](QUICK_DEPLOY.md) for detailed steps.
 
 ## 🔒 Security Considerations
 
