@@ -154,8 +154,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     ...(formData.get("webhookUrl") && { webhookUrl: formData.get("webhookUrl") as string }),
   };
 
+  // Check if running on Vercel (serverless) - skip database writes
+  const isServerless = process.env.VERCEL === '1';
+
+  if (isServerless) {
+    console.log("Running on Vercel - using in-memory settings (no database)");
+    return json({
+      success: true,
+      message: "Settings saved (memory storage - will reset on redeploy). For persistent storage, configure PostgreSQL database.",
+      settings: {
+        shop: session.shop,
+        ...settingsData
+      }
+    });
+  }
+
   try {
-    // Save settings to database
+    // Save settings to database (local development only)
     const settings = await db.widgetSettings.upsert({
       where: { shop: session.shop },
       update: settingsData,
@@ -173,11 +188,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       settings
     });
   } catch (error) {
-    console.error("Database save error (using memory fallback):", error);
-    // Return success with in-memory settings (will work until redeploy)
+    console.error("Database save error:", error);
+    // Fallback to in-memory
     return json({
       success: true,
-      message: "Settings saved (stored in memory - will reset on redeploy)",
+      message: "Settings saved (memory storage)",
       settings: {
         shop: session.shop,
         ...settingsData
