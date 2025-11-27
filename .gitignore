@@ -120,3 +120,5 @@ Thumbs.db
 
 # Local development
 *.local
+.vercel
+.env*.local
