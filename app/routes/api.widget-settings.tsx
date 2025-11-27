@@ -108,15 +108,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // Try to get admin access for shop data
     let admin;
     try {
-      const session = await sessionStorage.findSessionsByShop(shopDomain);
-      if (session.length > 0) {
-        console.log('✅ Found existing session for shop');
-        const { admin: sessionAdmin } = await authenticate.admin(request);
-        admin = sessionAdmin;
-      } else {
-        console.log('❌ No session found, using unauthenticated approach');
+      // Skip session lookup on Vercel (MemorySessionStorage doesn't support findSessionsByShop)
+      if (process.env.VERCEL === '1') {
+        console.log('🔧 Running on Vercel - using unauthenticated admin');
         const { admin: unauthenticatedAdmin } = await unauthenticated.admin(shopDomain);
         admin = unauthenticatedAdmin;
+      } else {
+        // Local development with Prisma storage
+        const session = await sessionStorage.findSessionsByShop(shopDomain);
+        if (session.length > 0) {
+          console.log('✅ Found existing session for shop');
+          const { admin: sessionAdmin } = await authenticate.admin(request);
+          admin = sessionAdmin;
+        } else {
+          console.log('❌ No session found, using unauthenticated approach');
+          const { admin: unauthenticatedAdmin } = await unauthenticated.admin(shopDomain);
+          admin = unauthenticatedAdmin;
+        }
       }
     } catch (error) {
       console.log('⚠️ Authentication failed, trying unauthenticated admin:', error);
