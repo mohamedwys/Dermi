@@ -10,7 +10,7 @@ import prisma from "./db.server";
 
 // Use PrismaSessionStorage if DATABASE_URL is configured for PostgreSQL, otherwise use Memory
 const isPostgresConfigured = process.env.DATABASE_URL?.startsWith('postgresql://');
-const sessionStorage = isPostgresConfigured
+const configuredSessionStorage = isPostgresConfigured
   ? new PrismaSessionStorage(prisma)
   : new MemorySessionStorage();
 
@@ -23,7 +23,7 @@ const shopify = shopifyApp({
   scopes: process.env.SCOPES?.split(","),
   appUrl: process.env.SHOPIFY_APP_URL || "",
   authPathPrefix: "/auth",
-  sessionStorage: sessionStorage,
+  sessionStorage: configuredSessionStorage,
   distribution: AppDistribution.AppStore,
   future: {
     unstable_newEmbeddedAuthStrategy: true,
