@@ -14,10 +14,10 @@ import { AIAssistants } from "../../components/AIAssistants";
 import { Footer } from "../../components/Footer";
 import { FloatingCTA } from "../../components/FloatingCTA";
 
-import landingStyles from "../../styles/landing.css?url";
+import "./styles.module.css";
 
 export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: landingStyles },
+  
 ];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -82,7 +82,7 @@ const testimonials = [
 ];
 
 export default function App() {
-  const { showForm } = useLoaderData<typeof loader>();
+  useLoaderData<typeof loader>();
 
   return (
     <>

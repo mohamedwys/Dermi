@@ -6,6 +6,9 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 
+// ADD THIS LINE - Import your Tailwind CSS
+import "./styles/tailwind.css";
+
 export default function App() {
   return (
     <html>
