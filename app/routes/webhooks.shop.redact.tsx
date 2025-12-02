@@ -3,22 +3,24 @@ import { authenticate } from "../shopify.server";
 import db from "../db.server";
 
 /**
- * App Uninstalled Webhook
+ * GDPR Webhook: Shop Data Redaction
  *
- * Triggered when a merchant uninstalls the app.
- * We perform immediate cleanup of app data here.
+ * Shopify sends this webhook 48 hours after a store uninstalls your app.
+ * We must delete ALL data associated with this shop.
  *
- * Note: The shop/redact webhook will be called 48 hours later for final cleanup.
- * We do comprehensive cleanup here to ensure data is removed promptly.
+ * Required by Shopify App Store for GDPR compliance.
+ * Reference: https://shopify.dev/docs/apps/build/privacy-law-compliance
+ *
+ * Timeline: Triggered 48 hours after app uninstallation.
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
-  const { shop, session, topic } = await authenticate.webhook(request);
+  const { shop, topic } = await authenticate.webhook(request);
 
   console.log(`Received ${topic} webhook for ${shop}`);
-  console.log(`🗑️ Starting immediate cleanup for uninstalled shop: ${shop}`);
+  console.log(`🗑️ Deleting ALL shop data for: ${shop}`);
 
   try {
-    // Perform comprehensive cleanup in a transaction
+    // Delete all shop data in a transaction to ensure data integrity
     const result = await db.$transaction(async (tx) => {
       const deletionStats = {
         sessions: 0,
@@ -30,81 +32,101 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         chatAnalytics: 0,
       };
 
-      // Find all chat sessions first (needed for foreign key cleanup)
+      // Step 1: Delete all chat messages for this shop
+      // (We need to do this first before deleting sessions due to foreign key constraints)
       const chatSessions = await tx.chatSession.findMany({
         where: { shop },
         select: { id: true },
       });
 
       const sessionIds = chatSessions.map(s => s.id);
+      console.log(`Found ${sessionIds.length} chat sessions to delete`);
 
-      // Delete chat messages first (child records)
       if (sessionIds.length > 0) {
         const deletedMessages = await tx.chatMessage.deleteMany({
           where: { sessionId: { in: sessionIds } },
         });
         deletionStats.chatMessages = deletedMessages.count;
+        console.log(`  - Deleted ${deletedMessages.count} chat messages`);
       }
 
-      // Delete chat sessions
+      // Step 2: Delete all chat sessions
       const deletedSessions = await tx.chatSession.deleteMany({
         where: { shop },
       });
       deletionStats.chatSessions = deletedSessions.count;
+      console.log(`  - Deleted ${deletedSessions.count} chat sessions`);
 
-      // Delete user profiles
+      // Step 3: Delete all user profiles
       const deletedProfiles = await tx.userProfile.deleteMany({
         where: { shop },
       });
       deletionStats.userProfiles = deletedProfiles.count;
+      console.log(`  - Deleted ${deletedProfiles.count} user profiles`);
 
-      // Delete product embeddings
+      // Step 4: Delete all product embeddings
       const deletedEmbeddings = await tx.productEmbedding.deleteMany({
         where: { shop },
       });
       deletionStats.productEmbeddings = deletedEmbeddings.count;
+      console.log(`  - Deleted ${deletedEmbeddings.count} product embeddings`);
 
-      // Delete widget settings
+      // Step 5: Delete widget settings
       const deletedSettings = await tx.widgetSettings.deleteMany({
         where: { shop },
       });
       deletionStats.widgetSettings = deletedSettings.count;
+      console.log(`  - Deleted ${deletedSettings.count} widget settings`);
 
-      // Delete analytics data
+      // Step 6: Delete all analytics data
       const deletedAnalytics = await tx.chatAnalytics.deleteMany({
         where: { shop },
       });
       deletionStats.chatAnalytics = deletedAnalytics.count;
+      console.log(`  - Deleted ${deletedAnalytics.count} analytics records`);
 
-      // Delete sessions
+      // Step 7: Delete all sessions
+      // Note: This might already be done by webhooks.app.uninstalled, but we do it again to be sure
       const deletedSessionRecords = await tx.session.deleteMany({
         where: { shop },
       });
       deletionStats.sessions = deletedSessionRecords.count;
+      console.log(`  - Deleted ${deletedSessionRecords.count} session records`);
 
       return deletionStats;
     });
 
-    console.log(`✅ Cleanup completed for shop ${shop}`);
+    console.log(`✅ Successfully deleted all data for shop ${shop}`);
     console.log(`Deletion summary:`, result);
 
     return new Response(JSON.stringify({
       success: true,
-      shop,
+      message: "Shop data deleted successfully",
+      shop_domain: shop,
       deletion_summary: result,
+      deleted_at: new Date().toISOString(),
     }), {
       status: 200,
       headers: { "Content-Type": "application/json" }
     });
 
   } catch (error) {
-    console.error(`❌ Error during uninstall cleanup for ${shop}:`, error);
+    console.error("❌ Error processing shop redaction request:", error);
 
-    // Return success to prevent webhook retries
-    // The shop/redact webhook (48 hours later) will catch any missed data
+    // Log detailed error for investigation
+    console.error("Error details:", {
+      shop,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
+    // Return success to Shopify to prevent retries
+    // Manual investigation will be needed if this fails
     return new Response(JSON.stringify({
-      error: "Cleanup error",
+      error: "Error deleting shop data",
       message: error instanceof Error ? error.message : 'Unknown error',
+      shop_domain: shop,
+      // Return 200 to prevent retries - manual cleanup may be needed
     }), {
       status: 200,
       headers: { "Content-Type": "application/json" }
