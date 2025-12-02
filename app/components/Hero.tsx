@@ -46,10 +46,10 @@ export function Hero() {
       />
 
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8 h-full">
-        <div className="flex flex-col lg:flex-row items-center justify-between h-full gap-12 lg:gap-8 py-12 lg:py-0">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center h-full py-12 lg:py-0">
           {/* Left content */}
           <motion.div
-            className="flex-1 flex flex-col justify-center max-w-2xl text-center lg:text-left"
+            className="flex flex-col justify-center text-center lg:text-left"
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
@@ -66,7 +66,7 @@ export function Hero() {
             </motion.div>
 
             {/* Main heading */}
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold leading-tight mb-6">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-6">
               <span className="bg-clip-text text-transparent bg-gradient-to-b from-white via-white to-white/40">
                 Transform
               </span>
@@ -77,7 +77,7 @@ export function Hero() {
             </h1>
 
             {/* Description */}
-            <p className="text-lg sm:text-xl lg:text-2xl text-gray-300 leading-relaxed mb-8 max-w-xl mx-auto lg:mx-0">
+            <p className="text-base sm:text-lg lg:text-xl text-gray-300 leading-relaxed mb-8">
               AI-powered chat that converts visitors into customers. Instant answers, personalized recommendations, and 24/7 support for your Shopify store.
             </p>
 
@@ -141,20 +141,36 @@ export function Hero() {
             </motion.div>
           </motion.div>
 
-          {/* Right 3D scene */}
+          {/* Right 3D scene - PROFESSIONAL ALIGNMENT */}
           <motion.div
-            className="flex-1 w-full max-w-2xl h-[400px] sm:h-[500px] lg:h-[600px] xl:h-[700px] flex items-end lg:items-center"
+            className="flex items-center justify-center lg:justify-end"
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            <div className="relative w-full h-full min-h-[400px]">
-              {mounted && (
-                <SplineScene 
-                  scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
-                  className="w-full h-full"
-                />
-              )}
+            {/* 3D Scene Container with proper containment */}
+            <div className="relative w-full max-w-[500px] lg:max-w-[600px] aspect-square">
+              {/* Ambient glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-pink-500/10 to-orange-500/10 rounded-full blur-3xl scale-110 -z-10 animate-pulse" />
+              
+              {/* Main 3D container with overflow control */}
+              <div className="relative w-full h-full rounded-3xl overflow-hidden bg-gradient-to-br from-purple-900/10 to-pink-900/10 backdrop-blur-sm border border-white/5">
+                {/* Inner padding to prevent clipping */}
+                <div className="absolute inset-0 p-8">
+                  <div className="w-full h-full relative">
+                    {mounted && (
+                      <SplineScene 
+                        scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
+                        className="w-full h-full"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Decorative elements */}
+              <div className="absolute -inset-4 rounded-full border border-purple-500/20 pointer-events-none" />
+              <div className="absolute -inset-8 rounded-full border border-pink-500/10 pointer-events-none" />
             </div>
           </motion.div>
         </div>

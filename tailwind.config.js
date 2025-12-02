@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
     "./app/**/*.{ts,tsx,js,jsx}",
     "./components/**/*.{ts,tsx,js,jsx}"
@@ -9,6 +9,9 @@ export default {
   },
   plugins: [],
   safelist: [
-    "bg-white/5", "text-gray-300", "bg-purple-500/20", "bg-orange-500/20"
+    "bg-white/5", 
+    "text-gray-300", 
+    "bg-purple-500/20", 
+    "bg-orange-500/20"
   ]
 };

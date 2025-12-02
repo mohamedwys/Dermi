@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs, LinksFunction } from "@remix-run/node";
+import type { LoaderFunctionArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
 import { useLoaderData } from "@remix-run/react";
 
@@ -14,11 +14,8 @@ import { AIAssistants } from "../../components/AIAssistants";
 import { Footer } from "../../components/Footer";
 import { FloatingCTA } from "../../components/FloatingCTA";
 
-import "./styles.module.css";
-
-export const links: LinksFunction = () => [
-  
-];
+// ✅ Tailwind CSS is already imported in root.tsx, so we don't need it here
+// ❌ REMOVE: import "./styles.module.css"; - This was causing conflicts!
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
@@ -94,15 +91,16 @@ export default function App() {
       <Testimonials testimonials={testimonials} />
       <TrustSection />
       <Footer
-        leftLinks={[]}
-        rightLinks={[
-          { href: '/privacy-policy', label: 'Privacy Policy' },
-          { href: '/terms-of-service', label: 'Terms of Service' },
-          { href: '/cookie-policy', label: 'Cookie Policy' },
-          { href: '/ai-compliance', label: 'AI Compliance' },
-        ]}
-        copyrightText="© 2025 ShopiBot by Welcome Middle East FZ-LLC. All rights reserved."
-      />
+          leftLinks={[]}
+          rightLinks={[
+            { href: '/privacy-policy', label: 'Privacy Policy' },
+            { href: '/terms-of-service', label: 'Terms of Service' },
+            { href: '/cookie-policy', label: 'Cookie Policy' },
+            { href: '/gdpr-compliance', label: 'GDPR Compliance' }, 
+            { href: '/ai-compliance', label: 'AI Compliance' },
+          ]}
+          copyrightText="© 2025 ShopiBot by Welcome Middle East FZ-LLC. All rights reserved."
+        />
       <FloatingCTA />
     </>
   );
