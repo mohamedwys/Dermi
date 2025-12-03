@@ -263,24 +263,38 @@ function getCorsHeaders(request: Request) {
 **Issue:**
 N8N webhook URL is hardcoded as a fallback in source code:
 
-**Vulnerable Code:**
+**Status: ✅ FIXED**
+
+**Previous Vulnerable Code:**
 ```typescript
-// app/services/n8n.service.ts:42
+// app/services/n8n.service.ts:42 (OLD - REMOVED)
 this.webhookUrl = webhookUrl || process.env.N8N_WEBHOOK_URL ||
   'https://dermadia.app.n8n.cloud/webhook/e4186076-dc56-4d25-afaf-28167ac396d2/chat';
   // ❌ Hardcoded URL exposes your N8N instance
 ```
 
-**Fix Required:**
+**Fixed Implementation:**
 ```typescript
-// Remove hardcoded fallback
-this.webhookUrl = webhookUrl || process.env.N8N_WEBHOOK_URL;
+// ✅ SECURITY FIX: Removed hardcoded webhook URL fallback
+const configuredWebhookUrl = webhookUrl || process.env.N8N_WEBHOOK_URL;
 
-if (!this.webhookUrl) {
-  console.warn('⚠️ N8N_WEBHOOK_URL not configured. Using local fallback.');
-  // Fall back to local processing immediately
+if (!configuredWebhookUrl) {
+  console.error('🚨 N8N_WEBHOOK_URL is not configured!');
+  console.error('💡 The app will use fallback local processing for all requests.');
+  this.webhookUrl = 'MISSING_N8N_WEBHOOK_URL'; // Triggers fallback
+} else {
+  this.webhookUrl = configuredWebhookUrl;
 }
+
+// Mask sensitive URL parts in logs
+const maskedUrl = this.maskWebhookUrl(this.webhookUrl);
+console.log('🔧 N8N Service: Using webhook URL:', maskedUrl);
 ```
+
+**Additional Security Improvements:**
+- Added URL masking to prevent webhook ID exposure in logs
+- Graceful fallback when N8N_WEBHOOK_URL is missing
+- Clear error messages for configuration issues
 
 **Immediate Action:** Rotate the exposed N8N webhook URL
 

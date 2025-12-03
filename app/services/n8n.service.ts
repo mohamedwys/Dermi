@@ -38,23 +38,70 @@ export class N8NService {
   private apiKey?: string;
 
   constructor(webhookUrl?: string, apiKey?: string) {
-    // Prioritize: 1) passed parameter, 2) environment variable, 3) fallback placeholder
-    this.webhookUrl = webhookUrl || process.env.N8N_WEBHOOK_URL || 'https://dermadia.app.n8n.cloud/webhook/e4186076-dc56-4d25-afaf-28167ac396d2/chat';
+    // ✅ SECURITY FIX: Removed hardcoded webhook URL fallback
+    // Prioritize: 1) passed parameter, 2) environment variable, 3) throw error if missing
+    const configuredWebhookUrl = webhookUrl || process.env.N8N_WEBHOOK_URL;
+
+    if (!configuredWebhookUrl) {
+      const errorMessage = '🚨 N8N_WEBHOOK_URL is not configured! Please set the N8N_WEBHOOK_URL environment variable.';
+      console.error(errorMessage);
+      console.error('💡 The app will use fallback local processing for all requests.');
+      console.error('💡 To fix this: Set N8N_WEBHOOK_URL in your environment variables or .env file');
+
+      // Use a placeholder that will trigger fallback processing
+      this.webhookUrl = 'MISSING_N8N_WEBHOOK_URL';
+    } else {
+      this.webhookUrl = configuredWebhookUrl;
+    }
+
     this.apiKey = apiKey || process.env.N8N_API_KEY;
-    
-    // Log the webhook URL being used for debugging
-    console.log('🔧 N8N Service: Using webhook URL:', this.webhookUrl);
+
+    // Log the webhook URL being used for debugging (hide sensitive parts)
+    if (this.webhookUrl !== 'MISSING_N8N_WEBHOOK_URL') {
+      const maskedUrl = this.maskWebhookUrl(this.webhookUrl);
+      console.log('🔧 N8N Service: Using webhook URL:', maskedUrl);
+    }
     console.log('🔧 N8N Service: Using API key:', this.apiKey ? '[CONFIGURED]' : '[NOT SET]');
-    
+
     // Log important note about webhook URL format
     if (this.webhookUrl.includes('/webhook/webhook/')) {
       console.warn('⚠️ N8N Service: Webhook URL contains duplicate /webhook/ - this might cause 404 errors');
     }
   }
 
+  /**
+   * Mask sensitive parts of webhook URL for logging
+   */
+  private maskWebhookUrl(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split('/');
+
+      // Mask the webhook ID (last part of path)
+      if (pathParts.length > 0) {
+        const lastPart = pathParts[pathParts.length - 1];
+        if (lastPart.length > 8) {
+          pathParts[pathParts.length - 1] = lastPart.substring(0, 4) + '****' + lastPart.substring(lastPart.length - 4);
+        }
+      }
+
+      urlObj.pathname = pathParts.join('/');
+      return urlObj.toString();
+    } catch {
+      return '[INVALID URL FORMAT]';
+    }
+  }
+
   async processUserMessage(request: N8NRequest): Promise<N8NWebhookResponse> {
     try {
-      console.log('🚀 N8N Service: Attempting to call webhook:', this.webhookUrl);
+      // Check if webhook URL is configured
+      if (this.webhookUrl === 'MISSING_N8N_WEBHOOK_URL') {
+        console.warn('⚠️ N8N_WEBHOOK_URL not configured, using fallback processing');
+        return this.fallbackProcessing(request);
+      }
+
+      const maskedUrl = this.maskWebhookUrl(this.webhookUrl);
+      console.log('🚀 N8N Service: Attempting to call webhook:', maskedUrl);
       console.log('📤 N8N Service: Request payload:', JSON.stringify(request, null, 2));
 
       const headers: any = {
