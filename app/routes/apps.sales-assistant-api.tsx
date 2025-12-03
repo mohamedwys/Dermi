@@ -1,24 +1,32 @@
-import type { ActionFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { authenticate, unauthenticated, sessionStorage } from "../shopify.server";
 import { n8nService } from "../services/n8n.service";
 import { personalizationService } from "../services/personalization.service";
 import db from "../db.server";
+import { getSecureCorsHeaders, createCorsPreflightResponse, isOriginAllowed, logCorsViolation } from "../lib/cors.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   console.log('🎯 API Route Called: /apps/sales-assistant-api');
   console.log('📥 Headers:', Object.fromEntries(request.headers.entries()));
-  
+
+  // ✅ SECURITY FIX: Use secure CORS headers (whitelist Shopify domains only)
   // Handle preflight CORS request
   if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, X-Shopify-Shop-Domain, X-Shopify-Customer-Access-Token',
+    return createCorsPreflightResponse(request);
+  }
+
+  // Verify origin is allowed (defense in depth)
+  const origin = request.headers.get('origin');
+  if (origin && !isOriginAllowed(origin)) {
+    logCorsViolation(origin, '/apps/sales-assistant-api');
+    return json(
+      { error: "Unauthorized origin" },
+      {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
       }
-    });
+    );
   }
   
   try {
@@ -43,14 +51,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     if (!shopDomain) {
       console.log('❌ No shop domain found in headers or origin');
       return json(
-        { error: "Shop domain required" }, 
-        { 
+        { error: "Shop domain required" },
+        {
           status: 400,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, X-Shopify-Shop-Domain, X-Shopify-Customer-Access-Token',
-          }
+          headers: getSecureCorsHeaders(request)
         }
       );
     }
@@ -259,53 +263,29 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         },
       },
       {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, X-Shopify-Shop-Domain, X-Shopify-Customer-Access-Token',
-        },
+        headers: getSecureCorsHeaders(request)
       }
     );
 
   } catch (error) {
     console.error("Sales Assistant API Error:", error);
-    return json({ 
+    return json({
       error: "Internal server error",
       message: "Sorry, I'm having trouble processing your request right now. Please try again later."
-    }, { 
+    }, {
       status: 500,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, X-Shopify-Shop-Domain, X-Shopify-Customer-Access-Token',
-      }
+      headers: getSecureCorsHeaders(request)
     });
   }
 };
 
-// Handle OPTIONS requests for CORS preflight
-export const options = async () => {
-  return new Response(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, X-Shopify-Shop-Domain, X-Shopify-Customer-Access-Token',
-    }
-  });
-};
-
 // Handle GET requests for health check
-export const loader = async () => {
-  return json({ 
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  return json({
     status: "healthy",
     service: "AI Sales Assistant API",
     timestamp: new Date().toISOString()
   }, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, X-Shopify-Shop-Domain, X-Shopify-Customer-Access-Token',
-    }
+    headers: getSecureCorsHeaders(request)
   });
 }; 

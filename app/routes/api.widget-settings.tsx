@@ -3,6 +3,7 @@ import { json } from "@remix-run/node";
 import { authenticate, unauthenticated, sessionStorage } from "../shopify.server";
 import { n8nService, N8NService } from "../services/n8n.service";
 import db from "../db.server";
+import { getSecureCorsHeaders, createCorsPreflightResponse, isOriginAllowed, logCorsViolation } from "../lib/cors.server";
 
 // Default settings (same as in settings page)
 const DEFAULT_SETTINGS = {
@@ -20,14 +21,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     // Extract shop domain from request headers
     const url = new URL(request.url);
     const shopDomain = url.searchParams.get("shop");
-    
+
     if (!shopDomain) {
       // Return default settings if no shop specified
-      const response = json({ settings: DEFAULT_SETTINGS });
-      response.headers.set("Access-Control-Allow-Origin", "*");
-      response.headers.set("Access-Control-Allow-Methods", "GET");
-      response.headers.set("Access-Control-Allow-Headers", "Content-Type");
-      return response;
+      return json(
+        { settings: DEFAULT_SETTINGS },
+        { headers: getSecureCorsHeaders(request) }
+      );
     }
     
     // Fetch settings from database
@@ -44,25 +44,19 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         }
       });
     }
-    
-    const response = json({ settings });
-    
-    // Add CORS headers to allow the storefront to access this endpoint
-    response.headers.set("Access-Control-Allow-Origin", "*");
-    response.headers.set("Access-Control-Allow-Methods", "GET, POST");
-    response.headers.set("Access-Control-Allow-Headers", "Content-Type");
-    
-    return response;
+
+    return json(
+      { settings },
+      { headers: getSecureCorsHeaders(request) }
+    );
   } catch (error) {
     console.error("Error fetching widget settings:", error);
-    
+
     // Return default settings on error
-    const response = json({ settings: DEFAULT_SETTINGS });
-    response.headers.set("Access-Control-Allow-Origin", "*");
-    response.headers.set("Access-Control-Allow-Methods", "GET, POST");
-    response.headers.set("Access-Control-Allow-Headers", "Content-Type");
-    
-    return response;
+    return json(
+      { settings: DEFAULT_SETTINGS },
+      { headers: getSecureCorsHeaders(request) }
+    );
   }
 };
 
@@ -70,17 +64,24 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const action = async ({ request }: ActionFunctionArgs) => {
   console.log('🎯 Chat Message via Widget Settings Route');
   console.log('📥 Headers:', Object.fromEntries(request.headers.entries()));
-  
+
+  // ✅ SECURITY FIX: Use secure CORS headers (whitelist Shopify domains only)
   // Handle preflight CORS request
   if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, X-Shopify-Shop-Domain, X-Shopify-Customer-Access-Token',
+    return createCorsPreflightResponse(request);
+  }
+
+  // Verify origin is allowed (defense in depth)
+  const origin = request.headers.get('origin');
+  if (origin && !isOriginAllowed(origin)) {
+    logCorsViolation(origin, '/api/widget-settings');
+    return json(
+      { error: "Unauthorized origin" },
+      {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
       }
-    });
+    );
   }
   
   try {
@@ -89,18 +90,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const shopDomain = url.searchParams.get("shop") || request.headers.get('X-Shopify-Shop-Domain');
     
     console.log('🏪 Shop Domain:', shopDomain);
-    
+
     if (!shopDomain) {
       console.log('❌ No shop domain found');
       return json(
-        { error: "Shop domain required" }, 
-        { 
+        { error: "Shop domain required" },
+        {
           status: 400,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, X-Shopify-Shop-Domain, X-Shopify-Customer-Access-Token',
-          }
+          headers: getSecureCorsHeaders(request)
         }
       );
     }
@@ -244,32 +241,24 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     });
     
     console.log('✅ N8N Response received:', n8nResponse);
-    
-    return json({ 
+
+    return json({
       response: n8nResponse.message,
       recommendations: n8nResponse.recommendations || [],
       confidence: n8nResponse.confidence || 0.7,
       timestamp: new Date().toISOString()
     }, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, X-Shopify-Shop-Domain, X-Shopify-Customer-Access-Token',
-      }
+      headers: getSecureCorsHeaders(request)
     });
 
   } catch (error) {
     console.error("Chat API Error:", error);
-    return json({ 
+    return json({
       error: "Internal server error",
       message: "Sorry, I'm having trouble processing your request right now. Please try again later."
-    }, { 
+    }, {
       status: 500,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, X-Shopify-Shop-Domain, X-Shopify-Customer-Access-Token',
-      }
+      headers: getSecureCorsHeaders(request)
     });
   }
 }; 
