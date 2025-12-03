@@ -83,17 +83,21 @@ export const userMessageSchema = z.string()
 
 /**
  * Chat context validation
+ * All fields are optional to support various widget implementations
  */
 export const chatContextSchema = z.object({
   previousMessages: z.array(z.string()).optional(),
-  sessionId: sessionIdSchema,
-  customerId: customerIdSchema,
+  sessionId: z.string().min(1).max(200).optional(),
+  customerId: z.string().min(1).max(100).optional(),
   shopDomain: shopDomainSchema.optional(),
   sentiment: z.enum(['POSITIVE', 'NEGATIVE', 'NEUTRAL']).optional(),
   intent: z.string().max(50).optional(),
   timestamp: z.string().datetime().optional(),
   userAgent: z.string().max(500).optional(),
   referer: z.string().max(2048).optional(),
+  page: z.string().max(2048).optional(),
+  productId: z.string().max(100).optional(),
+  conversationHistory: z.array(z.any()).optional(),
 }).optional();
 
 /**
@@ -111,13 +115,14 @@ export const productRecommendationSchema = z.object({
 
 /**
  * Chat request validation (for sales assistant API)
+ * Supports both direct API calls and widget requests
  */
 export const chatRequestSchema = z.object({
-  userMessage: userMessageSchema,
+  userMessage: userMessageSchema.optional(),
   message: userMessageSchema.optional(), // Alternative field name
-  sessionId: sessionIdSchema,
-  customerId: customerIdSchema,
-  context: chatContextSchema,
+  sessionId: z.string().min(1).max(200).optional(),
+  customerId: z.string().min(1).max(100).optional(),
+  context: chatContextSchema.optional(),
   products: z.array(z.object({
     id: z.string(),
     title: z.string(),
