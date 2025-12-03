@@ -4,6 +4,8 @@ import { authenticate, unauthenticated, sessionStorage } from "../shopify.server
 import { n8nService, N8NService } from "../services/n8n.service";
 import db from "../db.server";
 import { getSecureCorsHeaders, createCorsPreflightResponse, isOriginAllowed, logCorsViolation } from "../lib/cors.server";
+import { rateLimit, RateLimitPresets } from "../lib/rate-limit.server";
+import { chatRequestSchema, validateData, validationErrorResponse } from "../lib/validation.server";
 
 // Default settings (same as in settings page)
 const DEFAULT_SETTINGS = {
@@ -17,6 +19,17 @@ const DEFAULT_SETTINGS = {
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
+  // ✅ SECURITY FIX: Apply rate limiting
+  // Generous limit for widget settings retrieval: 300 requests per minute
+  const rateLimitResponse = rateLimit(request, RateLimitPresets.GENEROUS, {
+    useShop: true,
+    namespace: '/api/widget-settings/loader',
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     // Extract shop domain from request headers
     const url = new URL(request.url);
@@ -83,7 +96,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
     );
   }
-  
+
+  // ✅ SECURITY FIX: Apply rate limiting
+  // Moderate limit for chat messages: 100 requests per minute
+  const rateLimitResponse = rateLimit(request, RateLimitPresets.MODERATE, {
+    useShop: true,
+    namespace: '/api/widget-settings/action',
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     // Extract shop domain from request headers
     const url = new URL(request.url);
@@ -129,13 +153,32 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // Parse the request body
     const body = await request.json();
     console.log('📝 Request Body:', JSON.stringify(body, null, 2));
-    
-    const { userMessage, message, context } = body;
-    const finalMessage = userMessage || message;
-    
+
+    // ✅ SECURITY FIX: Validate request body with Zod schema
+    const validation = validateData(chatRequestSchema, body);
+
+    if (!validation.success) {
+      console.error('❌ Validation failed:', validation.errors);
+      const errorResponse = validationErrorResponse(validation.errors);
+      return json(errorResponse, {
+        status: errorResponse.status,
+        headers: getSecureCorsHeaders(request),
+      });
+    }
+
+    const validatedData = validation.data;
+    const finalMessage = validatedData.userMessage || validatedData.message;
+    const context = validatedData.context || {};
+
     if (!finalMessage) {
       console.log('❌ No message found in request');
-      return json({ error: "Message is required" }, { status: 400 });
+      return json(
+        { error: "Message is required" },
+        {
+          status: 400,
+          headers: getSecureCorsHeaders(request),
+        }
+      );
     }
     
     console.log('💬 Processing message:', finalMessage);

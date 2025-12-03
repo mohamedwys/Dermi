@@ -5,6 +5,8 @@ import { n8nService } from "../services/n8n.service";
 import { personalizationService } from "../services/personalization.service";
 import db from "../db.server";
 import { getSecureCorsHeaders, createCorsPreflightResponse, isOriginAllowed, logCorsViolation } from "../lib/cors.server";
+import { rateLimit, RateLimitPresets } from "../lib/rate-limit.server";
+import { chatRequestSchema, validateData, validationErrorResponse } from "../lib/validation.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   console.log('🎯 API Route Called: /apps/sales-assistant-api');
@@ -28,7 +30,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
     );
   }
-  
+
+  // ✅ SECURITY FIX: Apply rate limiting
+  // Moderate limit: 100 requests per minute for chat messages
+  const rateLimitResponse = rateLimit(request, RateLimitPresets.MODERATE, {
+    useShop: true,
+    namespace: '/apps/sales-assistant-api',
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   try {
     // Get shop domain from headers for theme extension
     let shopDomain = request.headers.get('X-Shopify-Shop-Domain');
@@ -85,18 +98,37 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // Parse the request body
     const body = await request.json();
     console.log('📝 Request Body:', JSON.stringify(body, null, 2));
-    
-    const { userMessage, message, context = {} } = body;
-    const finalMessage = userMessage || message; // Handle both field names
+
+    // ✅ SECURITY FIX: Validate request body with Zod schema
+    const validation = validateData(chatRequestSchema, body);
+
+    if (!validation.success) {
+      console.error('❌ Validation failed:', validation.errors);
+      const errorResponse = validationErrorResponse(validation.errors);
+      return json(errorResponse, {
+        status: errorResponse.status,
+        headers: getSecureCorsHeaders(request),
+      });
+    }
+
+    const validatedData = validation.data;
+    const finalMessage = validatedData.userMessage || validatedData.message;
 
     if (!finalMessage) {
       console.log('❌ No message found in request');
-      return json({ error: "Message is required" }, { status: 400 });
+      return json(
+        { error: "Message is required" },
+        {
+          status: 400,
+          headers: getSecureCorsHeaders(request),
+        }
+      );
     }
 
     console.log('💬 Final Message:', finalMessage);
 
     // Generate or extract session ID
+    const context = validatedData.context || {};
     const sessionId = context.sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const customerId = context.customerId;
 
