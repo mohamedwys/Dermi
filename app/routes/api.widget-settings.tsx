@@ -292,16 +292,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     
     // Use custom webhook URL only if it's a valid URL (not just "https://")
     const customWebhookUrl = (settings as any)?.webhookUrl;
-    const isValidCustomUrl = customWebhookUrl && 
-                            typeof customWebhookUrl === 'string' && 
-                            customWebhookUrl.trim() !== '' && 
+    const isValidCustomUrl = customWebhookUrl &&
+                            typeof customWebhookUrl === 'string' &&
+                            customWebhookUrl.trim() !== '' &&
                             customWebhookUrl !== 'https://' &&
+                            customWebhookUrl !== 'null' &&
+                            customWebhookUrl !== 'undefined' &&
                             customWebhookUrl.startsWith('https://') &&
                             customWebhookUrl.length > 8;
-    
+
     const webhookUrl = isValidCustomUrl ? customWebhookUrl : process.env.N8N_WEBHOOK_URL;
-    console.log('🔧 Final webhook URL being used:', webhookUrl);
+    console.log('🔧 Final webhook URL being used:', webhookUrl || '[USING FALLBACK]');
     console.log('🔧 Is using custom URL:', isValidCustomUrl);
+    if (isValidCustomUrl) {
+      console.log('✅ Custom N8N workflow will be used');
+    } else {
+      console.log('ℹ️ Using default workflow (enhanced fallback processing)');
+    }
     
     // Create N8N service instance with custom webhook URL if provided
     const customN8NService = new N8NService(webhookUrl);

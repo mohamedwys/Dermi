@@ -142,6 +142,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin, session } = await authenticate.admin(request);
 
   const formData = await request.formData();
+
+  // Handle webhookUrl explicitly - allow empty string to clear it
+  const webhookUrl = formData.get("webhookUrl") as string | null;
+  const normalizedWebhookUrl = webhookUrl?.trim() || null;
+
   const settingsData = {
     enabled: formData.get("enabled") === "true",
     position: formData.get("position") as string,
@@ -150,11 +155,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     welcomeMessage: formData.get("welcomeMessage") as string,
     inputPlaceholder: formData.get("inputPlaceholder") as string,
     primaryColor: formData.get("primaryColor") as string,
-    // Handle webhookUrl properly - only include if it has a value
-    ...(formData.get("webhookUrl") && { webhookUrl: formData.get("webhookUrl") as string }),
+    webhookUrl: normalizedWebhookUrl, // Always include, null clears it
   };
 
   try {
+    console.log('💾 Saving settings for shop:', session.shop);
+    console.log('🔧 Webhook URL being saved:', normalizedWebhookUrl || '[CLEARED/DEFAULT]');
+
     // Save settings to database
     const settings = await db.widgetSettings.upsert({
       where: { shop: session.shop },
@@ -165,7 +172,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
     });
 
-    console.log("Settings saved to database:", settings);
+    console.log("✅ Settings saved to database successfully");
+    console.log("🔧 Final webhookUrl in database:", settings.webhookUrl || '[NULL/DEFAULT]');
 
     return json({
       success: true,
@@ -173,7 +181,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       settings
     });
   } catch (error) {
-    console.error("Database save error:", error);
+    console.error("❌ Database save error:", error);
     // Return error to user instead of silent fallback
     return json({
       success: false,
@@ -345,10 +353,13 @@ export default function SettingsPage() {
                   label="Workflow Type"
                   value={(() => {
                     const url = (settings as any).webhookUrl;
-                    const isValidCustomUrl = url && 
-                                           typeof url === 'string' && 
-                                           url.trim() !== '' && 
+                    // Check if webhook URL is valid for custom workflow
+                    const isValidCustomUrl = url &&
+                                           typeof url === 'string' &&
+                                           url.trim() !== '' &&
                                            url !== 'https://' &&
+                                           url !== 'null' &&
+                                           url !== 'undefined' &&
                                            url.startsWith('https://') &&
                                            url.length > 8;
                     return isValidCustomUrl ? "custom" : "default";
@@ -370,31 +381,37 @@ export default function SettingsPage() {
                 <TextField
                   label="Custom N8N Webhook URL"
                   value={(settings as any).webhookUrl || ""}
-                  onChange={(value) => 
+                  onChange={(value) =>
                     setSettings((prev: any) => ({ ...prev, webhookUrl: value }))
                   }
                   placeholder="https://your-n8n-instance.com/webhook/your-workflow"
                   helpText={(() => {
                     const url = (settings as any).webhookUrl;
-                    const isValidCustomUrl = url && 
-                                           typeof url === 'string' && 
-                                           url.trim() !== '' && 
+                    const isValidCustomUrl = url &&
+                                           typeof url === 'string' &&
+                                           url.trim() !== '' &&
                                            url !== 'https://' &&
+                                           url !== 'null' &&
+                                           url !== 'undefined' &&
                                            url.startsWith('https://') &&
                                            url.length > 8;
-                    return isValidCustomUrl ? "Enter your N8N webhook URL. Must be HTTPS." : "Select 'Use My Custom N8N Workflow' above to enable this field.";
+                    return isValidCustomUrl
+                      ? "✅ Valid webhook URL configured. Messages will be sent to your N8N workflow."
+                      : "Select 'Use My Custom N8N Workflow' above to enable this field.";
                   })()}
                   autoComplete="off"
                   type="url"
                   disabled={(() => {
                     const url = (settings as any).webhookUrl;
-                    const isValidCustomUrl = url && 
-                                           typeof url === 'string' && 
-                                           url.trim() !== '' && 
+                    const isValidCustomUrl = url &&
+                                           typeof url === 'string' &&
+                                           url.trim() !== '' &&
                                            url !== 'https://' &&
+                                           url !== 'null' &&
+                                           url !== 'undefined' &&
                                            url.startsWith('https://') &&
                                            url.length > 8;
-                    return !isValidCustomUrl && (!(settings as any).webhookUrl || (settings as any).webhookUrl === 'https://');
+                    return !isValidCustomUrl && (!url || url === 'https://');
                   })()}
                 />
                 
