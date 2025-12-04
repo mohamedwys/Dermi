@@ -163,8 +163,7 @@ export default function AnalyticsPage() {
 
     return (
       <Badge tone={tone} icon={icon}>
-        {isPositive ? "+" : ""}
-        {change.toFixed(1)}%
+        {`${isPositive ? "+" : ""}${change.toFixed(1)}%`}
       </Badge>
     );
   };
@@ -446,7 +445,7 @@ export default function AnalyticsPage() {
                           {product.productId.split("/").pop()}
                         </Text>
                       </InlineStack>
-                      <Badge tone="info">{formatNumber(product.clicks)} clicks</Badge>
+                      <Badge tone="info">{`${formatNumber(product.clicks)} clicks`}</Badge>
                     </InlineStack>
                     {index < data.topProducts.length - 1 && (
                       <Box paddingBlockStart="300">

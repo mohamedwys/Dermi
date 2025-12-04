@@ -373,7 +373,7 @@ export default function SalesAssistantAdvanced() {
                                 {product.title}
                               </Text>
                               <Badge tone="success">
-                                ${parseFloat(product.price).toFixed(2)}
+                                {`$${parseFloat(product.price).toFixed(2)}`}
                               </Badge>
                             </BlockStack>
                           </InlineStack>
@@ -585,8 +585,7 @@ export default function SalesAssistantAdvanced() {
                     label=""
                     value={inputMessage}
                     onChange={setInputMessage}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Type your message... (Press Enter to send)"
+                    placeholder="Type your message..."
                     autoComplete="off"
                     multiline={2}
                   />

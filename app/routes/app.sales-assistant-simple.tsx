@@ -215,9 +215,9 @@ export default function SalesAssistantSimple() {
                     <Card key={product.id} padding="300">
                       <BlockStack gap="200">
                         <Text variant="headingSm" as="h3">{product.title}</Text>
-                        <Badge tone="success">${product.price}</Badge>
+                        <Badge tone="success">{`$${product.price}`}</Badge>
                         {product.description && (
-                          <Text variant="bodySm" as="p" color="subdued">
+                          <Text variant="bodySm" as="p" tone="subdued">
                             {product.description.substring(0, 100)}...
                           </Text>
                         )}
@@ -226,7 +226,7 @@ export default function SalesAssistantSimple() {
                   ))}
                 </BlockStack>
               ) : (
-                <Text variant="bodyMd" as="p" color="subdued">
+                <Text variant="bodyMd" as="p" tone="subdued">
                   Ask me for product recommendations to see suggestions here.
                 </Text>
               )}
