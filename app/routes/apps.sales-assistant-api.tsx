@@ -247,6 +247,20 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       context: enhancedContext
     });
 
+    console.log('📥 N8N Response received in API route:');
+    console.log('📥 Response type:', typeof n8nResponse);
+    console.log('📥 Response keys:', Object.keys(n8nResponse || {}));
+    console.log('📥 Message:', n8nResponse?.message);
+    console.log('📥 Recommendations:', n8nResponse?.recommendations?.length || 0);
+    console.log('📥 Confidence:', n8nResponse?.confidence);
+    console.log('📥 Full response:', JSON.stringify(n8nResponse, null, 2));
+
+    // Validate N8N response
+    if (!n8nResponse || !n8nResponse.message) {
+      console.error('❌ Invalid N8N response! Response:', n8nResponse);
+      throw new Error('Invalid response from N8N service');
+    }
+
     // Calculate response time
     const responseTime = Date.now() - startTime;
 

@@ -117,7 +117,22 @@ export class N8NService {
         timeout: 30000, // 30 second timeout
       });
 
-      console.log('✅ N8N Service: Success! Response:', response.data);
+      console.log('✅ N8N Response received:');
+      console.log('📦 Response Status:', response.status);
+      console.log('📦 Response Headers:', JSON.stringify(response.headers, null, 2));
+      console.log('📦 Response Data Type:', typeof response.data);
+      console.log('📦 Response Data:', JSON.stringify(response.data, null, 2));
+
+      // Vérifier le format de la réponse
+      if (response.data?.message) {
+        console.log('✅ AI Message found:', response.data.message);
+        console.log('✅ Recommendations count:', response.data.recommendations?.length || 0);
+        console.log('✅ Confidence:', response.data.confidence || 'N/A');
+      } else {
+        console.log('⚠️ Unexpected response format - missing "message" field!');
+        console.log('⚠️ Response keys:', Object.keys(response.data || {}));
+      }
+
       return response.data;
     } catch (error: any) {
       console.error('❌❌❌ N8N SERVICE WEBHOOK CALL FAILED ❌❌❌');
