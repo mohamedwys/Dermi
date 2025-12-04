@@ -222,16 +222,32 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // Enhanced context for better AI responses
     const enhancedContext = {
       ...context,
+      // Shop context
       shopDomain: shopDomain,
+      locale: context.locale || 'en', // Get from request body or default to 'en'
+      currency: context.currency || 'USD', // Get from request body or default to 'USD'
+
+      // Customer context
       sessionId: sessionId,
       customerId: customerId,
-      timestamp: new Date().toISOString(),
-      userAgent: request.headers.get('user-agent'),
-      referer: request.headers.get('referer'),
+      customerEmail: context.customerEmail || null,
+
+      // Page context
+      pageUrl: context.pageUrl || request.headers.get('referer') || '',
+      currentPage: context.currentPage || 'other',
+      currentProductId: context.currentProductId || null,
+      cartId: context.cartId || null,
+
+      // Conversation context
       userPreferences: personalizationContext.preferences,
       recentProducts: personalizationContext.recentProducts,
       sentiment: sentiment,
       intent: intent,
+
+      // Legacy/metadata fields
+      timestamp: new Date().toISOString(),
+      userAgent: request.headers.get('user-agent'),
+      referer: request.headers.get('referer'),
     };
 
     // Get custom webhook URL from settings if available
@@ -298,16 +314,43 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     return json(
       {
+        // Main response (backward compatible)
         response: n8nResponse.message,
+        message: n8nResponse.message, // Also include as 'message' for consistency
+
+        // Rich response fields
+        messageType: n8nResponse.messageType || 'general',
         recommendations: n8nResponse.recommendations || [],
+        quickReplies: n8nResponse.quickReplies || [],
+        suggestedActions: n8nResponse.suggestedActions || [],
+
+        // Metadata
         confidence: n8nResponse.confidence || 0.7,
+        sentiment: n8nResponse.sentiment || sentiment,
+        requiresHumanEscalation: n8nResponse.requiresHumanEscalation || false,
+
+        // Session info
         timestamp: new Date().toISOString(),
-        sessionId: sessionId, // Return session ID for client to use in next request
+        sessionId: sessionId,
+
+        // Analytics
+        analytics: {
+          intentDetected: n8nResponse.analytics?.intentDetected || intent,
+          subIntent: n8nResponse.analytics?.subIntent,
+          sentiment: n8nResponse.sentiment || sentiment,
+          confidence: n8nResponse.confidence || 0.7,
+          productsShown: n8nResponse.recommendations?.length || 0,
+          responseTime: n8nResponse.analytics?.responseTime || responseTime,
+        },
+
+        // Legacy metadata (for backward compatibility)
         metadata: {
           intent,
           sentiment,
           responseTime,
         },
+
+        success: true,
       },
       {
         headers: mergeSecurityHeaders(

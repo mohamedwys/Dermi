@@ -3,33 +3,85 @@ import { getEmbeddingService, isEmbeddingServiceAvailable } from './embedding.se
 import { personalizationService, type UserPreferences } from './personalization.service';
 // import db from '../db.server';
 
+// Enhanced N8N Response with rich features
 export interface N8NWebhookResponse {
   message: string;
-  recommendations?: ProductRecommendation[];
+  messageType?: string; // 'greeting', 'product_search', 'order_tracking', etc.
+  recommendations?: EnhancedProductRecommendation[];
+  quickReplies?: string[]; // Quick reply suggestions
+  suggestedActions?: SuggestedAction[]; // Action buttons
   confidence?: number;
+  sentiment?: 'positive' | 'negative' | 'neutral';
+  requiresHumanEscalation?: boolean;
+  analytics?: {
+    intentDetected?: string;
+    subIntent?: string;
+    responseTime?: number;
+    productsShown?: number;
+  };
+  success?: boolean;
 }
 
-export interface ProductRecommendation {
+// Enhanced Product Recommendation with rich metadata
+export interface EnhancedProductRecommendation {
   id: string;
   title: string;
   handle: string;
   price: string;
+  priceFormatted?: string; // e.g., "USD 99.99"
+  originalPrice?: string; // For showing discounts
+  discountPercent?: number; // e.g., 20 for 20% off
+  url?: string; // Full product URL
   image?: string;
   description?: string;
-  relevanceScore?: number;
+  isAvailable?: boolean; // Stock availability
+  isLowStock?: boolean; // Low inventory warning
+  inventory?: number; // Actual inventory count
+  relevanceScore?: number; // 0-100
+  urgencyMessage?: string; // e.g., "Only 3 left!"
+  badge?: string; // e.g., "20% OFF", "Best Seller"
+  cta?: string; // Call to action text, e.g., "View Product", "Add to Cart"
 }
 
+// Suggested action buttons
+export interface SuggestedAction {
+  label: string; // Button text
+  action: 'view_product' | 'add_to_cart' | 'compare' | 'custom';
+  data?: string; // Product ID or custom data
+}
+
+// Enhanced N8N Request with richer context
 export interface N8NRequest {
   userMessage: string;
+  sessionId?: string;
   products: any[];
   context?: {
+    // Shop context
+    shopDomain?: string;
+    locale?: string; // 'en', 'fr', 'es', etc.
+    currency?: string; // 'USD', 'EUR', 'CAD', etc.
+
+    // Customer context
+    customerId?: string;
+    customerEmail?: string;
+
+    // Page context
+    pageUrl?: string;
+    currentPage?: 'product' | 'cart' | 'checkout' | 'collection' | 'home' | 'other';
+    currentProductId?: string;
+    cartId?: string;
+
+    // Conversation context
     previousMessages?: string[];
     userPreferences?: UserPreferences;
-    sessionId?: string;
-    customerId?: string;
-    shopDomain?: string;
     sentiment?: string;
     intent?: string;
+
+    // Legacy fields (for backward compatibility)
+    timestamp?: string;
+    userAgent?: string;
+    referer?: string;
+    recentProducts?: string[];
   };
 }
 
