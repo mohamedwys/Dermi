@@ -272,7 +272,11 @@ This creates a floating chat widget that can be added to any page
                page: window.location.pathname,
                productId: getProductIdFromPage(),
                conversationHistory: conversationHistory,
-               shopDomain: '{{ shop.myshopify_domain }}'
+               shopDomain: '{{ shop.myshopify_domain }}',
+               // ✨ NEW: Detect user's browser language
+               locale: navigator.language || navigator.userLanguage || 'en',
+               // Also send currency from Shopify if available
+               currency: '{{ shop.currency }}' || 'USD'
              }
            })
          });

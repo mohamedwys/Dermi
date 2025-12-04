@@ -77,6 +77,9 @@ export interface N8NRequest {
     sentiment?: string;
     intent?: string;
 
+    // Language instruction for AI
+    languageInstruction?: string;
+
     // Legacy fields (for backward compatibility)
     timestamp?: string;
     userAgent?: string;

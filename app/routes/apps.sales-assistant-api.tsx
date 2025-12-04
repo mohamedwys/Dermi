@@ -257,10 +257,20 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     // Process message through N8N service (or fallback with AI enhancements)
     console.log('🚀 Calling N8N service with request...');
+    console.log('🌍 User locale detected:', enhancedContext.locale);
+
+    // ✨ NEW: Add language instruction to context for AI
+    const languageInstruction = enhancedContext.locale && enhancedContext.locale !== 'en'
+      ? `IMPORTANT: Respond in the user's language (${enhancedContext.locale}). Detect the language from their message and use the same language in your response.`
+      : '';
+
     const n8nResponse = await n8nService.processUserMessage({
       userMessage: finalMessage,
       products,
-      context: enhancedContext
+      context: {
+        ...enhancedContext,
+        languageInstruction // Add explicit instruction for N8N workflow
+      }
     });
 
     console.log('📥 N8N Response received in API route:');
