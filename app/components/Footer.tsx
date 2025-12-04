@@ -1,3 +1,5 @@
+import { Icons } from "./../components/ui/icons"
+
 interface FooterLink {
   href: string;
   label: string;
@@ -9,61 +11,72 @@ interface FooterProps {
   copyrightText?: string;
 }
 
-export function Footer({ leftLinks = [], rightLinks = [], copyrightText }: FooterProps) {
+// Default links if none are provided
+const defaultLeftLinks: FooterLink[] = [
+  { href: "/privacy", label: "Privacy Policy" },
+  { href: "/terms", label: "Terms of Service" },
+];
+
+const defaultRightLinks: FooterLink[] = [
+ 
+  { href: "/cookies", label: "Cookie Policy" },
+  { href: "/refund", label: "Refund Policy" },
+];
+
+function Footer({ 
+  leftLinks = defaultLeftLinks, 
+  rightLinks = defaultRightLinks, 
+  copyrightText = "© 2025 Shopibot. All rights reserved." 
+}: FooterProps) {
   return (
-    <footer className="footer">
-      <div className="footer-container">
-        <div className="footer-top">
-          <div className="footer-brand">
-            <div className="brand-logo">
-              <span className="logo-icon">🤖</span>
-              <span className="logo-text">Shopibot</span>
-            </div>
-            <p className="brand-tagline">
-              Transform your Shopify store with AI-powered shopping assistance
+    <footer className="bg-background py-12 border-t">
+      <div className="container mx-auto px-4 md:px-6">
+        <div className="flex flex-col items-center space-y-8">
+          {/* Logo */}
+          <div className="rounded-full bg-primary/10 p-8">
+            <Icons.logo className="w-8 h-8" />
+          </div>
+
+          {/* Links - Single Line */}
+          <div className="flex flex-wrap justify-center gap-6 md:gap-8">
+            {/* Left Links (Product) */}
+            {leftLinks && leftLinks.length > 0 && leftLinks.map((link, index) => (
+              <a 
+                key={`left-${index}`}
+                href={link.href} 
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
+
+            {/* Separator */}
+            {leftLinks && leftLinks.length > 0 && rightLinks && rightLinks.length > 0 && (
+              <span className="text-muted-foreground">•</span>
+            )}
+
+            {/* Right Links (Legal) */}
+            {rightLinks && rightLinks.length > 0 && rightLinks.map((link, index) => (
+              <a 
+                key={`right-${index}`}
+                href={link.href} 
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+
+          {/* Copyright */}
+          <div className="text-center pt-8 border-t w-full">
+            <p className="text-sm text-muted-foreground">
+              {copyrightText}
             </p>
           </div>
-
-          <div className="footer-links-container">
-            {leftLinks.length > 0 && (
-              <div className="footer-links-section">
-                <h4 className="links-title">Product</h4>
-                <ul className="links-list">
-                  {leftLinks.map((link, index) => (
-                    <li key={index}>
-                      <a href={link.href} className="footer-link">
-                        {link.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {rightLinks.length > 0 && (
-              <div className="footer-links-section">
-                <h4 className="links-title">Legal</h4>
-                <ul className="links-list">
-                  {rightLinks.map((link, index) => (
-                    <li key={index}>
-                      <a href={link.href} className="footer-link">
-                        {link.label}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="footer-bottom">
-          <p className="copyright">
-            {copyrightText || '© 2025 Shopibot. All rights reserved.'}
-          </p>
         </div>
       </div>
-
     </footer>
-  );
+  )
 }
+
+export { Footer }

@@ -1,6 +1,6 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { useLoaderData, Link } from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
 import {
   Page,
   Layout,
@@ -21,10 +21,8 @@ import { checkBillingStatus } from "../lib/billing.server";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { billing } = await authenticate.admin(request);
 
-  // Check billing status
   const billingStatus = await checkBillingStatus(billing);
 
-  // In a real app, you'd fetch analytics data from your database
   const stats = {
     totalConversations: 127,
     activeToday: 23,
@@ -47,19 +45,15 @@ export default function Index() {
 
   return (
     <Page
-      title="AI Sales Assistant Dashboard"
-      subtitle="Monitor your AI assistant's performance and customer interactions"
-      primaryAction={{
-        content: "Configure Settings",
-        url: "/app/settings"
-      }}
+      title="Dashboard"
+      subtitle="Welcome to your AI Sales Assistant"
     >
       <Layout>
         {/* Billing Status Banner */}
         {!billingStatus.hasActivePayment && (
           <Layout.Section>
             <Banner
-              title="Choose a plan to unlock all features"
+              title="🚀 Unlock Full Potential"
               tone="warning"
               action={{
                 content: "View Plans",
@@ -67,8 +61,8 @@ export default function Index() {
               }}
             >
               <p>
-                You're currently using the app without a subscription. Subscribe to a plan to unlock
-                full functionality including unlimited conversations, advanced analytics, and priority support.
+                You're currently on the free tier. Upgrade to unlock unlimited conversations, 
+                advanced analytics, N8N integration, and 24/7 priority support.
               </p>
             </Banner>
           </Layout.Section>
@@ -77,7 +71,7 @@ export default function Index() {
         {billingStatus.hasActivePayment && billingStatus.activePlan && (
           <Layout.Section>
             <Banner
-              title={`${billingStatus.activePlan} Active`}
+              title={`✓ ${billingStatus.activePlan} Active`}
               tone="success"
               action={{
                 content: "Manage Billing",
@@ -85,7 +79,7 @@ export default function Index() {
               }}
             >
               <p>
-                Your subscription is active and all features are unlocked.
+                Your subscription is active and all premium features are unlocked.
                 {billingStatus.appSubscriptions[0]?.test && (
                   <> (Test mode - you won't be charged)</>
                 )}
@@ -94,202 +88,427 @@ export default function Index() {
           </Layout.Section>
         )}
 
+        {/* Key Metrics Section */}
         <Layout.Section>
-          <InlineStack gap="400">
-            <Card>
-              <BlockStack gap="200">
-                <Text variant="headingMd" as="h3">
-                  Total Conversations
-                </Text>
-                <Text variant="heading2xl" as="p">
-                  {stats.totalConversations}
-                </Text>
-                <Text variant="bodySm" as="p" tone="subdued">
-                  All time
-                </Text>
-              </BlockStack>
-            </Card>
+          <BlockStack gap="400">
+            <Text as="h2" variant="headingLg">
+              Performance Overview
+            </Text>
+            
+            <InlineStack gap="400" wrap={false}>
+              <Box width="25%">
+                <Card>
+                  <BlockStack gap="300">
+                    <InlineStack align="space-between" blockAlign="start">
+                      <Text variant="bodyMd" as="p" tone="subdued">
+                        Total Conversations
+                      </Text>
+                      <Badge tone="info">All time</Badge>
+                    </InlineStack>
+                    <Text variant="heading2xl" as="p" fontWeight="bold">
+                      {stats.totalConversations.toLocaleString()}
+                    </Text>
+                    <Box>
+                      <Text variant="bodySm" as="p" tone="success">
+                        ↑ 12% from last month
+                      </Text>
+                    </Box>
+                  </BlockStack>
+                </Card>
+              </Box>
 
-            <Card>
-              <BlockStack gap="200">
-                <Text variant="headingMd" as="h3">
-                  Active Today
-                </Text>
-                <Text variant="heading2xl" as="p">
-                  {stats.activeToday}
-                </Text>
-                <Text variant="bodySm" as="p" tone="subdued">
-                  Conversations started
-                </Text>
-              </BlockStack>
-            </Card>
+              <Box width="25%">
+                <Card>
+                  <BlockStack gap="300">
+                    <InlineStack align="space-between" blockAlign="start">
+                      <Text variant="bodyMd" as="p" tone="subdued">
+                        Active Today
+                      </Text>
+                      <Badge tone="success">Live</Badge>
+                    </InlineStack>
+                    <Text variant="heading2xl" as="p" fontWeight="bold">
+                      {stats.activeToday}
+                    </Text>
+                    <Box>
+                      <Text variant="bodySm" as="p" tone="subdued">
+                        Conversations started
+                      </Text>
+                    </Box>
+                  </BlockStack>
+                </Card>
+              </Box>
 
-            <Card>
-              <BlockStack gap="200">
-                <Text variant="headingMd" as="h3">
-                  Avg Response Time
-                </Text>
-                <Text variant="heading2xl" as="p">
-                  {stats.avgResponseTime}
-                </Text>
-                <Text variant="bodySm" as="p" tone="subdued">
-                  AI processing speed
-                </Text>
-              </BlockStack>
-            </Card>
+              <Box width="25%">
+                <Card>
+                  <BlockStack gap="300">
+                    <InlineStack align="space-between" blockAlign="start">
+                      <Text variant="bodyMd" as="p" tone="subdued">
+                        Response Time
+                      </Text>
+                      <Badge tone="attention">Avg</Badge>
+                    </InlineStack>
+                    <Text variant="heading2xl" as="p" fontWeight="bold">
+                      {stats.avgResponseTime}
+                    </Text>
+                    <Box>
+                      <Text variant="bodySm" as="p" tone="subdued">
+                        AI processing speed
+                      </Text>
+                    </Box>
+                  </BlockStack>
+                </Card>
+              </Box>
 
-            <Card>
-              <BlockStack gap="200">
-                <Text variant="headingMd" as="h3">
-                  Satisfaction
-                </Text>
-                <InlineStack gap="200" align="center">
-                  <Text variant="heading2xl" as="p">
-                    {stats.customerSatisfaction}
-                  </Text>
-                  <Badge tone="success">Excellent</Badge>
-                </InlineStack>
-                <Text variant="bodySm" as="p" tone="subdued">
-                  Out of 5 stars
-                </Text>
-              </BlockStack>
-            </Card>
-          </InlineStack>
+              <Box width="25%">
+                <Card>
+                  <BlockStack gap="300">
+                    <InlineStack align="space-between" blockAlign="start">
+                      <Text variant="bodyMd" as="p" tone="subdued">
+                        Satisfaction Score
+                      </Text>
+                      <Badge tone="success">⭐ Excellent</Badge>
+                    </InlineStack>
+                    <InlineStack gap="200" blockAlign="center">
+                      <Text variant="heading2xl" as="p" fontWeight="bold">
+                        {stats.customerSatisfaction}
+                      </Text>
+                      <Text variant="bodyMd" as="p" tone="subdued">
+                        / 5.0
+                      </Text>
+                    </InlineStack>
+                    <Box>
+                      <Text variant="bodySm" as="p" tone="subdued">
+                        Based on customer feedback
+                      </Text>
+                    </Box>
+                  </BlockStack>
+                </Card>
+              </Box>
+            </InlineStack>
+          </BlockStack>
         </Layout.Section>
 
+        {/* Main Content Grid */}
         <Layout.Section>
           <InlineStack gap="400" align="start">
-            <Card>
-              <BlockStack gap="400">
-                <Text variant="headingMd" as="h3">
-                  Widget Status
-                </Text>
-                
-                <BlockStack gap="300">
-                  <InlineStack gap="200" align="space-between">
-                    <Text variant="bodyMd" as="p">
-                      AI Assistant
+            {/* Widget Status Card */}
+            <Box width="50%">
+              <Card>
+                <BlockStack gap="500">
+                  <BlockStack gap="200">
+                    <Text variant="headingLg" as="h3" fontWeight="bold">
+                      System Status
                     </Text>
-                    <Badge tone="success">Active</Badge>
-                  </InlineStack>
-                  
-                  <InlineStack gap="200" align="space-between">
-                    <Text variant="bodyMd" as="p">
-                      Theme Integration
+                    <Text variant="bodyMd" as="p" tone="subdued">
+                      Monitor your AI assistant components
                     </Text>
-                    <Badge tone="success">Enabled</Badge>
-                  </InlineStack>
-                  
-                  <InlineStack gap="200" align="space-between">
-                    <Text variant="bodyMd" as="p">
-                      N8N Connection
-                    </Text>
-                    <Badge tone="warning">Fallback Mode</Badge>
-                  </InlineStack>
-                </BlockStack>
+                  </BlockStack>
 
-                <Divider />
-
-                <Button variant="primary" url="/app/settings">
-                  Configure Widget
-                </Button>
-              </BlockStack>
-            </Card>
-
-            <Card>
-              <BlockStack gap="400">
-                <Text variant="headingMd" as="h3">
-                  Top Customer Questions
-                </Text>
-                
-                <BlockStack gap="300">
-                  {stats.topQuestions.map((question, index) => (
-                    <Box key={index}>
-                      <InlineStack gap="200" align="space-between">
-                        <Text variant="bodyMd" as="p">
-                          {question}
-                        </Text>
-                        <Text variant="bodySm" as="p" tone="subdued">
-                          {Math.floor(Math.random() * 20) + 5} times
-                        </Text>
+                  <BlockStack gap="400">
+                    {/* AI Assistant Status */}
+                    <Box>
+                      <InlineStack align="space-between" blockAlign="center">
+                        <BlockStack gap="100">
+                          <Text variant="bodyMd" as="p" fontWeight="semibold">
+                            AI Assistant
+                          </Text>
+                          <Text variant="bodySm" as="p" tone="subdued">
+                            Core chatbot engine
+                          </Text>
+                        </BlockStack>
+                        <Badge tone="success" size="medium">● Active</Badge>
                       </InlineStack>
                     </Box>
-                  ))}
+
+                    <Divider />
+
+                    {/* Theme Integration */}
+                    <Box>
+                      <InlineStack align="space-between" blockAlign="center">
+                        <BlockStack gap="100">
+                          <Text variant="bodyMd" as="p" fontWeight="semibold">
+                            Theme Integration
+                          </Text>
+                          <Text variant="bodySm" as="p" tone="subdued">
+                            Widget embedded in storefront
+                          </Text>
+                        </BlockStack>
+                        <Badge tone="success" size="medium">● Enabled</Badge>
+                      </InlineStack>
+                    </Box>
+
+                    <Divider />
+
+                    {/* N8N Connection */}
+                    <Box>
+                      <InlineStack align="space-between" blockAlign="center">
+                        <BlockStack gap="100">
+                          <Text variant="bodyMd" as="p" fontWeight="semibold">
+                            N8N Webhook
+                          </Text>
+                          <Text variant="bodySm" as="p" tone="subdued">
+                            Advanced workflow automation
+                          </Text>
+                        </BlockStack>
+                        <Badge tone="warning" size="medium">○ Fallback</Badge>
+                      </InlineStack>
+                    </Box>
+
+                    <Divider />
+
+                    {/* Analytics Tracking */}
+                    <Box>
+                      <InlineStack align="space-between" blockAlign="center">
+                        <BlockStack gap="100">
+                          <Text variant="bodyMd" as="p" fontWeight="semibold">
+                            Analytics Tracking
+                          </Text>
+                          <Text variant="bodySm" as="p" tone="subdued">
+                            Data collection & insights
+                          </Text>
+                        </BlockStack>
+                        <Badge tone="success" size="medium">● Running</Badge>
+                      </InlineStack>
+                    </Box>
+                  </BlockStack>
+
+                  <Box paddingBlockStart="200">
+                    <Button variant="primary" size="large" fullWidth url="/app/settings">
+                      Configure Settings
+                    </Button>
+                  </Box>
                 </BlockStack>
+              </Card>
+            </Box>
 
-                <Divider />
+            {/* Top Questions Card */}
+            <Box width="50%">
+              <Card>
+                <BlockStack gap="500">
+                  <BlockStack gap="200">
+                    <InlineStack align="space-between" blockAlign="start">
+                      <BlockStack gap="100">
+                        <Text variant="headingLg" as="h3" fontWeight="bold">
+                          Top Customer Questions
+                        </Text>
+                        <Text variant="bodyMd" as="p" tone="subdued">
+                          Most asked questions this week
+                        </Text>
+                      </BlockStack>
+                      <Badge>Last 7 days</Badge>
+                    </InlineStack>
+                  </BlockStack>
 
-                <Button url="/app/sales-assistant">
-                  View Chat Interface
-                </Button>
-              </BlockStack>
-            </Card>
+                  <BlockStack gap="300">
+                    {stats.topQuestions.map((question, index) => {
+                                          const count = Math.floor(Math.random() * 20) + 5;
+                                          const maxCount = 25;
+                                          const percentage = (count / maxCount) * 100;
+                                          
+                                          return (
+                                            <Box key={index}>
+                                              <BlockStack gap="200">
+                                                <InlineStack align="space-between" blockAlign="center">
+                                                  <Text variant="bodyMd" as="p">
+                                                    {index + 1}. {question}
+                                                  </Text>
+                                                  <Badge tone="info">{`${count}x`}</Badge>
+                                                </InlineStack>
+                                                <ProgressBar progress={percentage} size="small" tone="primary" />
+                                              </BlockStack>
+                                            </Box>
+                                          );
+                                        })}
+                  </BlockStack>
+
+                  <Box paddingBlockStart="200">
+                    <Button size="large" fullWidth url="/app/sales-assistant">
+                      View Full Analytics
+                    </Button>
+                  </Box>
+                </BlockStack>
+              </Card>
+            </Box>
           </InlineStack>
         </Layout.Section>
 
+        {/* Setup Progress Card */}
         <Layout.Section>
           <Card>
-            <BlockStack gap="400">
-              <Text variant="headingMd" as="h3">
-                Quick Setup Guide
-              </Text>
-              
-              <BlockStack gap="300">
-                <Box>
-                  <InlineStack gap="200" align="start">
-                    <Badge tone="success">✓</Badge>
-                    <BlockStack gap="100">
-                      <Text variant="bodyMd" as="p">
-                        App installed and configured
-                      </Text>
-                      <Text variant="bodySm" as="p" tone="subdued">
-                        Your AI Sales Assistant app is ready to use
-                      </Text>
-                    </BlockStack>
-                  </InlineStack>
-                </Box>
+            <BlockStack gap="500">
+              <BlockStack gap="200">
+                <InlineStack align="space-between" blockAlign="center">
+                  <Text variant="headingLg" as="h3" fontWeight="bold">
+                    Setup Progress
+                  </Text>
+                  <Badge tone="success">3 of 4 completed</Badge>
+                </InlineStack>
+                <Text variant="bodyMd" as="p" tone="subdued">
+                  Complete these steps to get the most out of your AI assistant
+                </Text>
+              </BlockStack>
 
-                <Box>
-                  <InlineStack gap="200" align="start">
-                    <Badge tone="success">✓</Badge>
-                    <BlockStack gap="100">
-                      <Text variant="bodyMd" as="p">
-                        Widget added to theme
-                      </Text>
-                      <Text variant="bodySm" as="p" tone="subdued">
-                        The chat widget appears on your storefront
-                      </Text>
-                    </BlockStack>
-                  </InlineStack>
-                </Box>
+              <Box paddingBlockStart="200" paddingBlockEnd="200">
+                <ProgressBar progress={75} size="medium" tone="success" />
+              </Box>
 
-                <Box>
-                  <InlineStack gap="200" align="start">
-                    <Badge tone="attention">⚠</Badge>
-                    <BlockStack gap="100">
-                      <Text variant="bodyMd" as="p">
-                        Connect N8N workflow (Optional)
+              <BlockStack gap="400">
+                {/* Step 1 - Completed */}
+                <Card background="bg-surface-secondary">
+                  <InlineStack gap="400" align="start" blockAlign="center">
+                    <Box>
+                      <Badge tone="success" size="large">✓</Badge>
+                    </Box>
+                    <BlockStack gap="200">
+                      <Text variant="bodyLg" as="p" fontWeight="semibold">
+                        App Installed & Configured
                       </Text>
-                      <Text variant="bodySm" as="p" tone="subdued">
-                        For advanced AI processing and integrations
+                      <Text variant="bodyMd" as="p" tone="subdued">
+                        Your AI Sales Assistant is ready to use with default settings
                       </Text>
                     </BlockStack>
                   </InlineStack>
-                </Box>
+                </Card>
+
+                {/* Step 2 - Completed */}
+                <Card background="bg-surface-secondary">
+                  <InlineStack gap="400" align="start" blockAlign="center">
+                    <Box>
+                      <Badge tone="success" size="large">✓</Badge>
+                    </Box>
+                    <BlockStack gap="200">
+                      <Text variant="bodyLg" as="p" fontWeight="semibold">
+                        Widget Added to Theme
+                      </Text>
+                      <Text variant="bodyMd" as="p" tone="subdued">
+                        The chat widget is live and visible on your storefront
+                      </Text>
+                    </BlockStack>
+                  </InlineStack>
+                </Card>
+
+                {/* Step 3 - Completed */}
+                <Card background="bg-surface-secondary">
+                  <InlineStack gap="400" align="start" blockAlign="center">
+                    <Box>
+                      <Badge tone="success" size="large">✓</Badge>
+                    </Box>
+                    <BlockStack gap="200">
+                      <Text variant="bodyLg" as="p" fontWeight="semibold">
+                        Analytics Enabled
+                      </Text>
+                      <Text variant="bodyMd" as="p" tone="subdued">
+                        Tracking customer interactions and generating insights
+                      </Text>
+                    </BlockStack>
+                  </InlineStack>
+                </Card>
+
+                {/* Step 4 - Optional */}
+                <Card>
+                  <InlineStack gap="400" align="start" blockAlign="center">
+                    <Box>
+                      <Badge tone="attention" size="large">○</Badge>
+                    </Box>
+                    <Box width="100%">
+                      <InlineStack align="space-between" blockAlign="center">
+                        <BlockStack gap="200">
+                          <InlineStack gap="200" blockAlign="center">
+                            <Text variant="bodyLg" as="p" fontWeight="semibold">
+                              Connect N8N Workflow
+                            </Text>
+                            <Badge tone="info">Optional</Badge>
+                          </InlineStack>
+                          <Text variant="bodyMd" as="p" tone="subdued">
+                            Enable advanced AI processing, custom workflows, and third-party integrations
+                          </Text>
+                        </BlockStack>
+                        <Button url="/app/settings">
+                          Connect Now
+                        </Button>
+                      </InlineStack>
+                    </Box>
+                  </InlineStack>
+                </Card>
               </BlockStack>
 
               <Divider />
 
-              <InlineStack gap="200">
+              <InlineStack gap="300">
                 <Button variant="primary" url="/app/settings">
                   Customize Widget
                 </Button>
-                <Button url="https://sanluna-ihearai.myshopify.com" external>
-                  View Store
+                <Button url="/app/sales-assistant">
+                  Test Chat Interface
                 </Button>
               </InlineStack>
             </BlockStack>
           </Card>
+        </Layout.Section>
+
+        {/* Quick Actions */}
+        <Layout.Section>
+          <BlockStack gap="400">
+            <Text as="h2" variant="headingLg">
+              Quick Actions
+            </Text>
+            
+            <InlineStack gap="400" wrap={false}>
+              <Box width="33.33%">
+                <Card>
+                  <BlockStack gap="300">
+                    <Text variant="headingMd" as="h3" fontWeight="semibold">
+                      📊 View Analytics
+                    </Text>
+                    <Text variant="bodyMd" as="p" tone="subdued">
+                      Dive deep into conversation insights, customer behavior, and AI performance metrics
+                    </Text>
+                    <Box paddingBlockStart="200">
+                      <Button fullWidth url="/app/sales-assistant">
+                        Open Analytics
+                      </Button>
+                    </Box>
+                  </BlockStack>
+                </Card>
+              </Box>
+
+              <Box width="33.33%">
+                <Card>
+                  <BlockStack gap="300">
+                    <Text variant="headingMd" as="h3" fontWeight="semibold">
+                      ⚙️ Widget Settings
+                    </Text>
+                    <Text variant="bodyMd" as="p" tone="subdued">
+                      Customize appearance, behavior, and configure N8N webhook integration
+                    </Text>
+                    <Box paddingBlockStart="200">
+                      <Button fullWidth url="/app/settings">
+                        Configure
+                      </Button>
+                    </Box>
+                  </BlockStack>
+                </Card>
+              </Box>
+
+              <Box width="33.33%">
+                <Card>
+                  <BlockStack gap="300">
+                    <Text variant="headingMd" as="h3" fontWeight="semibold">
+                      💎 Upgrade Plan
+                    </Text>
+                    <Text variant="bodyMd" as="p" tone="subdued">
+                      Unlock unlimited conversations, advanced features, and priority support
+                    </Text>
+                    <Box paddingBlockStart="200">
+                      <Button fullWidth tone="success" url="/app/billing">
+                        View Plans
+                      </Button>
+                    </Box>
+                  </BlockStack>
+                </Card>
+              </Box>
+            </InlineStack>
+          </BlockStack>
         </Layout.Section>
       </Layout>
     </Page>

@@ -2,7 +2,7 @@ export function Pricing() {
   const plans = [
     {
       name: 'Starter',
-      price: '$29',
+      price: '$25',
       period: '/month',
       description: 'Perfect for small stores getting started',
       features: [

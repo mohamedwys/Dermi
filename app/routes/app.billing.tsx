@@ -21,10 +21,9 @@ import { authenticate } from "../shopify.server";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { billing, session } = await authenticate.admin(request);
 
-  // Check if shop has an active subscription
   const { hasActivePayment, appSubscriptions } = await billing.check({
     plans: ["Starter Plan", "Professional Plan"],
-    isTest: process.env.NODE_ENV !== "production", // Test mode in development
+    isTest: process.env.NODE_ENV !== "production",
   });
 
   return json({
@@ -45,18 +44,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return json({ error: "Invalid plan selected" }, { status: 400 });
   }
 
-  // Request billing with the selected plan
   const billingCheck = await billing.require({
     plans: [plan],
     isTest: process.env.NODE_ENV !== "production",
     onFailure: async () => {
-      // Billing check failed - redirect to billing page
       return redirect("/app/billing");
     },
   });
 
-  // If we get here, billing was confirmed or subscription was created
-  // Redirect to dashboard
   return redirect("/app");
 };
 
@@ -74,18 +69,34 @@ export default function BillingPage() {
   };
 
   return (
-    <Page
-      title="Choose Your Plan"
-      subtitle={`Select the perfect plan for ${shop}`}
-    >
+    <Page title="Pricing Plans">
       <Layout>
+        {/* Hero Section */}
+        <Layout.Section>
+          <Box paddingBlockEnd="600">
+            <BlockStack gap="300" align="center">
+              <Text as="h1" variant="heading2xl" alignment="center">
+                Choose the Perfect Plan for Your Store
+              </Text>
+              <Text as="p" variant="bodyLg" alignment="center" tone="subdued">
+                Unlock the power of AI-driven conversations. Start with a 7-day free trial.
+              </Text>
+            </BlockStack>
+          </Box>
+        </Layout.Section>
+
+        {/* Status Banners */}
         {isTestMode && (
           <Layout.Section>
             <Banner tone="info">
-              <p>
-                <strong>Test Mode Active:</strong> You won't be charged during development.
-                Billing will be activated in production.
-              </p>
+              <BlockStack gap="200">
+                <Text as="p" variant="bodyMd" fontWeight="semibold">
+                  Test Mode Active
+                </Text>
+                <Text as="p" variant="bodyMd">
+                  You won't be charged during development. Billing will be activated in production.
+                </Text>
+              </BlockStack>
             </Banner>
           </Layout.Section>
         )}
@@ -93,12 +104,16 @@ export default function BillingPage() {
         {hasActivePayment && activePlan && (
           <Layout.Section>
             <Banner tone="success">
-              <p>
-                You're currently subscribed to <strong>{activePlan.name}</strong>.
+              <BlockStack gap="200">
+                <Text as="p" variant="bodyMd">
+                  <strong>Active Subscription:</strong> {activePlan.name}
+                </Text>
                 {activePlan.trialDays && activePlan.trialDays > 0 && (
-                  <> You have {activePlan.trialDays} days remaining in your trial.</>
+                  <Text as="p" variant="bodyMd">
+                    🎉 {activePlan.trialDays} days remaining in your free trial
+                  </Text>
                 )}
-              </p>
+              </BlockStack>
             </Banner>
           </Layout.Section>
         )}
@@ -106,124 +121,184 @@ export default function BillingPage() {
         {actionData?.error && (
           <Layout.Section>
             <Banner tone="critical">
-              <p>{actionData.error}</p>
+              <Text as="p" variant="bodyMd">{actionData.error}</Text>
             </Banner>
           </Layout.Section>
         )}
 
+        {/* Pricing Cards */}
         <Layout.Section>
-          <InlineStack gap="400" align="center">
-            {/* Starter Plan Card */}
-            <Box width="50%">
+          <InlineStack gap="400" wrap={false}>
+            {/* Starter Plan */}
+            <Box width="50%" minWidth="400px">
               <Card>
-                <BlockStack gap="400">
+                <BlockStack gap="500">
+                  {/* Header */}
                   <BlockStack gap="200">
-                    <Text as="h2" variant="headingLg">
-                      Starter Plan
-                    </Text>
+                    <InlineStack align="space-between" blockAlign="start">
+                      <Text as="h2" variant="headingLg" fontWeight="bold">
+                        Starter
+                      </Text>
+                      <Badge tone="attention">Most Popular</Badge>
+                    </InlineStack>
                     <Text as="p" variant="bodyMd" tone="subdued">
                       Perfect for small stores getting started
                     </Text>
                   </BlockStack>
 
-                  <Divider />
-
-                  <BlockStack gap="200">
-                    <InlineStack align="space-between" blockAlign="center">
-                      <Text as="h3" variant="heading2xl">
+                  {/* Pricing */}
+                  <BlockStack gap="100">
+                    <InlineStack gap="100" blockAlign="end">
+                      <Text as="h3" variant="heading3xl" fontWeight="bold">
                         $25
                       </Text>
-                      <Text as="p" variant="bodyMd" tone="subdued">
-                        / month
+                      <Text as="span" variant="bodyLg" tone="subdued">
+                        /month
                       </Text>
                     </InlineStack>
-                    <Badge tone="info">7-day free trial</Badge>
+                    <Badge tone="info">7-day free trial included</Badge>
                   </BlockStack>
 
                   <Divider />
 
-                  <BlockStack gap="300">
-                    <Text as="p" variant="headingSm">
+                  {/* Features */}
+                  <BlockStack gap="400">
+                    <Text as="p" variant="headingSm" fontWeight="semibold">
                       What's included:
                     </Text>
-                    <List type="bullet">
-                      <List.Item>Up to 1,000 conversations/month</List.Item>
-                      <List.Item>AI-powered product recommendations</List.Item>
-                      <List.Item>Basic analytics dashboard</List.Item>
-                      <List.Item>Email support</List.Item>
-                      <List.Item>Widget customization</List.Item>
+                    <List type="bullet" gap="tight">
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          Up to 1,000 conversations/month
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          AI-powered product recommendations
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          Basic analytics dashboard
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          Email support
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          Widget customization
+                        </Text>
+                      </List.Item>
                     </List>
                   </BlockStack>
 
+                  {/* CTA Button */}
                   <Button
                     variant="primary"
+                    size="large"
+                    fullWidth
                     onClick={() => handleSubscribe("Starter Plan")}
                     disabled={hasActivePayment && activePlan?.name === "Starter Plan"}
                   >
                     {hasActivePayment && activePlan?.name === "Starter Plan"
-                      ? "Current Plan"
-                      : "Subscribe to Starter"}
+                      ? "✓ Current Plan"
+                      : "Start Free Trial"}
                   </Button>
                 </BlockStack>
               </Card>
             </Box>
 
-            {/* Professional Plan Card */}
-            <Box width="50%">
-              <Card>
-                <BlockStack gap="400">
+            {/* Professional Plan */}
+            <Box width="50%" minWidth="400px">
+              <Card background="bg-surface-selected">
+                <BlockStack gap="500">
+                  {/* Header */}
                   <BlockStack gap="200">
-                    <InlineStack gap="200" align="space-between">
-                      <Text as="h2" variant="headingLg">
-                        Professional Plan
+                    <InlineStack align="space-between" blockAlign="start">
+                      <Text as="h2" variant="headingLg" fontWeight="bold">
+                        Professional
                       </Text>
-                      <Badge tone="success">Popular</Badge>
+                      <Badge tone="success">Best Value</Badge>
                     </InlineStack>
                     <Text as="p" variant="bodyMd" tone="subdued">
-                      For growing businesses that need more
+                      For growing businesses that need more power
                     </Text>
                   </BlockStack>
 
-                  <Divider />
-
-                  <BlockStack gap="200">
-                    <InlineStack align="space-between" blockAlign="center">
-                      <Text as="h3" variant="heading2xl">
+                  {/* Pricing */}
+                  <BlockStack gap="100">
+                    <InlineStack gap="100" blockAlign="end">
+                      <Text as="h3" variant="heading3xl" fontWeight="bold">
                         $79
                       </Text>
-                      <Text as="p" variant="bodyMd" tone="subdued">
-                        / month
+                      <Text as="span" variant="bodyLg" tone="subdued">
+                        /month
                       </Text>
                     </InlineStack>
-                    <Badge tone="info">7-day free trial</Badge>
+                    <Badge tone="info">7-day free trial included</Badge>
                   </BlockStack>
 
                   <Divider />
 
-                  <BlockStack gap="300">
-                    <Text as="p" variant="headingSm">
+                  {/* Features */}
+                  <BlockStack gap="400">
+                    <Text as="p" variant="headingSm" fontWeight="semibold">
                       Everything in Starter, plus:
                     </Text>
-                    <List type="bullet">
-                      <List.Item><strong>Unlimited conversations</strong></List.Item>
-                      <List.Item>Advanced analytics & insights</List.Item>
-                      <List.Item>Custom N8N webhook integration</List.Item>
-                      <List.Item>Priority support (24/7)</List.Item>
-                      <List.Item>Sentiment analysis & intent tracking</List.Item>
-                      <List.Item>User profiling & personalization</List.Item>
-                      <List.Item>Product click tracking</List.Item>
+                    <List type="bullet" gap="tight">
+                      <List.Item>
+                        <Text as="span" variant="bodyMd" fontWeight="semibold">
+                          Unlimited conversations
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          Advanced analytics & insights
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          Custom N8N webhook integration
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          Priority support (24/7)
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          Sentiment analysis & intent tracking
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          User profiling & personalization
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          Product click tracking
+                        </Text>
+                      </List.Item>
                     </List>
                   </BlockStack>
 
+                  {/* CTA Button */}
                   <Button
                     variant="primary"
                     tone="success"
+                    size="large"
+                    fullWidth
                     onClick={() => handleSubscribe("Professional Plan")}
                     disabled={hasActivePayment && activePlan?.name === "Professional Plan"}
                   >
                     {hasActivePayment && activePlan?.name === "Professional Plan"
-                      ? "Current Plan"
-                      : "Subscribe to Professional"}
+                      ? "✓ Current Plan"
+                      : "Start Free Trial"}
                   </Button>
                 </BlockStack>
               </Card>
@@ -231,41 +306,163 @@ export default function BillingPage() {
           </InlineStack>
         </Layout.Section>
 
+        {/* Comparison Table */}
         <Layout.Section>
           <Card>
             <BlockStack gap="400">
-              <Text as="h3" variant="headingMd">
+              <Text as="h3" variant="headingLg" alignment="center">
+                Compare Plans
+              </Text>
+              <Divider />
+              <BlockStack gap="300">
+                <InlineStack align="space-between">
+                  <Text as="p" variant="bodyMd" tone="subdued">
+                    Monthly conversations
+                  </Text>
+                  <InlineStack gap="800">
+                    <Text as="span" variant="bodyMd">1,000</Text>
+                    <Text as="span" variant="bodyMd" fontWeight="semibold">Unlimited</Text>
+                  </InlineStack>
+                </InlineStack>
+                <Divider />
+                <InlineStack align="space-between">
+                  <Text as="p" variant="bodyMd" tone="subdued">
+                    AI recommendations
+                  </Text>
+                  <InlineStack gap="800">
+                    <Text as="span" variant="bodyMd">✓</Text>
+                    <Text as="span" variant="bodyMd">✓</Text>
+                  </InlineStack>
+                </InlineStack>
+                <Divider />
+                <InlineStack align="space-between">
+                  <Text as="p" variant="bodyMd" tone="subdued">
+                    Analytics dashboard
+                  </Text>
+                  <InlineStack gap="800">
+                    <Text as="span" variant="bodyMd">Basic</Text>
+                    <Text as="span" variant="bodyMd" fontWeight="semibold">Advanced</Text>
+                  </InlineStack>
+                </InlineStack>
+                <Divider />
+                <InlineStack align="space-between">
+                  <Text as="p" variant="bodyMd" tone="subdued">
+                    N8N webhook integration
+                  </Text>
+                  <InlineStack gap="800">
+                    <Text as="span" variant="bodyMd">–</Text>
+                    <Text as="span" variant="bodyMd">✓</Text>
+                  </InlineStack>
+                </InlineStack>
+                <Divider />
+                <InlineStack align="space-between">
+                  <Text as="p" variant="bodyMd" tone="subdued">
+                    Support
+                  </Text>
+                  <InlineStack gap="800">
+                    <Text as="span" variant="bodyMd">Email</Text>
+                    <Text as="span" variant="bodyMd" fontWeight="semibold">24/7 Priority</Text>
+                  </InlineStack>
+                </InlineStack>
+              </BlockStack>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+
+        {/* FAQ Section */}
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="500">
+              <Text as="h3" variant="headingLg" alignment="center">
                 Frequently Asked Questions
               </Text>
 
-              <BlockStack gap="300">
-                <BlockStack gap="100">
-                  <Text as="p" variant="bodyMd" fontWeight="semibold">
+              <BlockStack gap="400">
+                <BlockStack gap="200">
+                  <Text as="p" variant="bodyLg" fontWeight="semibold">
                     Can I change plans later?
                   </Text>
                   <Text as="p" variant="bodyMd" tone="subdued">
-                    Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately.
+                    Absolutely! You can upgrade or downgrade your plan at any time from your dashboard. 
+                    Changes take effect immediately, and we'll prorate any differences.
                   </Text>
                 </BlockStack>
 
-                <BlockStack gap="100">
-                  <Text as="p" variant="bodyMd" fontWeight="semibold">
+                <Divider />
+
+                <BlockStack gap="200">
+                  <Text as="p" variant="bodyLg" fontWeight="semibold">
                     What happens after the 7-day trial?
                   </Text>
                   <Text as="p" variant="bodyMd" tone="subdued">
-                    After your trial ends, you'll be charged monthly. You can cancel anytime during or after the trial period.
+                    After your trial ends, you'll be charged monthly based on your selected plan. 
+                    You can cancel anytime during or after the trial period with no penalties.
                   </Text>
                 </BlockStack>
 
-                <BlockStack gap="100">
-                  <Text as="p" variant="bodyMd" fontWeight="semibold">
+                <Divider />
+
+                <BlockStack gap="200">
+                  <Text as="p" variant="bodyLg" fontWeight="semibold">
                     Do you offer refunds?
                   </Text>
                   <Text as="p" variant="bodyMd" tone="subdued">
-                    Yes, we offer a 30-day money-back guarantee. If you're not satisfied, contact support for a full refund.
+                    Yes! We offer a 30-day money-back guarantee. If you're not completely satisfied 
+                    with our service, contact our support team for a full refund—no questions asked.
+                  </Text>
+                </BlockStack>
+
+                <Divider />
+
+                <BlockStack gap="200">
+                  <Text as="p" variant="bodyLg" fontWeight="semibold">
+                    What counts as a conversation?
+                  </Text>
+                  <Text as="p" variant="bodyMd" tone="subdued">
+                    A conversation is a complete interaction session with a customer, regardless of the 
+                    number of messages exchanged. Sessions timeout after 30 minutes of inactivity.
                   </Text>
                 </BlockStack>
               </BlockStack>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+
+        {/* Trust Section */}
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="400" align="center">
+              <Text as="p" variant="bodyLg" alignment="center" tone="subdued">
+                Trusted by over 1,000+ Shopify stores worldwide
+              </Text>
+              <InlineStack gap="600" align="center">
+                <BlockStack gap="100" align="center">
+                  <Text as="p" variant="heading2xl" fontWeight="bold">
+                    98%
+                  </Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    Customer Satisfaction
+                  </Text>
+                </BlockStack>
+                <Divider />
+                <BlockStack gap="100" align="center">
+                  <Text as="p" variant="heading2xl" fontWeight="bold">
+                    24/7
+                  </Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    Priority Support
+                  </Text>
+                </BlockStack>
+                <Divider />
+                <BlockStack gap="100" align="center">
+                  <Text as="p" variant="heading2xl" fontWeight="bold">
+                    30-Day
+                  </Text>
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    Money-Back Guarantee
+                  </Text>
+                </BlockStack>
+              </InlineStack>
             </BlockStack>
           </Card>
         </Layout.Section>
