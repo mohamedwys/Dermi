@@ -370,10 +370,15 @@ export default function SettingsPage() {
                   ]}
                   onChange={(value) => {
                     if (value === "default") {
+                      // Clear webhook URL to use developer default workflow
                       setSettings((prev: any) => ({ ...prev, webhookUrl: "" }));
                     } else {
-                      // Set to empty string so user can type immediately
-                      setSettings((prev: any) => ({ ...prev, webhookUrl: "" }));
+                      // Custom mode: only set placeholder if URL is empty
+                      setSettings((prev: any) => {
+                        const currentUrl = prev.webhookUrl || "";
+                        // Keep existing URL, or set placeholder if empty
+                        return { ...prev, webhookUrl: currentUrl || "https://" };
+                      });
                     }
                   }}
                   helpText="Select whether to use the built-in AI workflow or your own custom setup"
