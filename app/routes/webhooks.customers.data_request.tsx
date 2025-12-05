@@ -112,7 +112,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       orderBy: { date: 'desc' },
     });
 
-    customerData.analytics = analytics.map((a: any) => ({
+    customerData.analytics = analytics.map((a) => ({
       date: a.date.toISOString(),
       total_sessions: a.totalSessions,
       total_messages: a.totalMessages,

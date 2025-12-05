@@ -81,7 +81,7 @@ export class PersonalizationService {
       }
 
       return profile;
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error getting/creating user profile:', error.message);
       throw error;
     }
@@ -130,7 +130,7 @@ export class PersonalizationService {
 
       console.log(`✅ Created new chat session: ${newSession.id}`);
       return newSession;
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error getting/creating chat session:', error.message);
       throw error;
     }
@@ -168,7 +168,7 @@ export class PersonalizationService {
       });
 
       console.log(`✅ Tracked ${interaction.type} interaction for user ${userProfileId}`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error tracking interaction:', error.message);
     }
   }
@@ -203,7 +203,7 @@ export class PersonalizationService {
       });
 
       console.log(`✅ Updated browsing history for user ${userProfileId}`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error updating browsing history:', error.message);
     }
   }
@@ -297,7 +297,7 @@ If no preferences are mentioned, return empty object {}.
       });
 
       console.log(`✅ Updated preferences for user ${userProfileId}:`, updatedPrefs);
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error learning preferences:', error.message);
     }
   }
@@ -364,7 +364,7 @@ Respond with just the category name.`,
       }
 
       return 'OTHER';
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error classifying intent:', error.message);
       return 'OTHER';
     }
@@ -409,7 +409,7 @@ Respond with just the category name.`,
       }
 
       return 'neutral';
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error analyzing sentiment:', error.message);
       return 'neutral';
     }
@@ -449,7 +449,7 @@ Respond with just the category name.`,
       });
 
       console.log(`✅ Saved ${role} message to session ${sessionId}`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error saving chat message:', error.message);
     }
   }
@@ -475,7 +475,7 @@ Respond with just the category name.`,
         sentiment: 'neutral', // Will be updated per message
         intent: undefined,
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error getting personalization context:', error.message);
       return {
         userProfile: null,
@@ -561,7 +561,7 @@ Respond with just the category name.`,
       }
 
       console.log(`✅ Updated analytics for ${shop}`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error updating analytics:', error.message);
     }
   }
@@ -633,7 +633,7 @@ Respond with just the category name.`,
       return scoredProducts
         .sort((a, b) => b.personalizedScore - a.personalizedScore)
         .slice(0, limit);
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error getting personalized recommendations:', error.message);
       return allProducts.slice(0, limit);
     }

@@ -20,7 +20,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   try {
     // Delete all shop data in a transaction to ensure data integrity
-    const result = await db.$transaction(async (tx: any) => {
+    const result = await db.$transaction(async (tx) => {
       const deletionStats = {
         sessions: 0,
         widgetSettings: 0,
@@ -38,7 +38,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         select: { id: true },
       });
 
-      const sessionIds = chatSessions.map((s: any) => s.id);
+      const sessionIds = chatSessions.map((s) => s.id);
 
       if (sessionIds.length > 0) {
         const deletedMessages = await tx.chatMessage.deleteMany({
@@ -100,13 +100,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     });
 
   } catch (error) {
-
-    // Log detailed error for investigation
-      shop,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-
     // Return success to Shopify to prevent retries
     // Manual investigation will be needed if this fails
     return new Response(JSON.stringify({

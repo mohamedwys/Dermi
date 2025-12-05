@@ -5,6 +5,11 @@ export interface AnalyticsOverview {
   totalMessages: number;
   avgResponseTime: number;
   avgConfidence: number;
+  sentimentBreakdown: {
+    positive: number;
+    neutral: number;
+    negative: number;
+  };
   periodComparison: {
     sessionsChange: number;
     messagesChange: number;

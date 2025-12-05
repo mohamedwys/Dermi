@@ -55,7 +55,7 @@ export class EmbeddingService {
       console.log(`✅ Generated embedding with ${embedding.length} dimensions`);
 
       return embedding;
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error generating embedding:', error.message);
       throw error;
     }
@@ -104,7 +104,7 @@ export class EmbeddingService {
       });
 
       console.log(`✅ Stored embedding for product: ${product.title} (${product.id})`);
-    } catch (error: any) {
+    } catch (error) {
       console.error(`❌ Error storing embedding for ${product.id}:`, error.message);
       throw error;
     }
@@ -126,7 +126,7 @@ export class EmbeddingService {
       }
 
       return JSON.parse(stored.embedding);
-    } catch (error: any) {
+    } catch (error) {
       console.error(`❌ Error retrieving embedding for ${productId}:`, error.message);
       return null;
     }
@@ -197,7 +197,7 @@ export class EmbeddingService {
             similarity,
             product,
           });
-        } catch (error: any) {
+        } catch (error) {
           console.warn(`⚠️ Skipping product ${product.id}:`, error.message);
           continue;
         }
@@ -211,7 +211,7 @@ export class EmbeddingService {
       console.log(`✅ Found ${topResults.length} results. Top similarity: ${topResults[0]?.similarity.toFixed(3)}`);
 
       return topResults;
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Semantic search error:', error.message);
       throw error;
     }
@@ -247,7 +247,7 @@ export class EmbeddingService {
 
         // Rate limiting: wait 100ms between requests
         await new Promise(resolve => setTimeout(resolve, 100));
-      } catch (error: any) {
+      } catch (error) {
         console.error(`❌ Error processing product ${products[i].id}:`, error.message);
         continue;
       }
@@ -300,7 +300,7 @@ export class EmbeddingService {
       return similarities
         .sort((a, b) => b.similarity - a.similarity)
         .slice(0, topK);
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error finding similar products:', error.message);
       throw error;
     }
@@ -339,7 +339,7 @@ export class EmbeddingService {
       });
 
       console.log(`✅ Cleared ${result.count} embeddings for shop: ${shop}`);
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error clearing embeddings:', error.message);
       throw error;
     }
@@ -366,7 +366,7 @@ export class EmbeddingService {
         oldest: stats._min.createdAt,
         newest: stats._max.updatedAt,
       };
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Error getting embedding stats:', error.message);
       return { total: 0, oldest: null, newest: null };
     }
@@ -380,7 +380,7 @@ export function getEmbeddingService(): EmbeddingService {
   if (!embeddingServiceInstance) {
     try {
       embeddingServiceInstance = new EmbeddingService();
-    } catch (error: any) {
+    } catch (error) {
       console.error('❌ Failed to initialize EmbeddingService:', error.message);
       throw error;
     }

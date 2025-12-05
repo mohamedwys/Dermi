@@ -46,11 +46,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       },
     });
 
-    const profileIds = userProfiles.map((p: any) => p.id);
+    const profileIds = userProfiles.map((p) => p.id);
 
     if (profileIds.length > 0) {
       // Delete all related data in a transaction to ensure data integrity
-      await db.$transaction(async (tx: any) => {
+      await db.$transaction(async (tx) => {
         // Step 1: Find all chat sessions for these profiles
         const chatSessions = await tx.chatSession.findMany({
           where: {
@@ -59,7 +59,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           select: { id: true },
         });
 
-        const sessionIds = chatSessions.map((s: any) => s.id);
+        const sessionIds = chatSessions.map((s) => s.id);
 
         // Step 2: Delete all chat messages for these sessions
         if (sessionIds.length > 0) {
