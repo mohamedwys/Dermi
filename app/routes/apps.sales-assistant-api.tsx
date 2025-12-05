@@ -8,6 +8,7 @@ import { getSecureCorsHeaders, createCorsPreflightResponse, isOriginAllowed, log
 import { rateLimit, RateLimitPresets } from "../lib/rate-limit.server";
 import { chatRequestSchema, validateData, validationErrorResponse } from "../lib/validation.server";
 import { getAPISecurityHeaders, mergeSecurityHeaders } from "../lib/security-headers.server";
+import { logger, logError } from "../lib/logger.server";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   // Handle preflight CORS request
@@ -331,10 +332,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     );
 
   } catch (error) {
-    // Log error without sensitive data
-    if (error instanceof Error) {
-      console.error("Sales Assistant API Error:", error.message);
-    }
+    // Log error with structured logging (no PII)
+    logError(error, 'Sales Assistant API Error');
+
     return json({
       error: "Internal server error",
       message: "Sorry, I'm having trouble processing your request right now. Please try again later."

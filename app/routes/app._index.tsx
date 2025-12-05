@@ -35,6 +35,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const overview = await analyticsService.getOverview(session.shop, {
       startDate: thirtyDaysAgo,
       endDate: now,
+      days: 30,
     });
 
     // Get today's active sessions
@@ -73,7 +74,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
     // Group by intent and get most common questions
     const intentCounts: Record<string, { count: number; example: string }> = {};
-    recentMessages.forEach(msg => {
+    recentMessages.forEach((msg: { content: string; intent: string | null }) => {
       if (msg.intent) {
         if (!intentCounts[msg.intent]) {
           intentCounts[msg.intent] = { count: 0, example: msg.content };
@@ -88,8 +89,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       .map(([_, data]) => data.example);
 
     // Calculate customer satisfaction (based on positive sentiment)
-    const satisfaction = overview.sentimentBreakdown.positive
-      ? (overview.sentimentBreakdown.positive / overview.totalMessages * 5).toFixed(1)
+    const satisfaction = (overview.sentimentBreakdown?.positive && overview.totalMessages > 0)
+      ? ((overview.sentimentBreakdown.positive / overview.totalMessages) * 5).toFixed(1)
       : '0.0';
 
     const stats = {

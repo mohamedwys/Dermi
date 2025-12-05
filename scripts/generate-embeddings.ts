@@ -63,12 +63,12 @@ async function getAllProducts(admin: any): Promise<Product[]> {
       }
     `;
 
-    const response: any = await admin.graphql(query, {
+    const response = await admin.graphql(query, {
       variables: { first: 50, after: cursor },
     });
 
-    const data: any = await response.json();
-    const edges: any = data.data.products.edges;
+    const data = await response.json();
+    const edges = data.data.products.edges;
 
     const products = edges.map((edge: any) => ({
       id: edge.node.id,
@@ -136,7 +136,7 @@ async function generateEmbeddings(shop: string, force: boolean = false) {
     // });
 
     console.log('✅ Script completed successfully');
-  } catch (error: any) {
+  } catch (error) {
     console.error('❌ Error generating embeddings:', error.message);
     console.error(error.stack);
     process.exit(1);
