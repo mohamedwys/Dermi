@@ -177,7 +177,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const userProfile = await personalizationService.getOrCreateUserProfile(
       shopDomain,
       sessionId,
-      customerId
+      customerId || undefined
     );
 
     const chatSession = await personalizationService.getOrCreateChatSession(
@@ -216,27 +216,26 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const personalizationContext = await personalizationService.getPersonalizationContext(
       shopDomain,
       sessionId,
-      customerId
+      customerId || undefined
     );
 
     // Enhanced context for better AI responses
     const enhancedContext = {
-      ...context,
       // Shop context
       shopDomain: shopDomain,
-      locale: context.locale || 'en', // Get from request body or default to 'en'
-      currency: context.currency || 'USD', // Get from request body or default to 'USD'
+      locale: (context.locale as string) || 'en', // Get from request body or default to 'en'
+      currency: (context.currency as string) || 'USD', // Get from request body or default to 'USD'
 
       // Customer context
       sessionId: sessionId,
-      customerId: customerId,
-      customerEmail: context.customerEmail || null,
+      customerId: customerId || undefined,
+      customerEmail: (context.customerEmail as string) || undefined,
 
       // Page context
-      pageUrl: context.pageUrl || request.headers.get('referer') || '',
-      currentPage: context.currentPage || 'other',
-      currentProductId: context.currentProductId || null,
-      cartId: context.cartId || null,
+      pageUrl: (context.pageUrl as string) || request.headers.get('referer') || '',
+      currentPage: ((context.currentPage as string) || 'other') as 'product' | 'cart' | 'checkout' | 'collection' | 'home' | 'other',
+      currentProductId: (context.currentProductId as string) || undefined,
+      cartId: (context.cartId as string) || undefined,
 
       // Conversation context
       userPreferences: personalizationContext.preferences,
@@ -246,8 +245,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
       // Legacy/metadata fields
       timestamp: new Date().toISOString(),
-      userAgent: request.headers.get('user-agent'),
-      referer: request.headers.get('referer'),
+      userAgent: request.headers.get('user-agent') || undefined,
+      referer: request.headers.get('referer') || undefined,
     };
 
     // Get custom webhook URL from settings if available

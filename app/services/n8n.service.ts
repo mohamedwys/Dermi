@@ -224,7 +224,7 @@ export class N8NService {
    * Enhanced fallback processing with semantic search and personalization
    */
   private async enhancedFallbackProcessing(request: N8NRequest): Promise<N8NWebhookResponse> {
-    const { userMessage, products, context } = request;
+    const { userMessage, products, context, sessionId } = request;
     const shop = context?.shopDomain || '';
 
     try {
@@ -269,12 +269,12 @@ export class N8NService {
           confidence = results[0]?.similarity || 0.7;
 
           // Apply personalization boost if we have user context
-          if (context?.sessionId) {
+          if (sessionId) {
             recommendations = await this.applyPersonalizationBoost(
-              context.sessionId,
+              sessionId,
               shop,
               recommendations,
-              context.userPreferences
+              context?.userPreferences
             );
           }
 

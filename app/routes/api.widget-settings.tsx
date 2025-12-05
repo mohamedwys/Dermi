@@ -269,10 +269,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // Enhanced context for better AI responses
     const enhancedContext = {
       ...context,
+      customerId: context.customerId || undefined,
+      customerEmail: (context.customerEmail as string) || undefined,
+      previousMessages: context.previousMessages || undefined,
+      sentiment: context.sentiment || undefined,
+      intent: context.intent || undefined,
       shopDomain: shopDomain,
       timestamp: new Date().toISOString(),
-      userAgent: request.headers.get('user-agent'),
-      referer: request.headers.get('referer'),
+      userAgent: request.headers.get('user-agent') || undefined,
+      referer: request.headers.get('referer') || undefined,
     };
 
     // Get webhook URL from widget settings

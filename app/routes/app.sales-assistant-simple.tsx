@@ -164,7 +164,7 @@ export default function SalesAssistantSimple() {
   const [recommendations, setRecommendations] = useState<ProductInfo[]>([]);
 
   useEffect(() => {
-    if (fetcher.data && fetcher.data.response) {
+    if (fetcher.data && 'response' in fetcher.data) {
       const newMessage: Message = {
         id: Date.now().toString(),
         role: "assistant",
@@ -172,7 +172,7 @@ export default function SalesAssistantSimple() {
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, newMessage]);
-      
+
       if (fetcher.data.recommendations) {
         setRecommendations(fetcher.data.recommendations);
       }
@@ -234,7 +234,7 @@ export default function SalesAssistantSimple() {
           </Card>
         </Layout.Section>
 
-        <Layout.Section variant="twoThirds">
+        <Layout.Section variant="fullWidth">
           <Card>
             <BlockStack gap="400">
               <Text variant="headingMd" as="h2">

@@ -40,7 +40,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         select: { id: true },
       });
 
-      const sessionIds = chatSessions.map(s => s.id);
+      const sessionIds = chatSessions.map((s: any) => s.id);
       console.log(`Found ${sessionIds.length} chat sessions to delete`);
 
       if (sessionIds.length > 0) {

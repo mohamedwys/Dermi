@@ -195,7 +195,7 @@ export default function SalesAssistantAdvanced() {
   }, [messages]);
 
   useEffect(() => {
-    if (fetcher.data && fetcher.data.response) {
+    if (fetcher.data && 'response' in fetcher.data) {
       const newMessage: Message = {
         id: Date.now().toString(),
         role: "assistant",
@@ -203,7 +203,7 @@ export default function SalesAssistantAdvanced() {
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, newMessage]);
-      
+
       if (fetcher.data.recommendations) {
         setRecommendations(fetcher.data.recommendations);
       }
@@ -323,7 +323,7 @@ export default function SalesAssistantAdvanced() {
                     </Text>
                   </InlineStack>
                   {recommendations.length > 0 && (
-                    <Badge tone="success">{recommendations.length}</Badge>
+                    <Badge tone="success">{`${recommendations.length}`}</Badge>
                   )}
                 </InlineStack>
                 <Divider />
@@ -395,7 +395,7 @@ export default function SalesAssistantAdvanced() {
                     ))}
                     {recommendations.length > 3 && (
                       <Button fullWidth variant="plain">
-                        View all {recommendations.length} products
+                        {`View all ${recommendations.length} products`}
                       </Button>
                     )}
                   </BlockStack>
@@ -416,7 +416,7 @@ export default function SalesAssistantAdvanced() {
           </BlockStack>
         </Layout.Section>
 
-        <Layout.Section variant="twoThirds">
+        <Layout.Section variant="fullWidth">
           <Card padding="0">
             {/* Header */}
             <div style={{ 
@@ -427,7 +427,7 @@ export default function SalesAssistantAdvanced() {
               <InlineStack align="space-between" blockAlign="center">
                 <InlineStack gap="300" blockAlign="center">
                   <Avatar customer name="AI Assistant" />
-                  <BlockStack gap="50">
+                  <BlockStack gap="100">
                     <Text variant="headingMd" as="h2" tone="text-inverse">
                       AI Sales Assistant
                     </Text>

@@ -34,9 +34,10 @@ export function verifyWebhookSignature(
 
   try {
     // Compute HMAC-SHA256 of the body
+    const bodyString = typeof body === 'string' ? body : body.toString('utf8');
     const hmac = crypto
       .createHmac('sha256', secret)
-      .update(body, 'utf8')
+      .update(bodyString, 'utf8')
       .digest('base64');
 
     // Compare signatures (timing-safe comparison)

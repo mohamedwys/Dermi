@@ -76,20 +76,20 @@ export class AnalyticsService {
       });
 
       // Aggregate current period
-      const totalSessions = currentData.reduce((sum, d) => sum + d.totalSessions, 0);
-      const totalMessages = currentData.reduce((sum, d) => sum + d.totalMessages, 0);
+      const totalSessions = currentData.reduce((sum: any, d: any) => sum + d.totalSessions, 0);
+      const totalMessages = currentData.reduce((sum: any, d: any) => sum + d.totalMessages, 0);
       const avgResponseTime = currentData.length > 0
-        ? currentData.reduce((sum, d) => sum + d.avgResponseTime, 0) / currentData.length
+        ? currentData.reduce((sum: any, d: any) => sum + d.avgResponseTime, 0) / currentData.length
         : 0;
       const avgConfidence = currentData.length > 0
-        ? currentData.reduce((sum, d) => sum + d.avgConfidence, 0) / currentData.length
+        ? currentData.reduce((sum: any, d: any) => sum + d.avgConfidence, 0) / currentData.length
         : 0;
 
       // Aggregate previous period
-      const prevTotalSessions = previousData.reduce((sum, d) => sum + d.totalSessions, 0);
-      const prevTotalMessages = previousData.reduce((sum, d) => sum + d.totalMessages, 0);
+      const prevTotalSessions = previousData.reduce((sum: any, d: any) => sum + d.totalSessions, 0);
+      const prevTotalMessages = previousData.reduce((sum: any, d: any) => sum + d.totalMessages, 0);
       const prevAvgConfidence = previousData.length > 0
-        ? previousData.reduce((sum, d) => sum + d.avgConfidence, 0) / previousData.length
+        ? previousData.reduce((sum: any, d: any) => sum + d.avgConfidence, 0) / previousData.length
         : 0;
 
       // Calculate percentage changes
@@ -149,7 +149,7 @@ export class AnalyticsService {
       const intentCounts: Record<string, number> = {};
       let totalIntents = 0;
 
-      data.forEach(record => {
+      data.forEach((record: any) => {
         const intents = JSON.parse(record.topIntents);
         Object.entries(intents).forEach(([intent, count]) => {
           intentCounts[intent] = (intentCounts[intent] || 0) + (count as number);
@@ -192,7 +192,7 @@ export class AnalyticsService {
       const sentimentCounts: Record<string, number> = {};
       let totalSentiments = 0;
 
-      data.forEach(record => {
+      data.forEach((record: any) => {
         const sentiments = JSON.parse(record.sentimentBreakdown);
         Object.entries(sentiments).forEach(([sentiment, count]) => {
           sentimentCounts[sentiment] = (sentimentCounts[sentiment] || 0) + (count as number);
@@ -234,7 +234,7 @@ export class AnalyticsService {
       // Aggregate product clicks
       const productClicks: Record<string, number> = {};
 
-      data.forEach(record => {
+      data.forEach((record: any) => {
         const products = JSON.parse(record.topProducts);
         Object.entries(products).forEach(([productId, clicks]) => {
           productClicks[productId] = (productClicks[productId] || 0) + (clicks as number);
@@ -275,7 +275,7 @@ export class AnalyticsService {
         },
       });
 
-      return data.map(record => ({
+      return data.map((record: any) => ({
         date: record.date.toISOString().split('T')[0],
         messages: record.totalMessages,
         sessions: record.totalSessions,
@@ -306,20 +306,20 @@ export class AnalyticsService {
       });
 
       const totalSessions = sessions.length;
-      const totalMessages = sessions.reduce((sum, s) => sum + s.messages.length, 0);
+      const totalMessages = sessions.reduce((sum: any, s: any) => sum + s.messages.length, 0);
       const avgMessagesPerSession = totalSessions > 0 ? totalMessages / totalSessions : 0;
 
       // Calculate session duration (time between first and last message)
       const sessionDurations = sessions
-        .filter(s => s.messages.length >= 2)
-        .map(s => {
+        .filter((s: any) => s.messages.length >= 2)
+        .map((s: any) => {
           const firstMsg = s.messages[0].timestamp;
           const lastMsg = s.messages[s.messages.length - 1].timestamp;
           return (lastMsg.getTime() - firstMsg.getTime()) / 1000; // in seconds
         });
 
       const avgSessionDuration = sessionDurations.length > 0
-        ? sessionDurations.reduce((sum, d) => sum + d, 0) / sessionDurations.length
+        ? sessionDurations.reduce((sum: any, d: any) => sum + d, 0) / sessionDurations.length
         : 0;
 
       return {

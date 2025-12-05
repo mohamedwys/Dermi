@@ -15,7 +15,7 @@ async function fixWebhookUrl() {
     });
 
     console.log('📊 Current webhook URLs in database:');
-    allSettings.forEach(setting => {
+    allSettings.forEach((setting: any) => {
       console.log(`  Shop: ${setting.shop}`);
       console.log(`  URL: ${setting.webhookUrl || '(null)'}`);
       console.log('');

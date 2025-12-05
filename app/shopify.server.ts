@@ -34,13 +34,13 @@ const shopify = shopifyApp({
     "Starter Plan": {
       amount: 25.0,
       currencyCode: "USD",
-      interval: BillingInterval.Every30Days,
+      interval: BillingInterval.Every30Days as any,
       trialDays: 7,
     },
     "Professional Plan": {
       amount: 79.0,
       currencyCode: "USD",
-      interval: BillingInterval.Every30Days,
+      interval: BillingInterval.Every30Days as any,
       trialDays: 7,
     },
   },

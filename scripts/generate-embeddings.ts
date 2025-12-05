@@ -63,12 +63,12 @@ async function getAllProducts(admin: any): Promise<Product[]> {
       }
     `;
 
-    const response = await admin.graphql(query, {
+    const response: any = await admin.graphql(query, {
       variables: { first: 50, after: cursor },
     });
 
-    const data = await response.json();
-    const edges = data.data.products.edges;
+    const data: any = await response.json();
+    const edges: any = data.data.products.edges;
 
     const products = edges.map((edge: any) => ({
       id: edge.node.id,
