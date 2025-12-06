@@ -218,7 +218,7 @@
     "insightLowConfidence": "AI置信度低于70%。",
     "insightNegativeSentiment": "检测到超过20%的负面情绪。",
     "insightLowEngagement": "参与度低（每会话<2条消息）。",
-    "insightOtherIntent": "许多查询被分类为"其他"。",
+    "insightOtherIntent": "许多查询被分类为\"其他\"。",
     "insightNoData": "还没有数据！在您的店面安装小部件。",
     "noIntentData": "此期间无意图数据",
     "noSentimentData": "此期间无情感数据",
