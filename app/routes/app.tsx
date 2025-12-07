@@ -6,9 +6,8 @@ import { NavMenu } from "@shopify/app-bridge-react";
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 import { useTranslation } from "react-i18next";
 import { json } from "@remix-run/node";
-import i18nServer from "../i18n/i18next.server";
 import { Select, Box, InlineStack } from "@shopify/polaris";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 
 import { authenticate } from "../shopify.server";
 
@@ -29,9 +28,11 @@ export const action = async ({ request }: LoaderFunctionArgs) => {
   const formData = await request.formData();
   const locale = formData.get("locale") as string;
 
-  // Set the locale cookie and redirect to reload the page with new language
+  console.log('[app.action] Setting locale cookie:', locale);
+
+  // Set the locale cookie
   return json(
-    { locale },
+    { success: true, locale },
     {
       headers: {
         "Set-Cookie": `locale=${locale}; Path=/; Max-Age=31536000; SameSite=Lax`,
@@ -46,7 +47,7 @@ export const handle = {
 
 export default function App() {
   const { apiKey, locale } = useLoaderData<typeof loader>();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const submit = useSubmit();
 
   const languageOptions = [
@@ -60,17 +61,33 @@ export default function App() {
     { label: "中文", value: "zh" },
   ];
 
-  const handleLanguageChange = useCallback((value: string) => {
+  // Sync i18n with server locale
+  useEffect(() => {
+    if (i18n.language !== locale) {
+      console.log('[app] Changing language from', i18n.language, 'to', locale);
+      i18n.changeLanguage(locale);
+    }
+  }, [locale, i18n]);
+
+  const handleLanguageChange = useCallback(async (value: string) => {
+    console.log('[app] User selected language:', value);
+
+    // Set cookie manually for immediate effect
+    document.cookie = `locale=${value}; Path=/; Max-Age=31536000; SameSite=Lax`;
+
+    // Also submit to server
     const formData = new FormData();
     formData.append("locale", value);
-    // Submit form to set the cookie
     submit(formData, { method: "post" });
 
-    // Reload the page after cookie is set (works in embedded apps)
+    // Change language immediately (client-side)
+    await i18n.changeLanguage(value);
+
+    // Reload after a short delay to get server-side rendered content
     setTimeout(() => {
-      window.location.href = window.location.href;
-    }, 200);
-  }, [submit]);
+      window.location.reload();
+    }, 300);
+  }, [submit, i18n]);
 
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
