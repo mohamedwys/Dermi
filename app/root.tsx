@@ -22,7 +22,8 @@ import "./styles/tailwind.css";
  * Loader to expose environment variables to the client and handle i18n
  */
 export async function loader({ request }: LoaderFunctionArgs) {
-  const locale = await i18nServer.getLocale(request);
+  const { getLocaleFromRequest } = await import("./i18n/i18next.server");
+  const locale = await getLocaleFromRequest(request);
 
   return json({
     locale,

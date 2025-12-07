@@ -16,7 +16,8 @@ export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
-  const locale = await i18nServer.getLocale(request);
+  const { getLocaleFromRequest } = await import("../i18n/i18next.server");
+  const locale = await getLocaleFromRequest(request);
 
   return json({
     apiKey: process.env.SHOPIFY_API_KEY || "",

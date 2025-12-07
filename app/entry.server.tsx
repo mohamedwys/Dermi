@@ -40,9 +40,10 @@ export default async function handleRequest(
       : "onShellReady";
     console.log('✅ [entry.server] Bot detection:', { callbackName, userAgent });
 
-    // Get locale from request using remix-i18next
+    // Get locale from request using manual parsing (bypasses remix-i18next cookie issues)
     console.log('🔄 [entry.server] Getting locale from request...');
-    const locale = await i18nServer.getLocale(request);
+    const { getLocaleFromRequest } = await import("./i18n/i18next.server");
+    const locale = await getLocaleFromRequest(request);
     console.log('✅ [entry.server] Locale detected:', locale);
 
     // Create i18next instance for this request
