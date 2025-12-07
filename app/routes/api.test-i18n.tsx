@@ -14,15 +14,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
     const { resources } = await import("../i18n/resources");
     console.log('✅ [test-i18n] Resources imported successfully');
 
-    // Try to import i18nServer
-    console.log('🔄 [test-i18n] Importing i18nServer...');
-    const i18nServerModule = await import("../i18n/i18next.server");
-    const i18nServer = i18nServerModule.default;
-    console.log('✅ [test-i18n] i18nServer imported successfully');
+    // Try to import i18nServer and getLocaleFromRequest
+    console.log('🔄 [test-i18n] Importing i18n functions...');
+    const { getLocaleFromRequest } = await import("../i18n/i18next.server");
+    console.log('✅ [test-i18n] i18n functions imported successfully');
 
-    // Get locale
+    // Get locale using our manual parser
     console.log('🔄 [test-i18n] Getting locale...');
-    const locale = await i18nServer.getLocale(request);
+    const locale = await getLocaleFromRequest(request);
     console.log('✅ [test-i18n] Locale detected:', locale);
 
     // Check resources
