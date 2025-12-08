@@ -1,15 +1,15 @@
 import { Form } from "@remix-run/react";
 
 interface LanguageSwitcherProps {
-  locale: string; // matches prop from loader
+  currentLocale: string;
 }
 
-export function LanguageSwitcher({ locale }: LanguageSwitcherProps) {
+export function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
   return (
     <Form method="post" action="/app/change-locale">
       <select
         name="locale"
-        defaultValue={locale}
+        defaultValue={currentLocale}
         onChange={(e) => e.currentTarget.form?.submit()}
       >
         <option value="en">English</option>

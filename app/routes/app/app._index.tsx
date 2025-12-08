@@ -15,12 +15,13 @@ import {
   Divider,
   Banner,
 } from "@shopify/polaris";
-import { authenticate } from "../shopify.server";
-import { checkBillingStatus } from "../lib/billing.server";
-import { AnalyticsService } from "../services/analytics.service";
-import db from "../db.server";
+import { authenticate } from "../../shopify.server";
+import { checkBillingStatus } from "../../lib/billing.server";
+import { AnalyticsService } from "../../services/analytics.service";
+import db from "../../db.server";
 import { useTranslation } from "react-i18next";
-import i18next from "../i18n/i18next.server";
+import i18next from "../../i18n/i18next.server";
+import { LanguageSwitcher } from "../../components/LanguageSwitcher";
 
 
 export const handle = {
@@ -139,7 +140,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function Index() {
-  const { stats, billingStatus } = useLoaderData<typeof loader>();
+  const { stats, billingStatus, locale } = useLoaderData<typeof loader>();
   const { t } = useTranslation();
 
   return (
@@ -185,6 +186,9 @@ export default function Index() {
             </Banner>
           </Layout.Section>
         )}
+        
+        <LanguageSwitcher currentLocale={locale} />
+
 
         {/* Key Metrics Section */}
         <Layout.Section>

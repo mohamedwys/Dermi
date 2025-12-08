@@ -16,7 +16,7 @@ import { captureException } from "./lib/sentry.client";
 import { useChangeLanguage } from "remix-i18next/react";
 
 import { localeCookie } from "./i18n/i18next.server"; // ✅ properly exported cookie
-import { LanguageSwitcher } from "./components/LanguageSwitcher"; // ✅ switcher component
+// import { LanguageSwitcher } from "./components/LanguageSwitcher"; // ✅ switcher component
 
 // Tailwind
 import "./styles/tailwind.css";
@@ -103,7 +103,7 @@ export default function App() {
       <body className="relative">
         {/* Language switcher at top-right */}
         <div className="fixed top-4 right-4 z-50">
-          <LanguageSwitcher locale={locale} />
+          {/* <LanguageSwitcher locale={locale} /> */}
         </div>
 
         <Outlet />

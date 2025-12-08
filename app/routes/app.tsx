@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { authenticate } from "../shopify.server";
 import { getLocaleFromRequest } from "../i18n/i18next.server";
-import { LanguageSwitcher } from "../components/LanguageSwitcher";
+// import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { boundary } from "@shopify/shopify-app-remix/server";
 
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
@@ -44,7 +44,7 @@ export default function App() {
         <Link to="/app/settings">{t("nav.settings")}</Link>
         <Link to="/app/analytics">{t("nav.analytics")}</Link>
         <Link to="/app/additional">{t("nav.additional")}</Link>
-        <LanguageSwitcher locale={locale} />
+        {/* <LanguageSwitcher locale={locale} /> */}
       </NavMenu>
 
       <Box paddingInlineStart="400" paddingInlineEnd="400" paddingBlockStart="400">
