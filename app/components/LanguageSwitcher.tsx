@@ -1,7 +1,7 @@
 import { Form } from "@remix-run/react";
 
 interface LanguageSwitcherProps {
-  currentLocale: string;
+  currentLocale: string; // must match prop name
 }
 
 export function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {

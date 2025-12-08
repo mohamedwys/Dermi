@@ -6,11 +6,12 @@ import { NavMenu } from "@shopify/app-bridge-react";
 import { Box } from "@shopify/polaris";
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 import { useEffect } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation, I18nextProvider } from "react-i18next";
 import { authenticate } from "../shopify.server";
 import { getLocaleFromRequest } from "../i18n/i18next.server";
-// import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import { LanguageSwitcher } from "../components/LanguageSwitcher";
 import { boundary } from "@shopify/shopify-app-remix/server";
+import i18nClient from "../i18n/i18next.client";
 
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
@@ -39,17 +40,20 @@ export default function App() {
 
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
+      <I18nextProvider i18n={i18nClient}>
       <NavMenu>
         <Link to="/app">{t("nav.home")}</Link>
         <Link to="/app/settings">{t("nav.settings")}</Link>
         <Link to="/app/analytics">{t("nav.analytics")}</Link>
         <Link to="/app/additional">{t("nav.additional")}</Link>
-        {/* <LanguageSwitcher locale={locale} /> */}
+        
       </NavMenu>
 
       <Box paddingInlineStart="400" paddingInlineEnd="400" paddingBlockStart="400">
         <Outlet />
+        <LanguageSwitcher currentLocale={locale} />
       </Box>
+    </I18nextProvider>
     </AppProvider>
   );
 }
