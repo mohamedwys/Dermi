@@ -27,41 +27,37 @@ export async function getLocaleFromRequest(request: Request): Promise<string> {
   try {
     console.log('[getLocaleFromRequest] Starting locale detection...');
 
-    // Manual cookie parsing (check FIRST for user preference)
-    const cookieHeader = request.headers.get("Cookie");
-    console.log('[getLocaleFromRequest] Cookie header:', cookieHeader);
+    // --- 1️⃣ Read cookie first ---
+    const cookieHeader = request.headers.get("Cookie") ?? "";
+    const cookies: Record<string, string> = {};
+    cookieHeader.split(";").forEach((c) => {
+      const [key, ...vals] = c.trim().split("=");
+      if (!key) return;
+      cookies[key] = decodeURIComponent(vals.join("="));
+    });
 
-    if (cookieHeader) {
-      const cookies = cookieHeader.split(";").reduce((acc, cookie) => {
-        const [key, value] = cookie.trim().split("=");
-        acc[key] = value;
-        return acc;
-      }, {} as Record<string, string>);
+    console.log('[getLocaleFromRequest] Parsed cookies:', cookies);
 
-      console.log('[getLocaleFromRequest] Parsed cookies:', cookies);
-
-      const localeCookie = cookies["locale"];
-      if (localeCookie && i18nConfig.supportedLngs.includes(localeCookie)) {
-        console.log('[getLocaleFromRequest] ✅ Found locale in cookie:', localeCookie);
-        return localeCookie;
-      } else {
-        console.log('[getLocaleFromRequest] No valid locale cookie found');
-      }
+    const localeCookie = cookies["locale"];
+    if (localeCookie && i18nConfig.supportedLngs.includes(localeCookie)) {
+      console.log('[getLocaleFromRequest] ✅ Using locale from cookie:', localeCookie);
+      return localeCookie;
     }
 
-    // Try to get from URL searchParams as fallback (only for first visit)
+    console.log('[getLocaleFromRequest] No valid locale cookie found');
+
+    // --- 2️⃣ Fallback to URL search param ---
     const url = new URL(request.url);
     const localeParam = url.searchParams.get("locale");
-    console.log('[getLocaleFromRequest] URL locale parameter:', localeParam);
-
     if (localeParam && i18nConfig.supportedLngs.includes(localeParam)) {
       console.log('[getLocaleFromRequest] ✅ Using locale from URL:', localeParam);
       return localeParam;
     }
 
-    // Fallback to default
+    // --- 3️⃣ Fallback to default ---
     console.log('[getLocaleFromRequest] ⚠️ Using fallback locale:', i18nConfig.fallbackLng);
     return i18nConfig.fallbackLng;
+
   } catch (error) {
     console.error("[getLocaleFromRequest] ❌ Error getting locale:", error);
     return i18nConfig.fallbackLng;
