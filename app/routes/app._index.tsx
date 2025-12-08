@@ -20,6 +20,8 @@ import { checkBillingStatus } from "../lib/billing.server";
 import { AnalyticsService } from "../services/analytics.service";
 import db from "../db.server";
 import { useTranslation } from "react-i18next";
+import i18next from "../i18n/i18next.server";
+
 
 export const handle = {
   i18n: "common",
@@ -28,22 +30,22 @@ export const handle = {
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { billing, session } = await authenticate.admin(request);
 
+  const locale = await i18next.getLocale(request); // <-- IMPORTANT!
+  const t = await i18next.getFixedT(request, "common"); // <-- LOAD NAMESPACE
+
   const billingStatus = await checkBillingStatus(billing);
   const analyticsService = new AnalyticsService();
 
-  // Get analytics for last 30 days
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const now = new Date();
 
   try {
-    // Fetch real analytics data
     const overview = await analyticsService.getOverview(session.shop, {
       startDate: thirtyDaysAgo,
       endDate: now,
       days: 30,
     });
 
-    // Get today's active sessions
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
 
@@ -56,74 +58,76 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       },
     });
 
-    // Get top questions from recent messages
-    const recentMessages = await db.chatMessage.findMany({
-      where: {
-        session: {
-          shop: session.shop,
-        },
-        role: 'user',
-        timestamp: {
-          gte: thirtyDaysAgo,
-        },
-      },
-      select: {
-        content: true,
-        intent: true,
-      },
-      orderBy: {
-        timestamp: 'desc',
-      },
-      take: 100,
-    });
+    // Define the type returned by Prisma
+      type RecentMessage = {
+        content: string | null; // assuming content could be null in DB
+        intent: string | null;  // assuming intent could be null in DB
+      };
 
-    // Group by intent and get most common questions
-    const intentCounts: Record<string, { count: number; example: string }> = {};
-    recentMessages.forEach((msg: { content: string; intent: string | null }) => {
-      if (msg.intent) {
-        if (!intentCounts[msg.intent]) {
-          intentCounts[msg.intent] = { count: 0, example: msg.content };
-        }
-        intentCounts[msg.intent]!.count++;
-      }
-    });
+      const recentMessages: RecentMessage[] = await db.chatMessage.findMany({
+        where: {
+          session: { shop: session.shop },
+          role: "user",
+          timestamp: { gte: thirtyDaysAgo },
+        },
+        select: { content: true, intent: true },
+        orderBy: { timestamp: "desc" },
+        take: 100,
+      });
+
+      const intentCounts: Record<string, { count: number; example: string }> = {};
+
+        recentMessages.forEach((msg) => {
+          if (msg.intent && msg.content) {
+            if (!intentCounts[msg.intent]) {
+              intentCounts[msg.intent] = { count: 0, example: msg.content };
+            }
+            // Non-null assertion: we know it's initialized above
+            intentCounts[msg.intent]!.count++;
+          }
+        });
 
     const topQuestions = Object.entries(intentCounts)
       .sort((a, b) => b[1].count - a[1].count)
       .slice(0, 5)
-      .map(([_, data]) => ({ question: data.example, count: data.count }));
+      .map(([_, data]) => ({
+        question: data.example,
+        count: data.count,
+      }));
 
-    // Calculate customer satisfaction (based on positive sentiment)
-    const satisfaction = (overview.sentimentBreakdown?.positive && overview.totalMessages > 0)
-      ? ((overview.sentimentBreakdown.positive / overview.totalMessages) * 5).toFixed(1)
-      : '0.0';
+    const satisfaction =
+      overview.sentimentBreakdown?.positive && overview.totalMessages > 0
+        ? ((overview.sentimentBreakdown.positive / overview.totalMessages) * 5).toFixed(1)
+        : "0.0";
 
     const stats = {
       totalConversations: overview.totalSessions || 0,
       activeToday: todaySessions || 0,
       avgResponseTime: overview.avgResponseTime
         ? `${(overview.avgResponseTime / 1000).toFixed(1)}s`
-        : '0.0s',
+        : "0.0s",
       customerSatisfaction: parseFloat(satisfaction) || 0,
-      topQuestions: topQuestions.length > 0 ? topQuestions : [
-        { question: "No questions yet - waiting for first customer interaction", count: 0 }
-      ],
+      topQuestions:
+        topQuestions.length > 0
+          ? topQuestions
+          : [{ question: t("dashboard.noQuestionsYet"), count: 0 }],
     };
 
-    return json({ stats, billingStatus });
+    return json({ stats, billingStatus, locale });
   } catch (error) {
-    // Fallback to zero stats if analytics fail
-    const stats = {
-      totalConversations: 0,
-      activeToday: 0,
-      avgResponseTime: "0.0s",
-      customerSatisfaction: 0,
-      topQuestions: [
-        { question: "No data available yet - install the widget to start tracking", count: 0 }
-      ],
-    };
-
-    return json({ stats, billingStatus });
+    return json({
+      stats: {
+        totalConversations: 0,
+        activeToday: 0,
+        avgResponseTime: "0.0s",
+        customerSatisfaction: 0,
+        topQuestions: [
+          { question: t("dashboard.noDataAvailable"), count: 0 },
+        ],
+      },
+      billingStatus,
+      locale,
+    });
   }
 };
 
