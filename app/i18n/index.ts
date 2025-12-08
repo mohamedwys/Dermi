@@ -1,5 +1,5 @@
 // Centralized i18n configuration for both server and client
-export default {
+const i18nConfig = {
   // Supported languages
   supportedLngs: ["en", "es", "fr", "de", "ja", "it", "pt", "zh"],
   // Fallback language
@@ -9,3 +9,5 @@ export default {
   // Disable suspense for Remix
   react: { useSuspense: false },
 };
+
+export default i18nConfig;

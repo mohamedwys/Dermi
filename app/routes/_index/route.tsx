@@ -1,10 +1,8 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { redirect, json } from "@remix-run/node";
+import { useLoaderData, Form } from "@remix-run/react";
 
 import { login } from "../../shopify.server";
-import { getLocaleFromRequest } from "../../i18n/i18next.server"
-import { LanguageSwitcher } from "../../components/LanguageSwitcher";
 
 import { Hero } from "../../components/Hero";
 import { Features } from "../../components/Features";
@@ -16,21 +14,47 @@ import { AIAssistants } from "../../components/AIAssistants";
 import { Footer } from "../../components/Footer";
 import { FloatingCTA } from "../../components/FloatingCTA";
 
-export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const url = new URL(request.url);
+// ✅ Import your i18n config
+import i18nConfig from "../../i18n";
 
+// Language Switcher Component
+function LanguageSwitcher({ currentLocale }: { currentLocale: string }) {
+  return (
+    <Form method="post" action="/set-locale">
+      <select
+        name="locale"
+        defaultValue={currentLocale}
+        onChange={(e) => e.currentTarget.form?.submit()}
+        className="p-2 border rounded"
+      >
+        {i18nConfig.supportedLngs.map((lng) => (
+          <option key={lng} value={lng}>
+            {lng.toUpperCase()}
+          </option>
+        ))}
+      </select>
+    </Form>
+  );
+}
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const { getLocaleFromRequest } = await import("../../i18n/i18next.server");
+  const locale = await getLocaleFromRequest(request);
+
+  const url = new URL(request.url);
   if (url.searchParams.get("shop")) {
     throw redirect(`/app?${url.searchParams.toString()}`);
   }
 
-  // ✅ detect locale from request
-  const locale = await getLocaleFromRequest(request);
-
-  return { showForm: Boolean(login), locale };
+  return json({
+    showForm: Boolean(login),
+    locale,
+  });
 };
 
+// Dummy testimonials
 const testimonials = [
-  {
+{
     name: 'Sarah Johnson',
     jobtitle: 'Founder, EcoStyle',
     image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=200',
@@ -77,16 +101,17 @@ const testimonials = [
     text: 'We scaled our store 5x without hiring more support staff. ShopiBot handles everything from product questions to order tracking seamlessly.',
     rating: 5,
     metric: '5x scale achieved',
-  },
-];
+  },];
 
 export default function App() {
   const { locale } = useLoaderData<typeof loader>();
 
   return (
     <>
-      {/* ✅ add language switcher at top or wherever you want */}
-      <LanguageSwitcher currentLocale={locale} />
+      {/* Language switcher */}
+      <div className="absolute top-4 right-4 z-50">
+        <LanguageSwitcher currentLocale={locale} />
+      </div>
 
       <Hero />
       <Features />
@@ -110,6 +135,5 @@ export default function App() {
     </>
   );
 }
-
 
 
