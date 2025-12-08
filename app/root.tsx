@@ -9,7 +9,7 @@ import {
   isRouteErrorResponse,
 } from "@remix-run/react";
 
-import { json, redirect } from "@remix-run/server-runtime";
+import { json, redirect } from "@remix-run/node";
 
 import { useEffect } from "react";
 import { captureException } from "./lib/sentry.client";
