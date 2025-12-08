@@ -4,38 +4,28 @@ import { createCookie } from "@remix-run/node";
 import i18nConfig from "./index";
 import { resources } from "./resources";
 
-// ----------------------------------------------------
 // Cookie to persist locale
-// ----------------------------------------------------
 export const localeCookie = createCookie("locale", {
   path: "/",
-  httpOnly: false, // user changes language on client
+  httpOnly: false, // allow client to read
   sameSite: "lax",
   maxAge: 60 * 60 * 24 * 365, // 1 year
 });
 
-// ----------------------------------------------------
 // Detect locale from request
-// ----------------------------------------------------
-export async function getLocaleFromRequest(
-  request: Request
-): Promise<string> {
-  // 1️⃣ Cookie
+export async function getLocaleFromRequest(request: Request): Promise<string> {
+  // 1️⃣ Try cookie
   const cookieHeader = request.headers.get("Cookie");
   if (cookieHeader) {
     const cookieValue = await localeCookie.parse(cookieHeader);
-    if (
-      cookieValue &&
-      i18nConfig.supportedLngs.includes(cookieValue)
-    ) {
+    if (cookieValue && i18nConfig.supportedLngs.includes(cookieValue)) {
       return cookieValue;
     }
   }
 
-  // 2️⃣ URL param "?locale="
+  // 2️⃣ Try URL search param
   const url = new URL(request.url);
   const localeParam = url.searchParams.get("locale");
-
   if (localeParam && i18nConfig.supportedLngs.includes(localeParam)) {
     return localeParam;
   }
@@ -44,14 +34,12 @@ export async function getLocaleFromRequest(
   return i18nConfig.fallbackLng;
 }
 
-// ----------------------------------------------------
-// RemixI18Next instance
-// ----------------------------------------------------
+// Remix i18next server instance
 const i18nServer = new RemixI18Next({
   detection: {
     supportedLanguages: i18nConfig.supportedLngs,
     fallbackLanguage: i18nConfig.fallbackLng,
-    order: ["searchParams"], // ✔ cookie handled manually
+    order: ["searchParams"], // cookies handled manually
   },
   i18next: {
     ...i18nConfig,
