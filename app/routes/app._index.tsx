@@ -21,12 +21,12 @@ import { AnalyticsService } from "../services/analytics.service";
 import db from "../db.server";
 import { useTranslation } from "react-i18next";
 import i18next from "../i18n/i18next.server";
-import { LanguageSwitcher } from "../components/LanguageSwitcher";
 
 
 export const handle = {
   i18n: "common",
 };
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { billing, session } = await authenticate.admin(request);
 
@@ -139,7 +139,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function Index() {
-  const { stats, billingStatus, locale } = useLoaderData<typeof loader>();
+  const { stats, billingStatus } = useLoaderData<typeof loader>();
   const { t } = useTranslation();
 
   return (
@@ -147,8 +147,6 @@ export default function Index() {
       title={t("dashboard.title")}
       subtitle={t("dashboard.subtitle")}
     >
-      <LanguageSwitcher locale={locale} />
-
       <Layout>
         {/* Billing Status Banner */}
         {!billingStatus.hasActivePayment && (
