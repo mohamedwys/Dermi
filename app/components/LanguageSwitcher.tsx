@@ -29,7 +29,6 @@ export function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
     if (newLocale === currentLocale || isChanging) return;
 
     setIsChanging(true);
-    console.log(`[LanguageSwitcher] Changing locale to: ${newLocale}`);
 
     try {
       const response = await fetch("/api/set-locale", {
@@ -42,20 +41,16 @@ export function LanguageSwitcher({ currentLocale }: LanguageSwitcherProps) {
       const result = await response.json();
 
       if (result.success) {
-        console.log(`[LanguageSwitcher] ✅ Locale changed successfully. Reloading...`);
-
-        // Option 1: Reload the page to apply new locale
+        // Reload the page to apply new locale
         window.location.reload();
 
         // Option 2: Use revalidator (doesn't reload page, but may not update all translations)
         // revalidator.revalidate();
       } else {
-        console.error(`[LanguageSwitcher] ❌ Failed to change locale:`, result.error);
         alert(`Failed to change language: ${result.error}`);
         setIsChanging(false);
       }
     } catch (error) {
-      console.error(`[LanguageSwitcher] ❌ Error changing locale:`, error);
       alert("Failed to change language. Please try again.");
       setIsChanging(false);
     }

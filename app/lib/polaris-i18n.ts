@@ -1,5 +1,6 @@
 // app/lib/polaris-i18n.ts
 import type { SupportedLocale } from "../i18n/resources";
+import { logger } from "./logger.server";
 
 /**
  * Polaris i18n translations for supported locales.
@@ -41,10 +42,10 @@ export async function loadPolarisTranslations(
     const translations = await import(
       `@shopify/polaris/locales/${polarisLocale}.json`
     );
-    console.log(`[polaris-i18n] ✅ Loaded Polaris translations for: ${polarisLocale}`);
+    logger.info(`[polaris-i18n] ✅ Loaded Polaris translations for: ${polarisLocale}`);
     return translations.default || translations;
   } catch (error) {
-    console.warn(
+    logger.warn(
       `[polaris-i18n] ⚠️ No Polaris translations found for ${polarisLocale}, using English fallback`
     );
     return undefined;

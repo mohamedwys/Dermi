@@ -3,6 +3,7 @@ import type { ActionFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { localeCookie } from "../i18n/i18next.server";
 import i18nConfig from "../i18n";
+import { logger } from "../lib/logger.server";
 
 /**
  * Resource route for setting user's locale preference via cookie.
@@ -33,17 +34,17 @@ export async function action({ request }: ActionFunctionArgs) {
       locale = formData.get("locale")?.toString();
     }
 
-    console.log(`[set-locale.action] Received locale request:`, locale);
+    logger.debug({ locale }, 'Received locale change request');
 
     if (!locale || !i18nConfig.supportedLngs.includes(locale)) {
-      console.error(`[set-locale.action] ❌ Invalid locale:`, locale);
+      logger.warn({ locale, supportedLngs: i18nConfig.supportedLngs }, 'Invalid locale requested');
       return json(
         { success: false, error: "Invalid locale" },
         { status: 400 }
       );
     }
 
-    console.log(`[set-locale.action] ✅ Setting locale cookie: ${locale}`);
+    logger.info({ locale }, 'Setting locale cookie');
 
     // Return success with Set-Cookie header (no redirect)
     return json(
@@ -55,7 +56,7 @@ export async function action({ request }: ActionFunctionArgs) {
       }
     );
   } catch (error) {
-    console.error("[set-locale.action] ❌ Error:", error);
+    logger.error({ err: error }, 'Error setting locale cookie');
     return json(
       { success: false, error: "Internal error" },
       { status: 500 }

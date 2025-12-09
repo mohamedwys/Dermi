@@ -5,6 +5,7 @@ import i18n from "i18next";
 import i18nConfig from "./index";
 import { resources } from "./resources";
 import type { SupportedLocale, DefaultNamespace } from "./resources";
+import { logger } from "../lib/logger.server";
 
 // 👇 Export a server-side i18n instance
 export const i18nServer = i18n.createInstance();
@@ -41,27 +42,27 @@ export async function getLocaleFromRequest(request: Request): Promise<SupportedL
     if (cookieHeader) {
       const cookieValue = await localeCookie.parse(cookieHeader);
       if (typeof cookieValue === "string" && i18nConfig.supportedLngs.includes(cookieValue)) {
-        console.log(`[getLocaleFromRequest] ✅ Using locale from COOKIE: ${cookieValue}`);
+        logger.debug({ locale: cookieValue, source: 'cookie' }, 'Using locale from cookie');
         return cookieValue as SupportedLocale;
       } else {
-        console.log(`[getLocaleFromRequest] ⚠️ Invalid cookie value:`, cookieValue);
+        logger.debug({ cookieValue, source: 'cookie' }, 'Invalid cookie value');
       }
     } else {
-      console.log(`[getLocaleFromRequest] ℹ️ No cookie header found`);
+      logger.debug('No cookie header found');
     }
 
     // PRIORITY 2: Check URL param (Shopify iframe default - lower priority)
     const localeParam = url.searchParams.get("locale");
     if (localeParam && i18nConfig.supportedLngs.includes(localeParam)) {
-      console.log(`[getLocaleFromRequest] ⚠️ Using locale from URL: ${localeParam} (cookie not found)`);
+      logger.debug({ locale: localeParam, source: 'url' }, 'Using locale from URL parameter');
       return localeParam as SupportedLocale;
     }
   } catch (err) {
-    console.error("[getLocaleFromRequest] ❌ Error reading locale:", err);
+    logger.error({ err }, 'Error reading locale from request');
   }
 
   // PRIORITY 3: Fallback to default
-  console.log(`[getLocaleFromRequest] ℹ️ Using fallback locale: ${i18nConfig.fallbackLng}`);
+  logger.debug({ locale: i18nConfig.fallbackLng, source: 'fallback' }, 'Using fallback locale');
   return i18nConfig.fallbackLng as SupportedLocale;
 }
 

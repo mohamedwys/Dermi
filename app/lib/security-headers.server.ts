@@ -218,7 +218,7 @@ export function logSecurityViolation(
   violationType: string,
   details: Record<string, any>
 ): void {
-  console.warn(`🚨 Security Violation: ${violationType}`, details);
+  logger.warn(`🚨 Security Violation: ${violationType}`, details);
 
   // In production, integrate with monitoring service
   if (process.env.NODE_ENV === 'production') {

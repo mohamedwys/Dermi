@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
+import { logger } from "../lib/logger.server";
 import { json } from "@remix-run/node";
 import { useLoaderData, useSubmit, useNavigation } from "@remix-run/react";
 import {
@@ -71,7 +72,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       },
     });
   } catch (error: any) {
-    console.error("Analytics loader error:", error);
+    logger.error("Analytics loader error:", error);
     return json({
       overview: {
         totalSessions: 0,

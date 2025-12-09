@@ -73,7 +73,7 @@ class RateLimitStore {
     keysToDelete.forEach(key => this.store.delete(key));
 
     if (keysToDelete.length > 0) {
-      console.log(`🧹 Rate limit cleanup: Removed ${keysToDelete.length} expired entries`);
+      logger.info(`🧹 Rate limit cleanup: Removed ${keysToDelete.length} expired entries`);
     }
   }
 
@@ -310,7 +310,7 @@ export function rateLimit(
   if (result.isLimited) {
     headers.set('Retry-After', result.retryAfter.toString());
 
-    console.warn(
+    logger.warn(
       `⚠️ Rate limit exceeded for ${identifier} on ${namespace} ` +
       `(${result.retryAfter}s until reset)`
     );
@@ -395,7 +395,7 @@ export function compositeRateLimit(
     const result = checkRateLimit(identifier, config, namespace);
 
     if (result.isLimited) {
-      console.warn(
+      logger.warn(
         `⚠️ Composite rate limit exceeded for ${identifier} on ${namespace} ` +
         `(${result.retryAfter}s until reset)`
       );

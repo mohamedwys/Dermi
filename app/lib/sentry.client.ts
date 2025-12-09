@@ -8,7 +8,6 @@ const NODE_ENV = typeof window !== 'undefined' ? window.ENV?.NODE_ENV : undefine
  */
 export function initSentry() {
   if (!SENTRY_DSN) {
-    console.warn('⚠️ SENTRY_DSN not configured - client-side error tracking disabled');
     return;
   }
 
@@ -65,7 +64,6 @@ export function initSentry() {
     ],
   });
 
-  console.log('✅ Sentry initialized for client-side error tracking');
 }
 
 /**

@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { logger } from "./logger.server";
 
 /**
  * Webhook Signature Verification
@@ -23,12 +24,12 @@ export function verifyWebhookSignature(
   secret: string
 ): boolean {
   if (!signature) {
-    console.error('❌ Webhook verification failed: No signature provided');
+    logger.error('❌ Webhook verification failed: No signature provided');
     return false;
   }
 
   if (!secret) {
-    console.error('❌ Webhook verification failed: No secret configured');
+    logger.error('❌ Webhook verification failed: No secret configured');
     return false;
   }
 
@@ -47,14 +48,14 @@ export function verifyWebhookSignature(
     );
 
     if (!isValid) {
-      console.error('❌ Webhook verification failed: Signature mismatch');
-      console.error('Expected:', hmac);
-      console.error('Received:', signature);
+      logger.error('❌ Webhook verification failed: Signature mismatch');
+      logger.error('Expected:', hmac);
+      logger.error('Received:', signature);
     }
 
     return isValid;
   } catch (error) {
-    console.error('❌ Webhook verification error:', error);
+    logger.error('❌ Webhook verification error:', error);
     return false;
   }
 }
@@ -186,7 +187,7 @@ export function logWebhookVerificationFailure(
   error: string,
   metadata?: Record<string, any>
 ): void {
-  console.error('🚨 Webhook verification failed', {
+  logger.error('🚨 Webhook verification failed', {
     topic,
     shop,
     error,
@@ -251,7 +252,7 @@ export function parseWebhookPayload<T = any>(body: string): T | null {
   try {
     return JSON.parse(body);
   } catch (error) {
-    console.error('❌ Failed to parse webhook payload:', error);
+    logger.error('❌ Failed to parse webhook payload:', error);
     return null;
   }
 }
@@ -326,8 +327,8 @@ export function getWebhookSecret(): string {
   const webhookSecret = process.env.SHOPIFY_WEBHOOK_SECRET || process.env.SHOPIFY_API_SECRET;
 
   if (!webhookSecret) {
-    console.error('🚨 CRITICAL: SHOPIFY_API_SECRET not configured!');
-    console.error('💡 Webhook verification will fail without this secret.');
+    logger.error('🚨 CRITICAL: SHOPIFY_API_SECRET not configured!');
+    logger.error('💡 Webhook verification will fail without this secret.');
     throw new Error('SHOPIFY_API_SECRET environment variable is required for webhook verification');
   }
 
@@ -355,13 +356,13 @@ export function isWebhookFresh(
     const age = now - timestamp;
 
     if (age > maxAgeSeconds) {
-      console.warn(`⚠️ Old webhook detected: ${age}s old (max: ${maxAgeSeconds}s)`);
+      logger.warn(`⚠️ Old webhook detected: ${age}s old (max: ${maxAgeSeconds}s)`);
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error('❌ Failed to parse webhook timestamp:', error);
+    logger.error('❌ Failed to parse webhook timestamp:', error);
     return false;
   }
 }

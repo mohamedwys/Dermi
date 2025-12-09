@@ -21,7 +21,7 @@ import { AnalyticsService } from "../services/analytics.service";
 import { prisma as db } from "../db.server";
 import { useTranslation } from "react-i18next";
 import { getLocaleFromRequest, i18nServer } from "../i18n/i18next.server";
-// import { LanguageSwitcher } from "../components/LanguageSwitcher";
+import { logger } from "../lib/logger.server";
 
 export const handle = {
   i18n: "common",
@@ -29,7 +29,7 @@ export const handle = {
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { billing, session } = await authenticate.admin(request);
-  console.log("✅ Session valid for shop:", session.shop);
+  logger.debug({ shop: session.shop }, 'Session authenticated');
   const locale = await getLocaleFromRequest(request);
   const t = i18nServer.getFixedT(locale, "common");
 

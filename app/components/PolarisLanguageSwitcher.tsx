@@ -31,7 +31,6 @@ export function PolarisLanguageSwitcher({ currentLocale }: PolarisLanguageSwitch
       if (newLocale === currentLocale || isChanging) return;
 
       setIsChanging(true);
-      console.log(`[PolarisLanguageSwitcher] Changing locale to: ${newLocale}`);
 
       try {
         const response = await fetch("/api/set-locale", {
@@ -44,14 +43,11 @@ export function PolarisLanguageSwitcher({ currentLocale }: PolarisLanguageSwitch
         const result = await response.json();
 
         if (result.success) {
-          console.log(`[PolarisLanguageSwitcher] ✅ Locale changed. Reloading...`);
           window.location.reload();
         } else {
-          console.error(`[PolarisLanguageSwitcher] ❌ Failed:`, result.error);
           setIsChanging(false);
         }
       } catch (error) {
-        console.error(`[PolarisLanguageSwitcher] ❌ Error:`, error);
         setIsChanging(false);
       }
     },

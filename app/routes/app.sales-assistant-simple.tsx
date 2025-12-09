@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import { logger } from "../lib/logger.server";
 import { json } from "@remix-run/node";
 import { useLoaderData, useFetcher } from "@remix-run/react";
 import {
@@ -144,7 +145,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       confidence: n8nResponse.confidence || 0.7
     });
   } catch (error) {
-    console.error("Error processing message:", error);
+    logger.error("Error processing message:", error);
     return json({ error: "Failed to process message" }, { status: 500 });
   }
 };

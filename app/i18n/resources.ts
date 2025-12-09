@@ -25,5 +25,4 @@ export const resources = {
 
 // Optional: Log in dev only
 if (process.env.NODE_ENV === "development") {
-  console.log("✅ [i18n/resources] Loaded locales:", Object.keys(resources));
 }

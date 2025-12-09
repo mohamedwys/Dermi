@@ -8,7 +8,7 @@ const NODE_ENV = process.env.NODE_ENV;
  */
 export function initSentry() {
   if (!SENTRY_DSN) {
-    console.warn('⚠️ SENTRY_DSN not configured - error tracking disabled');
+    logger.warn('⚠️ SENTRY_DSN not configured - error tracking disabled');
     return;
   }
 
@@ -67,7 +67,7 @@ export function initSentry() {
     ],
   });
 
-  console.log('✅ Sentry initialized for server-side error tracking');
+  logger.info('✅ Sentry initialized for server-side error tracking');
 }
 
 /**

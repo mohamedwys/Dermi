@@ -41,7 +41,6 @@ export default function App() {
       const translations = await loadPolarisTranslations(locale as SupportedLocale);
       if (isMounted) {
         setPolarisTranslations(translations);
-        console.log(`[app.tsx] Polaris translations loaded for: ${locale}`);
       }
     }
 
@@ -56,7 +55,6 @@ export default function App() {
   useEffect(() => {
     if (i18n.language !== locale) {
       i18n.changeLanguage(locale);
-      console.log(`[app.tsx] Changed i18n language to: ${locale}`);
     }
   }, [locale, i18n]);
 

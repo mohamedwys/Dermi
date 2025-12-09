@@ -7,6 +7,8 @@
  * SECURITY: Never use wildcard (*) for Access-Control-Allow-Origin in production!
  */
 
+import { logger } from './logger.server';
+
 /**
  * Allowed origin patterns for CORS
  */
@@ -127,7 +129,7 @@ export function addSecureCorsHeaders(response: Response, request: Request): Resp
  * @param path - The request path
  */
 export function logCorsViolation(origin: string | null, path: string): void {
-  console.warn(`🚨 CORS Violation: Blocked request from origin "${origin}" to ${path}`);
+  logger.warn({ origin, path }, 'CORS violation: Blocked request from unauthorized origin');
 
   // In production, you might want to send this to a monitoring service
   // Example: Sentry, LogRocket, Datadog, etc.

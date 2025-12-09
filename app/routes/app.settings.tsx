@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
+import { logger } from "../lib/logger.server";
 import { json } from "@remix-run/node";
 import { useActionData, useLoaderData, useSubmit } from "@remix-run/react";
 import {
@@ -130,7 +131,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     
     return json({ settings });
   } catch (error) {
-    console.error("Database error in settings loader:", error);
+    logger.error("Database error in settings loader:", error);
     // Return default settings if database fails
     return json({ 
       settings: {
@@ -162,8 +163,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   };
 
   try {
-    console.log('💾 Saving settings for shop:', session.shop);
-    console.log('🔧 Webhook URL being saved:', normalizedWebhookUrl || '[CLEARED/DEFAULT]');
+    logger.info('💾 Saving settings for shop:', session.shop);
+    logger.info('🔧 Webhook URL being saved:', normalizedWebhookUrl || '[CLEARED/DEFAULT]');
 
     // Save settings to database
     const settings = await db.widgetSettings.upsert({
@@ -175,8 +176,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
     });
 
-    console.log("✅ Settings saved to database successfully");
-    console.log("🔧 Final webhookUrl in database:", settings.webhookUrl || '[NULL/DEFAULT]');
+    logger.info("✅ Settings saved to database successfully");
+    logger.info("🔧 Final webhookUrl in database:", settings.webhookUrl || '[NULL/DEFAULT]');
 
     return json({
       success: true,
@@ -184,7 +185,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       settings
     });
   } catch (error) {
-    console.error("❌ Database save error:", error);
+    logger.error("❌ Database save error:", error);
     // Return error to user instead of silent fallback
     return json({
       success: false,
