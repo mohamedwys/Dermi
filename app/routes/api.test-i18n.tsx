@@ -6,30 +6,39 @@ import type { LoaderFunctionArgs } from "@remix-run/node";
  * Access at: /api/test-i18n
  */
 export async function loader({ request }: LoaderFunctionArgs) {
-  console.log('🧪 [test-i18n] Test endpoint called');
+  console.log("🧪 [test-i18n] Test endpoint called");
 
   try {
-    // Try to import resources
-    console.log('🔄 [test-i18n] Importing resources...');
-    const { resources } = await import("../i18n/resources");
-    console.log('✅ [test-i18n] Resources imported successfully');
+    // Import resources
+    console.log("🔄 [test-i18n] Importing resources...");
+    const resourcesModule = await import("../i18n/resources");
+    const resources = resourcesModule.resources;
+    console.log("✅ [test-i18n] Resources imported successfully");
 
-    // Try to import i18nServer and getLocaleFromRequest
-    console.log('🔄 [test-i18n] Importing i18n functions...');
-    const { getLocaleFromRequest } = await import("../i18n/i18next.server");
-    console.log('✅ [test-i18n] i18n functions imported successfully');
+    // Import locale detection
+    console.log("🔄 [test-i18n] Importing i18n functions...");
+    const i18nModule = await import("../i18n/i18next.server");
 
-    // Get locale using our manual parser
-    console.log('🔄 [test-i18n] Getting locale...');
+    if (!("getLocaleFromRequest" in i18nModule)) {
+      throw new Error(
+        "getLocaleFromRequest is missing from i18next.server.ts (expected export)."
+      );
+    }
+
+    const { getLocaleFromRequest } = i18nModule;
+    console.log("✅ [test-i18n] i18n functions imported successfully");
+
+    // Detect locale
+    console.log("🔄 [test-i18n] Getting locale...");
     const locale = await getLocaleFromRequest(request);
-    console.log('✅ [test-i18n] Locale detected:', locale);
+    console.log("✅ [test-i18n] Locale detected:", locale);
 
     // Check resources
     const availableLanguages = Object.keys(resources);
-    const hasEnglish = 'en' in resources;
-    const englishKeys = hasEnglish ? Object.keys(resources.en.common).slice(0, 5) : [];
-
-    console.log('✅ [test-i18n] Test completed successfully');
+    const hasEnglish = "en" in resources;
+    const englishKeys = hasEnglish
+      ? Object.keys(resources.en.common).slice(0, 5)
+      : [];
 
     return json({
       success: true,
@@ -41,20 +50,20 @@ export async function loader({ request }: LoaderFunctionArgs) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('❌ [test-i18n] Error:', error);
-    console.error('❌ [test-i18n] Error details:', {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : 'No stack',
-    });
+    const e = error as Error;
+    console.error("❌ [test-i18n] Error:", e);
 
-    return json({
-      success: false,
-      error: {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : 'No stack trace',
-        name: error instanceof Error ? error.name : 'Unknown',
+    return json(
+      {
+        success: false,
+        error: {
+          message: e.message,
+          stack: e.stack,
+          name: e.name,
+        },
+        timestamp: new Date().toISOString(),
       },
-      timestamp: new Date().toISOString(),
-    }, { status: 500 });
+      { status: 500 }
+    );
   }
 }

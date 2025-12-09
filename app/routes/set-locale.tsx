@@ -1,16 +1,13 @@
-import { redirect } from "@remix-run/node";
-import { localeCookie } from "../i18n/i18next.server";
+import type { ActionFunctionArgs } from "@remix-run/node";
 
-// Use the built-in fetch Request type
-export const action = async ({ request }: { request: globalThis.Request }) => {
+export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
-  const newLocale = formData.get("locale")?.toString();
+  const locale = formData.get("locale");
 
-  if (!newLocale) return null;
-
-  return redirect("/", {
+  return new Response(null, {
+    status: 200,
     headers: {
-      "Set-Cookie": await localeCookie.serialize(newLocale),
-    },
+      "Set-Cookie": `locale=${locale}; Path=/; SameSite=Lax; HttpOnly`
+    }
   });
 };

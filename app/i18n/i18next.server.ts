@@ -1,42 +1,55 @@
-// app/translations/i18next.server.ts
 import { createCookie } from "@remix-run/node";
 import i18nConfig from "./index";
 
-// Create a cookie for storing the user's locale
+// Cookie used to store locale
 export const localeCookie = createCookie("locale", {
   path: "/",
-  httpOnly: false, // allow access from client-side if needed
+  httpOnly: false,
   sameSite: "lax",
-  maxAge: 60 * 60 * 24 * 365, // 1 year
+  maxAge: 60 * 60 * 24 * 365,
 });
 
-/**
- * Get the locale from the request in the following order:
- * 1. Cookie
- * 2. URL query parameter
- * 3. Fallback locale
- */
 export async function getLocaleFromRequest(request: Request): Promise<string> {
   try {
-    // 1️⃣ Check cookie
+    // 1️⃣ Try cookie
     const cookieHeader = request.headers.get("Cookie");
     if (cookieHeader) {
       const cookieValue = await localeCookie.parse(cookieHeader);
-      if (cookieValue && i18nConfig.supportedLngs.includes(cookieValue)) {
+
+      if (
+        typeof cookieValue === "string" &&
+        i18nConfig.supportedLngs.includes(cookieValue)
+      ) {
         return cookieValue;
       }
     }
 
-    // 2️⃣ Check URL query parameter
+    // 2️⃣ Try URL parameter ?locale=fr
     const url = new URL(request.url);
     const localeParam = url.searchParams.get("locale");
-    if (localeParam && i18nConfig.supportedLngs.includes(localeParam)) {
+
+    if (
+      typeof localeParam === "string" &&
+      i18nConfig.supportedLngs.includes(localeParam)
+    ) {
       return localeParam;
     }
   } catch (error) {
-    console.error("Error parsing locale from request:", error);
+    console.error("[i18next.server] Error reading locale:", error);
   }
 
-  // 3️⃣ Fallback locale
-  return i18nConfig.fallbackLng;
+  // 3️⃣ Safe fallback (handles both string & object formats)
+  let fallback = "en";
+
+  if (typeof i18nConfig.fallbackLng === "string") {
+    fallback = i18nConfig.fallbackLng;
+  } else if (
+    i18nConfig.fallbackLng &&
+    typeof i18nConfig.fallbackLng === "object" &&
+    "default" in i18nConfig.fallbackLng
+  ) {
+    fallback = (i18nConfig.fallbackLng as { default: string }).default;
+  }
+
+  return fallback;
 }
