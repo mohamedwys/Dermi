@@ -21,7 +21,7 @@ import { AnalyticsService } from "../services/analytics.service";
 import { prisma as db } from "../db.server";
 import { useTranslation } from "react-i18next";
 import { getLocaleFromRequest, i18nServer } from "../i18n/i18next.server";
-import { LanguageSwitcher } from "../components/LanguageSwitcher";
+// import { LanguageSwitcher } from "../components/LanguageSwitcher";
 
 export const handle = {
   i18n: "common",
@@ -126,7 +126,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 };
 
 export default function Index() {
-  const { stats, billingStatus, locale } = useLoaderData<typeof loader>();
+  const { stats, billingStatus } = useLoaderData<typeof loader>();
   const { t } = useTranslation(); // ✅ Safe: runs only on client
 
   return (
@@ -167,9 +167,9 @@ export default function Index() {
         )}
 
         {/* Language Switcher */}
-        <Layout.Section>
+        {/* <Layout.Section>
           <LanguageSwitcher currentLocale={locale} />
-        </Layout.Section>
+        </Layout.Section> */}
 
         {/* Key Metrics Section */}
         <Layout.Section>

@@ -45,9 +45,7 @@ export default function App() {
         <Link to="/app/settings">{t("nav.settings")}</Link>
         <Link to="/app/analytics">{t("nav.analytics")}</Link>
         <Link to="/app/additional">{t("nav.additional")}</Link>
-        
       </NavMenu>
-
       <Box paddingInlineStart="400" paddingInlineEnd="400" paddingBlockStart="400">
         <Outlet />
       </Box>
