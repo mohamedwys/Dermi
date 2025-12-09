@@ -20,10 +20,13 @@ i18nServer.init({
 
 // --- Locale cookie logic (unchanged) ---
 export const localeCookie = createCookie("locale", {
-  path: "/",
-  httpOnly: false,
-  sameSite: "lax",
-  maxAge: 60 * 60 * 24 * 365,
+  path: "/",                 // ✅ must be "/"
+  httpOnly: false,           // ✅ required for client-side read
+  sameSite: "lax",           // ✅ Shopify uses "lax"
+  secure: process.env.NODE_ENV === "production", // ✅ true in prod
+  maxAge: 60 * 60 * 24 * 365, // 1 year
+  // 🔥 CRITICAL: DO NOT set `domain` — let browser infer it
+  // Setting domain breaks embedded apps (uses shop subdomain)
 });
 
 export async function getLocaleFromRequest(request: Request): Promise<SupportedLocale> {
