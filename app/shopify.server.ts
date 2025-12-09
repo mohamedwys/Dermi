@@ -3,14 +3,10 @@ import "@shopify/shopify-app-remix/adapters/node";
 import {
   ApiVersion,
   AppDistribution,
-  BillingInterval,
   shopifyApp,
 } from "@shopify/shopify-app-remix/server";
-
-// ✅ REMOVE PrismaSessionStorage — use token-based auth instead
-// import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
-// import { MemorySessionStorage } from "@shopify/shopify-app-session-storage-memory";
-// import { prisma } from "./db.server";
+// ✅ Keep MemorySessionStorage (required even for token auth)
+import { MemorySessionStorage } from "@shopify/shopify-app-session-storage-memory";
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -19,23 +15,24 @@ const shopify = shopifyApp({
   scopes: process.env.SCOPES?.split(","),
   appUrl: process.env.SHOPIFY_APP_URL || "",
   authPathPrefix: "/auth",
-  // ✅ No sessionStorage needed — App Bridge handles it
+  // ✅ Use MemorySessionStorage — no DB needed for token auth
+  sessionStorage: new MemorySessionStorage(),
   distribution: AppDistribution.AppStore,
   future: {
-    unstable_newEmbeddedAuthStrategy: true,
+    unstable_newEmbeddedAuthStrategy: true, // ✅ enables token-based auth
     removeRest: true,
   },
   billing: {
     "Starter Plan": {
       amount: 25.0,
       currencyCode: "USD",
-      interval: BillingInterval.Monthly, // ✅ Changed from Every30Days
+      interval: "EVERY_30_DAYS", // ✅ correct string
       trialDays: 7,
     },
     "Professional Plan": {
       amount: 79.0,
       currencyCode: "USD",
-      interval: BillingInterval.Monthly, // ✅ Changed from Every30Days
+      interval: "EVERY_30_DAYS",
       trialDays: 7,
     },
   },
