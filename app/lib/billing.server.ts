@@ -47,12 +47,19 @@ export async function checkBillingStatus(
  *
  * Use this in loaders to protect routes that require a subscription
  *
+ * DEVELOPMENT: Set SKIP_BILLING_CHECK=true to bypass billing in development
+ *
  * @param billing - Billing API from authenticate.admin
  * @throws Redirect to /app/billing if no active subscription
  */
 export async function requireBilling(
   billing: BillingAPI
 ): Promise<void> {
+  // Allow bypassing billing check in development
+  if (process.env.SKIP_BILLING_CHECK === "true") {
+    return;
+  }
+
   const billingCheck = await billing.require({
     plans: ["Starter Plan", "Professional Plan"] as any,
     isTest: process.env.NODE_ENV !== "production",
