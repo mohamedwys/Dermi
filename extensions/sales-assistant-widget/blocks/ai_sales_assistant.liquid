@@ -1415,7 +1415,7 @@ This creates a floating chat widget that can be added to any page
             <!-- Wavy bottom edge -->
             <div class="header-wave-bottom">
               <svg viewBox="0 0 1200 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0,25 Q600,5 1200,25 L1200,40 L0,40 Z" fill="#fafafa"/>
+                <path d="M0,25 Q600,5 1200,25 L1200,40 L0,40 Z" fill="white"/>
               </svg>
             </div>
           </div>
@@ -1785,9 +1785,9 @@ This creates a floating chat widget that can be added to any page
 }
 .ai-chat-header {
   position: relative;
-  background: linear-gradient(135deg, var(--ai-primary-color, #ee5cee) 0%, var(--ai-primary-color-dark, #cc00cc) 100%);
+  background: var(--ai-primary-color, #ee5cee);
   color: white;
-  padding: 18px 12px 0 12px;
+  padding: 18px 8px 0 8px;
   z-index: 10;
   box-sizing: border-box;
   grid-area: header !important;
@@ -1905,7 +1905,7 @@ This creates a floating chat widget that can be added to any page
 .ai-chat-messages-container {
   grid-area: messages !important;
   overflow: hidden;
-  background: #fafafa;
+  background: white;
   box-sizing: border-box;
   height: 100%;
   width: 100%;
@@ -1921,7 +1921,7 @@ This creates a floating chat widget that can be added to any page
   scroll-behavior: smooth;
   height: 100% !important; /* Take full available height */
   box-sizing: border-box !important;
-  background: #fafafa; /* Light background to distinguish from header/footer */
+  background: white;
 }
 .ai-chat-messages::-webkit-scrollbar {
   width: 6px;
