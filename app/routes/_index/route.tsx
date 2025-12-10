@@ -1,17 +1,23 @@
 // app/routes/_index.tsx
-import { Hero } from "../../components/Hero";
-import { Features } from "../../components/Features";
-import { Stats } from "../../components/Stats";
-import { Pricing } from "../../components/Pricing";
-import { Testimonials } from "../../components/Testimonials";
-import { TrustSection } from "../../components/TrustSection";
-import { AIAssistants } from "../../components/AIAssistants";
-import { Footer } from "../../components/Footer";
-import { FloatingCTA } from "../../components/FloatingCTA";
+import { lazy, Suspense } from "react";
 import { useLoaderData } from "@remix-run/react";
 import { login } from "../../shopify.server";
 import { redirect } from "@remix-run/node";
 import type { LoaderFunctionArgs } from "@remix-run/node";
+
+// ✅ Lazy load heavy components to reduce initial bundle size
+// Hero contains Spline 3D library (~2MB) - only load when needed
+const Hero = lazy(() => import("../../components/Hero").then(m => ({ default: m.Hero })));
+const Features = lazy(() => import("../../components/Features").then(m => ({ default: m.Features })));
+const Stats = lazy(() => import("../../components/Stats").then(m => ({ default: m.Stats })));
+const Pricing = lazy(() => import("../../components/Pricing").then(m => ({ default: m.Pricing })));
+const Testimonials = lazy(() => import("../../components/Testimonials").then(m => ({ default: m.Testimonials })));
+const TrustSection = lazy(() => import("../../components/TrustSection").then(m => ({ default: m.TrustSection })));
+const AIAssistants = lazy(() => import("../../components/AIAssistants").then(m => ({ default: m.AIAssistants })));
+
+// ⚡ Keep Footer and FloatingCTA eager - they're small and needed immediately
+import { Footer } from "../../components/Footer";
+import { FloatingCTA } from "../../components/FloatingCTA";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
@@ -70,24 +76,55 @@ const testimonials = [ {
     metric: '5x scale achieved',
   }, ];
 
+// Simple loading skeleton for sections
+const SectionLoader = () => (
+  <div className="w-full min-h-[400px] flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-12 h-12 border-4 border-purple-500/30 border-t-purple-500 rounded-full animate-spin"></div>
+      <p className="text-slate-600 text-sm">Loading...</p>
+    </div>
+  </div>
+);
+
 export default function LandingPage() {
   useLoaderData<typeof loader>();
   return (
     <>
-      <Hero />
-      <Features />
-      <AIAssistants />
-      <Stats />
-      <Pricing />
-      <Testimonials testimonials={testimonials} />
-      <TrustSection />
+      <Suspense fallback={<SectionLoader />}>
+        <Hero />
+      </Suspense>
+
+      <Suspense fallback={<SectionLoader />}>
+        <Features />
+      </Suspense>
+
+      <Suspense fallback={<SectionLoader />}>
+        <AIAssistants />
+      </Suspense>
+
+      <Suspense fallback={<SectionLoader />}>
+        <Stats />
+      </Suspense>
+
+      <Suspense fallback={<SectionLoader />}>
+        <Pricing />
+      </Suspense>
+
+      <Suspense fallback={<SectionLoader />}>
+        <Testimonials testimonials={testimonials} />
+      </Suspense>
+
+      <Suspense fallback={<SectionLoader />}>
+        <TrustSection />
+      </Suspense>
+
       <Footer
         leftLinks={[]}
         rightLinks={[
           { href: '/privacy-policy', label: 'Privacy Policy' },
           { href: '/terms-of-service', label: 'Terms of Service' },
           { href: '/cookie-policy', label: 'Cookie Policy' },
-          { href: '/gdpr-compliance', label: 'GDPR Compliance' }, 
+          { href: '/gdpr-compliance', label: 'GDPR Compliance' },
           { href: '/ai-compliance', label: 'AI Compliance' },
         ]}
         copyrightText="© 2025 ShopiBot by Welcome Middle East FZ-LLC. All rights reserved."
