@@ -2,7 +2,6 @@
 AI Sales Assistant Widget Block
 This creates a floating chat widget that can be added to any page
 {% endcomment %}
-
 {% schema %}
 {
   "name": "AI Sales Assistant",
@@ -163,10 +162,8 @@ This creates a floating chat widget that can be added to any page
   ]
 }
 {% endschema %}
-
 <!-- AI Sales Assistant Widget will be dynamically loaded -->
 <div id="ai-sales-assistant-container"></div>
-
 <script>
 (function() {
   let chatOpen = false;
@@ -175,14 +172,12 @@ This creates a floating chat widget that can be added to any page
   let currentQuickReplies = []; // ✨ NEW: Track current quick replies
   let currentSentiment = 'neutral'; // ✨ NEW: Track sentiment for styling
   let currentSuggestedActions = []; // ✨ NEW: Track suggested actions
-
   function escapeHTML(str) {
     if (!str) return '';
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
   }
-
   function sanitizeColor(color) {
     if (!color) return '#ee5cee'; // default color
     if (/^#([0-9A-Fa-f]{3}){1,2}$/.test(color)) {
@@ -190,55 +185,42 @@ This creates a floating chat widget that can be added to any page
     }
     return '#ee5cee'; // fallback to default if invalid
   }
-
   function sanitizeUrl(url) {
     if (!url) return '';
     const urlStr = String(url).trim();
-
     const dangerousProtocols = /^(javascript|data|vbscript|file|about):/i;
     if (dangerousProtocols.test(urlStr)) {
       return '';
     }
-
     if (urlStr.startsWith('http://') || urlStr.startsWith('https://') || urlStr.startsWith('/')) {
       return urlStr;
     }
-
     if (!urlStr.includes(':')) {
       return urlStr;
     }
-
     return '';
   }
-
   async function fetchWithRetry(url, options = {}, maxRetries = 3) {
     let lastError;
-
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         const response = await fetch(url, options);
         if (response.ok) {
           return response;
         }
-
         if (response.status >= 400 && response.status < 500) {
           throw new Error(`Request failed with status ${response.status}`);
         }
-
         lastError = new Error(`Request failed with status ${response.status}`);
       } catch (error) {
         lastError = error;
-
         if (attempt === maxRetries) break;
-
         const delay = Math.pow(2, attempt) * 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
-
     throw lastError;
   }
-
   function loadConversationHistory() {
     try {
       const stored = localStorage.getItem('ai_chat_history');
@@ -253,7 +235,6 @@ This creates a floating chat widget that can be added to any page
     }
     return false;
   }
-
   function saveConversationHistory() {
     try {
       localStorage.setItem('ai_chat_history', JSON.stringify({
@@ -263,20 +244,17 @@ This creates a floating chat widget that can be added to any page
     } catch (e) {
     }
   }
-
   let settingsCheckInterval = null;
   function cleanupWidget() {
     if (settingsCheckInterval) {
       clearInterval(settingsCheckInterval);
       settingsCheckInterval = null;
     }
-
     if (window.aiWidgetHandlers) {
       const toggleBtn = document.getElementById('ai-chat-toggle-btn');
       const closeBtn = document.getElementById('ai-chat-close-btn');
       const sendBtn = document.getElementById('ai-chat-send-btn');
       const inputField = document.getElementById('ai-chat-input-field');
-
       if (toggleBtn && window.aiWidgetHandlers.toggleHandler) {
         toggleBtn.removeEventListener('click', window.aiWidgetHandlers.toggleHandler);
       }
@@ -299,11 +277,8 @@ This creates a floating chat widget that can be added to any page
         document.removeEventListener('click', window.aiWidgetHandlers.outsideClickHandler);
       }
     }
-
   }
-
   window.cleanupAIWidget = cleanupWidget;
-
   const analyticsEvents = {
     WIDGET_OPENED: 'ai_widget_opened',
     WIDGET_CLOSED: 'ai_widget_closed',
@@ -313,7 +288,6 @@ This creates a floating chat widget that can be added to any page
     SUGGESTION_CLICKED: 'ai_suggestion_clicked',
     ERROR_OCCURRED: 'ai_error_occurred'
   };
-
   function trackAnalytics(eventName, data = {}) {
     const event = new CustomEvent('ai-widget-analytics', {
       detail: {
@@ -323,29 +297,22 @@ This creates a floating chat widget that can be added to any page
       }
     });
     window.dispatchEvent(event);
-
     if (typeof gtag === 'function') {
       gtag('event', eventName, data);
     }
-
     if (typeof dataLayer !== 'undefined') {
       dataLayer.push({
         event: eventName,
         ...data
       });
     }
-
     if (typeof fbq === 'function') {
       fbq('trackCustom', eventName, data);
     }
-
   }
-
   window.aiWidgetAnalytics = trackAnalytics;
-
   let messageQueue = [];
   let isOnline = navigator.onLine;
-
   function loadMessageQueue() {
     try {
       const stored = localStorage.getItem('ai_message_queue');
@@ -355,51 +322,39 @@ This creates a floating chat widget that can be added to any page
     } catch (e) {
     }
   }
-
   function saveMessageQueue() {
     try {
       localStorage.setItem('ai_message_queue', JSON.stringify(messageQueue));
     } catch (e) {
     }
   }
-
   function processMessageQueue() {
     if (!isOnline || messageQueue.length === 0) return;
-
-
     const queue = [...messageQueue];
     messageQueue = [];
     saveMessageQueue();
-
     queue.forEach(queuedMessage => {
       addMessageToChat('user', `${queuedMessage.message} 📤`);
-
       setTimeout(() => {
         sendMessageToServer(queuedMessage.message);
       }, 500);
     });
   }
-
   window.addEventListener('online', () => {
     isOnline = true;
     showNotification('Back online! Sending queued messages...', 'success');
     processMessageQueue();
   });
-
   window.addEventListener('offline', () => {
     isOnline = false;
     showNotification('You\'re offline. Messages will be queued.', 'info');
   });
-
   loadMessageQueue();
-
   function applySentimentStyling(sentiment) {
     const chatWidget = document.getElementById('ai-chat-widget');
     const chatHeader = document.querySelector('.ai-chat-header');
     const messagesContainer = document.getElementById('ai-chat-messages');
-
     if (!chatWidget) return;
-
     const sentimentStyles = {
       positive: {
         headerGradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', // Bright green
@@ -420,20 +375,16 @@ This creates a floating chat widget that can be added to any page
         accentColor: widgetSettings?.primaryColor || '#ee5cee'
       }
     };
-
     const style = sentimentStyles[sentiment] || sentimentStyles.neutral;
-
     if (chatHeader) {
       chatHeader.style.transition = 'all 0.5s ease';
       chatHeader.style.background = style.headerGradient;
       chatHeader.style.boxShadow = style.headerShadow;
     }
-
     if (messagesContainer) {
       messagesContainer.style.transition = 'background-color 0.5s ease';
       messagesContainer.style.backgroundColor = style.messagesBg;
     }
-
     const quickReplyButtons = document.querySelectorAll('.quick-reply-btn');
     quickReplyButtons.forEach(btn => {
       btn.style.transition = 'all 0.3s ease';
@@ -441,7 +392,6 @@ This creates a floating chat widget that can be added to any page
       btn.style.color = style.accentColor;
     });
   }
-
   function adjustColor(color, percent) {
     const num = parseInt(color.replace('#', ''), 16);
     const amt = Math.round(2.55 * percent);
@@ -453,7 +403,6 @@ This creates a floating chat widget that can be added to any page
       (B < 255 ? B < 1 ? 0 : B : 255))
       .toString(16).slice(1);
   }
-
   const blockSettings = {
     enabled: {{ block.settings.enabled | json }},
     position: {{ block.settings.position | json }},
@@ -475,34 +424,26 @@ This creates a floating chat widget that can be added to any page
     trackOrderText: {{ block.settings.track_order_text | json }},
     helpText: {{ block.settings.help_text | json }}
   };
-  
   window.toggleAIChat = function() {
     const chatWindow = document.getElementById('ai-chat-window');
     const toggleBtn = document.getElementById('ai-chat-toggle-btn');
-
     if (!chatWindow) {
       return;
     }
-
     chatOpen = !chatOpen;
-
     trackAnalytics(chatOpen ? analyticsEvents.WIDGET_OPENED : analyticsEvents.WIDGET_CLOSED, {
       timestamp: new Date().toISOString(),
       conversationLength: conversationHistory.length
     });
-
     if (toggleBtn) {
       toggleBtn.setAttribute('aria-expanded', chatOpen.toString());
       toggleBtn.setAttribute('aria-label', chatOpen ? 'Close AI chat assistant' : 'Open AI chat assistant');
     }
-
     if (chatOpen) {
       chatWindow.classList.add('ai-chat-open');
     } else {
       chatWindow.classList.remove('ai-chat-open');
     }
-
-
     if (chatOpen) {
       const inputField = document.getElementById('ai-chat-input-field');
       if (inputField) {
@@ -517,24 +458,19 @@ This creates a floating chat widget that can be added to any page
       }
     }
   };
-  
   window.handleChatKeyPress = function(event) {
     if (event.key === 'Enter') {
       sendAIMessage();
     }
   };
-  
   window.sendAIMessage = function() {
     const inputField = document.getElementById('ai-chat-input-field');
     const message = inputField.value.trim();
-
     if (!message) return;
-
     trackAnalytics(analyticsEvents.MESSAGE_SENT, {
       messageLength: message.length,
       conversationPosition: conversationHistory.length + 1
     });
-
     if (!isOnline) {
       addMessageToChat('user', `${message} 📭 (Queued)`);
       messageQueue.push({
@@ -546,20 +482,13 @@ This creates a floating chat widget that can be added to any page
       showNotification('Message queued. Will send when online.', 'info');
       return;
     }
-
     hideWelcomeScreen();
-
     addMessageToChat('user', message);
     inputField.value = '';
-
     showLoading(true);
-    
     const shopUrl = '{{ shop.url }}';
-    
     const sendChatMessage = async () => {
-
       const detectedLocale = navigator.language || navigator.userLanguage || 'en';
-
       try {
         const contextData = {
           page: window.location.pathname,
@@ -569,8 +498,6 @@ This creates a floating chat widget that can be added to any page
           locale: navigator.language || navigator.userLanguage || 'en',
           currency: '{{ shop.currency }}' || 'USD'
         };
-
-
         const response = await fetchWithRetry(`${shopUrl}/apps/widget-settings`, {
            method: 'POST',
            headers: {
@@ -584,62 +511,49 @@ This creates a floating chat widget that can be added to any page
              context: contextData
            })
          });
-
          return await response.json();
        } catch (error) {
          throw error;
        }
      };
-     
      sendChatMessage()
       .then(data => {
       showLoading(false);
-
       let responseMessage = data.response || data.message;
-
       if (responseMessage) {
         trackAnalytics(analyticsEvents.MESSAGE_RECEIVED, {
           responseLength: responseMessage.length,
           hasRecommendations: !!(data.recommendations && data.recommendations.length > 0),
           hasSuggestions: !!(data.quickReplies && data.quickReplies.length > 0)
         });
-
         addMessageToChat('assistant', responseMessage);
-
         if (data.recommendations && data.recommendations.length > 0) {
           displayProductRecommendations(data.recommendations);
         }
-
         if (data.quickReplies && data.quickReplies.length > 0) {
           displayQuickReplies(data.quickReplies);
         } else {
           displayQuickReplies([]);
         }
-
         if (data.suggestedActions && data.suggestedActions.length > 0) {
           displaySuggestedActions(data.suggestedActions);
         } else {
           displaySuggestedActions([]);
         }
-
         if (data.sentiment) {
           currentSentiment = data.sentiment;
           applySentimentStyling(data.sentiment);
         }
-
         if (data.requiresHumanEscalation) {
           displayHumanEscalationPrompt();
         }
-
         conversationHistory.push(
           { role: 'user', content: message },
           { role: 'assistant', content: responseMessage }
         );
-
         if (conversationHistory.length > 10) {
           conversationHistory = conversationHistory.slice(-10);
         }
-
         saveConversationHistory();
       } else {
         addMessageToChat('assistant', 'Sorry, I encountered an error. Please try again.');
@@ -647,42 +561,32 @@ This creates a floating chat widget that can be added to any page
     })
     .catch(error => {
       showLoading(false);
-
       trackAnalytics(analyticsEvents.ERROR_OCCURRED, {
         errorMessage: error.message,
         errorType: error.name
       });
-
       addMessageToChat('assistant', 'Sorry, I encountered an error. Please try again.');
     });
   };
-  
   function addMessageToChat(sender, message) {
     const messagesContainer = document.getElementById('ai-chat-messages');
     const messageDiv = document.createElement('div');
     messageDiv.className = `ai-message ${sender}-message`;
-
     const messageContent = document.createElement('div');
     messageContent.className = 'message-content';
-
     const cleanMessage = message.trim();
     const lines = cleanMessage.split('\n');
-
     lines.forEach((line, index) => {
       const textNode = document.createTextNode(line);
       messageContent.appendChild(textNode);
-
       if (index < lines.length - 1) {
         messageContent.appendChild(document.createElement('br'));
       }
     });
-
     messageDiv.appendChild(messageContent);
     messagesContainer.appendChild(messageDiv);
-
     scrollToBottom();
   }
-  
   function scrollToBottom() {
     const messagesContainer = document.getElementById('ai-chat-messages');
     if (messagesContainer) {
@@ -694,7 +598,6 @@ This creates a floating chat widget that can be added to any page
       }, 10);
     }
   }
-  
   function scrollToTop() {
     const messagesContainer = document.getElementById('ai-chat-messages');
     if (messagesContainer) {
@@ -706,7 +609,6 @@ This creates a floating chat widget that can be added to any page
       }, 10);
     }
   }
-
   function displayQuickReplies(quickReplies) {
     if (!quickReplies || quickReplies.length === 0) {
       currentQuickReplies = [];
@@ -714,12 +616,9 @@ This creates a floating chat widget that can be added to any page
       if (container) container.remove();
       return;
     }
-
     currentQuickReplies = quickReplies;
-
     const existingContainer = document.getElementById('quick-replies-container');
     if (existingContainer) existingContainer.remove();
-
     const container = document.createElement('div');
     container.id = 'quick-replies-container';
     container.style.cssText = `
@@ -732,7 +631,6 @@ This creates a floating chat widget that can be added to any page
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
     `;
-
     quickReplies.forEach(reply => {
       const button = document.createElement('button');
       button.textContent = reply;
@@ -750,7 +648,6 @@ This creates a floating chat widget that can be added to any page
         transition: all 0.2s ease;
         flex-shrink: 0;
       `;
-
       button.onmouseover = () => {
         button.style.background = widgetSettings.primaryColor || '#ee5cee';
         button.style.color = 'white';
@@ -763,29 +660,24 @@ This creates a floating chat widget that can be added to any page
         button.style.transform = 'translateY(0)';
         button.style.boxShadow = 'none';
       };
-
       button.onclick = () => {
         trackAnalytics(analyticsEvents.SUGGESTION_CLICKED, {
           suggestion: reply
         });
-
         const inputField = document.getElementById('ai-chat-input-field');
         if (inputField) {
           inputField.value = reply;
           sendAIMessage();
         }
       };
-
       container.appendChild(button);
     });
-
     const chatFooter = document.querySelector('.ai-chat-footer') ||
                        document.getElementById('ai-chat-input-field')?.parentElement;
     if (chatFooter) {
       chatFooter.insertBefore(container, chatFooter.firstChild);
     }
   }
-
   function displaySuggestedActions(suggestedActions) {
     if (!suggestedActions || suggestedActions.length === 0) {
       currentSuggestedActions = [];
@@ -793,12 +685,9 @@ This creates a floating chat widget that can be added to any page
       if (existingBar) existingBar.remove();
       return;
     }
-
     currentSuggestedActions = suggestedActions;
-
     const existingBar = document.getElementById('suggested-actions-bar');
     if (existingBar) existingBar.remove();
-
     const actionsBar = document.createElement('div');
     actionsBar.id = 'suggested-actions-bar';
     actionsBar.style.cssText = `
@@ -811,12 +700,10 @@ This creates a floating chat widget that can be added to any page
       flex-wrap: wrap;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     `;
-
     suggestedActions.forEach(action => {
       const button = document.createElement('button');
       button.textContent = action.label;
       button.className = 'suggested-action-btn';
-
       const icons = {
         'view_product': '👁️',
         'add_to_cart': '🛒',
@@ -824,7 +711,6 @@ This creates a floating chat widget that can be added to any page
         'custom': '✨'
       };
       const icon = icons[action.action] || '▶️';
-
       button.style.cssText = `
         background: ${widgetSettings.primaryColor || '#ee5cee'};
         color: white;
@@ -843,9 +729,7 @@ This creates a floating chat widget that can be added to any page
         min-width: 140px;
         justify-content: center;
       `;
-
       button.innerHTML = `<span style="font-size: 16px;">${icon}</span> ${escapeHTML(action.label)}`;
-
       button.onmouseover = () => {
         button.style.transform = 'translateY(-2px)';
         button.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
@@ -856,25 +740,20 @@ This creates a floating chat widget that can be added to any page
         button.style.boxShadow = '0 2px 6px rgba(0,0,0,0.12)';
         button.style.filter = 'brightness(1)';
       };
-
       button.onclick = () => {
         handleSuggestedAction(action);
       };
-
       actionsBar.appendChild(button);
     });
-
     const messagesContainer = document.getElementById('ai-chat-messages');
     if (messagesContainer) {
       messagesContainer.appendChild(actionsBar);
       messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
   }
-
   function showNotification(message, type = 'success') {
     const existingNotif = document.getElementById('cart-notification');
     if (existingNotif) existingNotif.remove();
-
     const notification = document.createElement('div');
     notification.id = 'cart-notification';
     notification.style.cssText = `
@@ -894,28 +773,22 @@ This creates a floating chat widget that can be added to any page
       font-weight: 600;
       animation: slideInRight 0.3s ease;
     `;
-
     const icon = document.createElement('span');
     icon.style.fontSize = '20px';
     icon.textContent = type === 'success' ? '✅' : '❌';
     notification.appendChild(icon);
-
     const text = document.createElement('span');
     text.textContent = message;
     notification.appendChild(text);
-
     document.body.appendChild(notification);
-
     setTimeout(() => {
       notification.style.animation = 'slideOutRight 0.3s ease';
       setTimeout(() => notification.remove(), 300);
     }, 3000);
   }
-
   async function addToCart(productHandle, variantId, quantity = 1) {
     try {
       showNotification('Adding to cart...', 'info');
-
       if (variantId) {
         const response = await fetch('/cart/add.js', {
           method: 'POST',
@@ -929,14 +802,11 @@ This creates a floating chat widget that can be added to any page
             }]
           })
         });
-
         if (!response.ok) {
           throw new Error('Failed to add to cart');
         }
-
         const data = await response.json();
         showNotification('Added to cart! 🛒', 'success');
-
         updateCartCount();
         return true;
       } else {
@@ -944,14 +814,11 @@ This creates a floating chat widget that can be added to any page
         if (!productResponse.ok) {
           throw new Error('Product not found');
         }
-
         const product = await productResponse.json();
         const firstAvailableVariant = product.variants.find(v => v.available);
-
         if (!firstAvailableVariant) {
           throw new Error('Product is out of stock');
         }
-
         const addResponse = await fetch('/cart/add.js', {
           method: 'POST',
           headers: {
@@ -964,11 +831,9 @@ This creates a floating chat widget that can be added to any page
             }]
           })
         });
-
         if (!addResponse.ok) {
           throw new Error('Failed to add to cart');
         }
-
         showNotification('Added to cart! 🛒', 'success');
         updateCartCount();
         return true;
@@ -978,7 +843,6 @@ This creates a floating chat widget that can be added to any page
       return false;
     }
   }
-
   function updateCartCount() {
     fetch('/cart.js')
       .then(res => res.json())
@@ -989,7 +853,6 @@ This creates a floating chat widget that can be added to any page
         });
       })
   }
-
   function handleSuggestedAction(action) {
     switch(action.action) {
       case 'view_product':
@@ -1003,7 +866,6 @@ This creates a floating chat widget that can be added to any page
           }
         }
         break;
-
       case 'add_to_cart':
         if (action.data) {
           const isVariantId = /^\d+$/.test(action.data);
@@ -1014,25 +876,19 @@ This creates a floating chat widget that can be added to any page
           }
         }
         break;
-
       case 'compare':
         addMessageToChat('assistant', 'Product comparison feature coming soon! ⚖️');
         break;
-
       case 'custom':
         break;
-
       default:
     }
   }
-
   function displayHumanEscalationPrompt() {
     const messagesContainer = document.getElementById('ai-chat-messages');
     if (!messagesContainer) return;
-
     const existingPrompt = document.getElementById('escalation-prompt');
     if (existingPrompt) return; // Don't show multiple times
-
     const escalationPrompt = document.createElement('div');
     escalationPrompt.id = 'escalation-prompt';
     escalationPrompt.className = 'ai-message assistant-message';
@@ -1044,7 +900,6 @@ This creates a floating chat widget that can be added to any page
       margin: 16px 0;
       box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
     `;
-
     const header = document.createElement('div');
     header.style.cssText = `
       display: flex;
@@ -1052,12 +907,10 @@ This creates a floating chat widget that can be added to any page
       gap: 12px;
       margin-bottom: 12px;
     `;
-
     const icon = document.createElement('span');
     icon.style.fontSize = '28px';
     icon.textContent = '👤';
     header.appendChild(icon);
-
     const title = document.createElement('h3');
     title.style.cssText = `
       margin: 0;
@@ -1067,9 +920,7 @@ This creates a floating chat widget that can be added to any page
     `;
     title.textContent = 'Need to speak with a human?';
     header.appendChild(title);
-
     escalationPrompt.appendChild(header);
-
     const message = document.createElement('p');
     message.style.cssText = `
       margin: 0 0 16px 0;
@@ -1079,14 +930,12 @@ This creates a floating chat widget that can be added to any page
     `;
     message.textContent = 'It looks like you might need personalized assistance. Our support team is ready to help you!';
     escalationPrompt.appendChild(message);
-
     const buttonsContainer = document.createElement('div');
     buttonsContainer.style.cssText = `
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
     `;
-
     const connectBtn = document.createElement('button');
     connectBtn.textContent = '💬 Talk to Support';
     connectBtn.style.cssText = `
@@ -1102,7 +951,6 @@ This creates a floating chat widget that can be added to any page
       flex: 1;
       min-width: 140px;
     `;
-
     connectBtn.onmouseover = () => {
       connectBtn.style.background = '#dc2626';
       connectBtn.style.transform = 'translateY(-1px)';
@@ -1113,7 +961,6 @@ This creates a floating chat widget that can be added to any page
       connectBtn.style.transform = 'translateY(0)';
       connectBtn.style.boxShadow = 'none';
     };
-
     connectBtn.onclick = () => {
       const safeUrl = sanitizeUrl('/pages/contact');
       if (safeUrl) {
@@ -1121,7 +968,6 @@ This creates a floating chat widget that can be added to any page
       }
     };
     buttonsContainer.appendChild(connectBtn);
-
     const continueBtn = document.createElement('button');
     continueBtn.textContent = '🤖 Continue with AI';
     continueBtn.style.cssText = `
@@ -1137,7 +983,6 @@ This creates a floating chat widget that can be added to any page
       flex: 1;
       min-width: 140px;
     `;
-
     continueBtn.onmouseover = () => {
       continueBtn.style.background = '#fef2f2';
       continueBtn.style.transform = 'translateY(-1px)';
@@ -1146,29 +991,23 @@ This creates a floating chat widget that can be added to any page
       continueBtn.style.background = 'white';
       continueBtn.style.transform = 'translateY(0)';
     };
-
     continueBtn.onclick = () => {
       escalationPrompt.style.animation = 'fadeOut 0.3s ease';
       setTimeout(() => escalationPrompt.remove(), 300);
       addMessageToChat('assistant', 'No problem! I\'m here to help. What else can I assist you with? 😊');
     };
     buttonsContainer.appendChild(continueBtn);
-
     escalationPrompt.appendChild(buttonsContainer);
-
     messagesContainer.appendChild(escalationPrompt);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
-
   function displayProductRecommendations(recommendations) {
     const messagesContainer = document.getElementById('ai-chat-messages');
-    
     const productsContainer = document.createElement('div');
     productsContainer.className = 'ai-message assistant-message products-grid-container';
     productsContainer.style.marginBottom = '16px';
     productsContainer.style.maxWidth = '100%';
     productsContainer.style.width = '100%';
-    
     const gridContent = document.createElement('div');
     gridContent.className = 'products-grid';
     gridContent.style.display = 'grid';
@@ -1176,7 +1015,6 @@ This creates a floating chat widget that can be added to any page
     gridContent.style.gap = '12px';
     gridContent.style.padding = '0';
     gridContent.style.width = '100%';
-    
     recommendations.forEach((product, index) => {
       const productCard = document.createElement('div');
       productCard.className = 'product-card clickable-product';
@@ -1188,8 +1026,6 @@ This creates a floating chat widget that can be added to any page
       productCard.style.transition = 'all 0.3s ease';
       productCard.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
       productCard.style.position = 'relative';
-
-
       if (product.image) {
         const imageDiv = document.createElement('div');
         imageDiv.className = 'product-image';
@@ -1204,7 +1040,6 @@ This creates a floating chat widget that can be added to any page
         imageDiv.style.backgroundPosition = 'center';
         imageDiv.style.backgroundColor = '#f8f9fa';
         imageDiv.style.position = 'relative';
-
         const badgesContainer = document.createElement('div');
         badgesContainer.style.position = 'absolute';
         badgesContainer.style.top = '8px';
@@ -1212,7 +1047,6 @@ This creates a floating chat widget that can be added to any page
         badgesContainer.style.display = 'flex';
         badgesContainer.style.flexDirection = 'column';
         badgesContainer.style.gap = '6px';
-
         if (product.badge || product.discountPercent) {
           const discountBadge = document.createElement('div');
           discountBadge.style.background = '#ef4444';
@@ -1225,7 +1059,6 @@ This creates a floating chat widget that can be added to any page
           discountBadge.textContent = product.badge || `${product.discountPercent}% OFF`;
           badgesContainer.appendChild(discountBadge);
         }
-
         if (product.isLowStock && product.inventory) {
           const stockBadge = document.createElement('div');
           stockBadge.style.background = '#f59e0b';
@@ -1238,11 +1071,9 @@ This creates a floating chat widget that can be added to any page
           stockBadge.textContent = `Only ${product.inventory} left!`;
           badgesContainer.appendChild(stockBadge);
         }
-
         if (badgesContainer.children.length > 0) {
           imageDiv.appendChild(badgesContainer);
         }
-
         if (product.relevanceScore) {
           const matchBadge = document.createElement('div');
           matchBadge.style.position = 'absolute';
@@ -1258,13 +1089,10 @@ This creates a floating chat widget that can be added to any page
           matchBadge.textContent = `${product.relevanceScore}% match`;
           imageDiv.appendChild(matchBadge);
         }
-
         productCard.appendChild(imageDiv);
       }
-
       const detailsDiv = document.createElement('div');
       detailsDiv.style.padding = '16px';
-
       const titleH4 = document.createElement('h4');
       titleH4.style.margin = '0 0 8px 0';
       titleH4.style.fontSize = '16px';
@@ -1277,24 +1105,20 @@ This creates a floating chat widget that can be added to any page
       titleH4.style.overflow = 'hidden';
       titleH4.textContent = product.title || 'Untitled Product'; // Safe textContent
       detailsDiv.appendChild(titleH4);
-
       if (product.rating || product.reviewCount) {
         const ratingDiv = document.createElement('div');
         ratingDiv.style.display = 'flex';
         ratingDiv.style.alignItems = 'center';
         ratingDiv.style.gap = '6px';
         ratingDiv.style.marginBottom = '8px';
-
         const rating = product.rating || 0;
         const fullStars = Math.floor(rating);
         const hasHalfStar = rating % 1 >= 0.5;
-
         const starsSpan = document.createElement('span');
         starsSpan.style.color = '#fbbf24';
         starsSpan.style.fontSize = '14px';
         starsSpan.textContent = '★'.repeat(fullStars) + (hasHalfStar ? '½' : '') + '☆'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0));
         ratingDiv.appendChild(starsSpan);
-
         if (product.reviewCount) {
           const reviewSpan = document.createElement('span');
           reviewSpan.style.fontSize = '12px';
@@ -1302,21 +1126,17 @@ This creates a floating chat widget that can be added to any page
           reviewSpan.textContent = `(${product.reviewCount})`;
           ratingDiv.appendChild(reviewSpan);
         }
-
         detailsDiv.appendChild(ratingDiv);
       }
-
       const priceRow = document.createElement('div');
       priceRow.style.display = 'flex';
       priceRow.style.justifyContent = 'space-between';
       priceRow.style.alignItems = 'center';
       priceRow.style.marginBottom = '12px';
-
       const priceContainer = document.createElement('div');
       priceContainer.style.display = 'flex';
       priceContainer.style.flexDirection = 'column';
       priceContainer.style.gap = '2px';
-
       if (product.compareAtPrice && parseFloat(product.compareAtPrice) > parseFloat(product.price)) {
         const originalPriceSpan = document.createElement('span');
         originalPriceSpan.style.fontSize = '13px';
@@ -1325,16 +1145,13 @@ This creates a floating chat widget that can be added to any page
         originalPriceSpan.textContent = `$${parseFloat(product.compareAtPrice).toFixed(2)}`;
         priceContainer.appendChild(originalPriceSpan);
       }
-
       const priceDiv = document.createElement('div');
       priceDiv.style.fontSize = '20px';
       priceDiv.style.fontWeight = '700';
       priceDiv.style.color = product.compareAtPrice ? '#ef4444' : widgetSettings.primaryColor;
       priceDiv.textContent = product.priceFormatted || `$${parseFloat(product.price || '0').toFixed(2)}`;
       priceContainer.appendChild(priceDiv);
-
       priceRow.appendChild(priceContainer);
-
       if (product.category) {
         const categoryDiv = document.createElement('div');
         categoryDiv.style.background = '#f3f4f6';
@@ -1347,7 +1164,6 @@ This creates a floating chat widget that can be added to any page
         priceRow.appendChild(categoryDiv);
       }
       detailsDiv.appendChild(priceRow);
-
       const descP = document.createElement('p');
       descP.style.margin = '0 0 12px 0';
       descP.style.fontSize = '13px';
@@ -1359,7 +1175,6 @@ This creates a floating chat widget that can be added to any page
       descP.style.overflow = 'hidden';
       descP.textContent = product.description || 'No description available'; // Safe textContent
       detailsDiv.appendChild(descP);
-
       if (product.urgencyMessage) {
         const urgencyDiv = document.createElement('div');
         urgencyDiv.style.display = 'flex';
@@ -1373,23 +1188,18 @@ This creates a floating chat widget that can be added to any page
         urgencyDiv.style.fontWeight = '600';
         urgencyDiv.style.marginBottom = '12px';
         urgencyDiv.style.border = '1px solid #fcd34d';
-
         const iconSpan = document.createElement('span');
         iconSpan.textContent = '⚡';
         iconSpan.style.fontSize = '14px';
         urgencyDiv.appendChild(iconSpan);
-
         const textSpan = document.createElement('span');
         textSpan.textContent = product.urgencyMessage;
         urgencyDiv.appendChild(textSpan);
-
         detailsDiv.appendChild(urgencyDiv);
       }
-
       if (product.tags && product.tags.length > 0) {
         const tagsDiv = document.createElement('div');
         tagsDiv.style.marginBottom = '12px';
-
         product.tags.slice(0, 3).forEach(tag => {
           const tagSpan = document.createElement('span');
           tagSpan.style.display = 'inline-block';
@@ -1403,10 +1213,8 @@ This creates a floating chat widget that can be added to any page
           tagSpan.textContent = tag; // Safe textContent
           tagsDiv.appendChild(tagSpan);
         });
-
         detailsDiv.appendChild(tagsDiv);
       }
-
       const actionButton = document.createElement('div');
       actionButton.style.background = widgetSettings.primaryColor;
       actionButton.style.color = 'white';
@@ -1418,56 +1226,45 @@ This creates a floating chat widget that can be added to any page
       actionButton.style.marginTop = 'auto';
       actionButton.textContent = 'View Product →';
       detailsDiv.appendChild(actionButton);
-
       productCard.appendChild(detailsDiv);
-      
       productCard.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-
         trackAnalytics(analyticsEvents.PRODUCT_CLICKED, {
           productTitle: product.title,
           productHandle: product.handle,
           productPrice: product.price,
           relevanceScore: product.relevanceScore
         });
-
         const productUrl = product.fullUrl || `/products/${product.handle}`;
         const safeUrl = sanitizeUrl(productUrl);
         if (safeUrl) {
           window.open(safeUrl, '_blank', 'noopener,noreferrer');
         }
-
         this.style.transform = 'scale(0.98)';
         setTimeout(() => {
           this.style.transform = 'scale(1)';
         }, 150);
       });
-      
       productCard.addEventListener('mouseenter', function() {
         this.style.borderColor = widgetSettings.primaryColor;
         this.style.transform = 'translateY(-4px)';
         this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
       });
-      
       productCard.addEventListener('mouseleave', function() {
         this.style.borderColor = '#e5e7eb';
         this.style.transform = 'translateY(0)';
         this.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
       });
-      
       gridContent.appendChild(productCard);
     });
-    
     productsContainer.appendChild(gridContent);
     messagesContainer.appendChild(productsContainer);
-    
     if (recommendations.length > 2) {
       const browseMoreDiv = document.createElement('div');
       browseMoreDiv.className = 'ai-message assistant-message';
       browseMoreDiv.style.marginTop = '8px';
       browseMoreDiv.style.textAlign = 'center';
-      
       const browseButton = document.createElement('button');
       browseButton.style.background = 'transparent';
       browseButton.style.border = `2px solid ${widgetSettings.primaryColor}`;
@@ -1479,61 +1276,49 @@ This creates a floating chat widget that can be added to any page
       browseButton.style.cursor = 'pointer';
       browseButton.style.transition = 'all 0.2s ease';
       browseButton.textContent = 'Browse All Products';
-      
       browseButton.addEventListener('click', function() {
         const safeUrl = sanitizeUrl('/collections/all');
         if (safeUrl) {
           window.open(safeUrl, '_blank', 'noopener,noreferrer');
         }
       });
-      
       browseButton.addEventListener('mouseenter', function() {
         this.style.backgroundColor = widgetSettings.primaryColor;
         this.style.color = 'white';
       });
-      
       browseButton.addEventListener('mouseleave', function() {
         this.style.backgroundColor = 'transparent';
         this.style.color = widgetSettings.primaryColor;
       });
-      
       browseMoreDiv.appendChild(browseButton);
       messagesContainer.appendChild(browseMoreDiv);
     }
-    
     scrollToBottom();
   }
-  
   function showLoading(show) {
     const messagesContainer = document.getElementById('ai-chat-messages');
     let loadingDiv = document.getElementById('ai-loading');
-
     if (show) {
       if (loadingDiv) {
         loadingDiv.remove();
       }
-
       loadingDiv = document.createElement('div');
       loadingDiv.id = 'ai-loading';
       loadingDiv.className = 'ai-message assistant-message skeleton-message';
-
       for (let i = 0; i < 3; i++) {
         const line = document.createElement('div');
         line.className = 'skeleton skeleton-line';
         line.style.width = i === 2 ? '60%' : '100%';
         loadingDiv.appendChild(line);
       }
-
       if (messagesContainer) {
         const allMessages = messagesContainer.querySelectorAll('.ai-message:not(.ai-welcome-message)');
-
         if (allMessages.length > 0) {
           const lastMessage = allMessages[allMessages.length - 1];
           lastMessage.insertAdjacentElement('afterend', loadingDiv);
         } else {
           messagesContainer.appendChild(loadingDiv);
         }
-
         scrollToBottom();
       }
     } else {
@@ -1544,14 +1329,12 @@ This creates a floating chat widget that can be added to any page
       }
     }
   }
-  
   function hideWelcomeScreen() {
     const welcomeMessage = document.querySelector('.ai-welcome-message');
     if (welcomeMessage) {
       welcomeMessage.style.display = 'none';
     }
   }
-  
   function getProductIdFromPage() {
     const productMatch = window.location.pathname.match(/\/products\/([^\/]+)/);
     if (productMatch) {
@@ -1559,46 +1342,37 @@ This creates a floating chat widget that can be added to any page
     }
     return null;
   }
-  
   async function initializeWidget() {
     try {
       loadConversationHistory();
-
       widgetSettings = blockSettings;
-
-      
       const shopDomain = window.Shopify?.shop || '{{ shop.permanent_domain }}';
       const shopUrl = '{{ shop.url }}';
       const possibleSettingsUrls = [
         shopUrl + '/apps/widget-settings',
         window.location.protocol + '//' + window.location.host + '/apps/widget-settings'
       ];
-      
       let apiSuccess = false;
       for (const appUrl of possibleSettingsUrls) {
         try {
           const timestamp = Date.now();
           const response = await fetchWithRetry(`${appUrl}?shop=${shopDomain}&t=${timestamp}`, {}, 2);
           const data = await response.json();
-
           const isThemeEditor = !!(
             window.Shopify?.designMode ||
             window.location.search.includes('oseid=') ||
             window.location.pathname.includes('/editor')
           );
-
             'Shopify.designMode': window.Shopify?.designMode,
             'URL has oseid': window.location.search.includes('oseid='),
             'Is theme editor': isThemeEditor
           });
-
           if (isThemeEditor) {
             widgetSettings = { ...data.settings, ...blockSettings };  // Theme editor: block settings override
           } else {
             widgetSettings = { ...blockSettings, ...data.settings }; // Storefront: API settings override
           }
           apiSuccess = true;
-
           if (typeof window.lastSettingsUpdate === 'undefined') {
             window.lastSettingsUpdate = data.settings.updatedAt;
           }
@@ -1607,23 +1381,17 @@ This creates a floating chat widget that can be added to any page
           continue;
         }
       }
-      
       if (!apiSuccess) {
       }
-      
-      
       if (!widgetSettings.enabled) {
         return;
       }
-      
       createWidget();
-      
         position: widgetSettings.position,
         primaryColor: widgetSettings.primaryColor,
         buttonText: widgetSettings.buttonText,
         chatTitle: widgetSettings.chatTitle
       });
-      
     } catch (error) {
       widgetSettings = blockSettings;
       if (widgetSettings.enabled) {
@@ -1631,21 +1399,16 @@ This creates a floating chat widget that can be added to any page
       }
     }
   }
-  
   function createWidget() {
     const container = document.getElementById('ai-sales-assistant-container');
     if (!container || !widgetSettings) return;
-    
-    
     container.innerHTML = '';
-    
     const safePosition = String(widgetSettings.position).replace(/[^a-z-]/gi, ''); // Only allow letters and hyphens
     const safeButtonText = escapeHTML(widgetSettings.buttonText);
     const safeChatTitle = escapeHTML(widgetSettings.chatTitle);
     const safeWelcomeMessage = escapeHTML(widgetSettings.welcomeMessage);
     const safeInputPlaceholder = escapeHTML(widgetSettings.inputPlaceholder);
     const safePrimaryColor = sanitizeColor(widgetSettings.primaryColor);
-
     container.innerHTML = `
       <div class="ai-sales-assistant-widget position-${safePosition}" data-widget-id="ai-sales-assistant">
         <!-- Chat Toggle Button -->
@@ -1660,7 +1423,6 @@ This creates a floating chat widget that can be added to any page
           <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAABJlBMVEVHcEwb49o9s+I0v+BIoOUuyN9Ui+hZg+pdfOsc49tMl+ZViuke4NtOk+ce39sc4ts3t+Ej19xbf+pTi+gl1N1GoOVCp+RWh+kxwuAa5tpFo+Ue39s0vuAsyt4i2NxIneYpzd5Ml+Yry946suJUiuldfOs6suIc49oZ59oa5do/q+Neeusxwt8Y6dka5touxt88sOJcfupZgupcfuo0veBefOpcfuoZ5toiIiI8sOI2ueFCp+RFouVInuU5tOE/q+MzveAxwt8uxt9LmedQkOdWh+kry98o0N0hHx9Ui+gl1Nwi2dwf3dtOlOZZgulcfuomTFYsRFcrhZc+ZpxUjes4cJsyepkjP0Ei2t0lxs1ImOBPluomy9ZEcbFBo95KgMsmmaIkZ2ysswjsAAAAOHRSTlMA/gUPAic0C7FTd1yYJhPx7WN0zOqTseDK3t/QnT6GGbzjS7idmjlKO63ujvUwzvf08Ty8eiXh80ZVzqoAAAFYSURBVDjLvZPXVsJAEIYpgST0DlIEFAQLFiw0KUGECKJIVECxvf9LaHZmMBG88/hdzX/mO7t7dnYNhv/FVciJYt5iWt015R37bqPRWFrb9rpW9AsOtQuUYuLSKrnYtRb3ulnfFwMDxnQ6hWLg0BmJQJ/Rm81mcyj765zm9Kke8D6ZTD7mUAc2vgVvF+iNZVketTGlFpuYI22gOy6X5ZGE6WCxRGJPAtpMaGGS4iSctBCJCVWKEdyDi1cJJjQoeSx4x5sNpPqoChWKni0SKgQTmpQOUeBCTYQJdzWKO7iFIVgjHlThlVI0iYL9nGBCnVKIRuqM1hEmPFGy0T1wwQsEBAxp52IW1vSQ8ayoQgfC0KYZt60DvCmK8oK1P6kR+MwVcP8FVGGr7kWZM5d6/MUfb5L3hW80CM7lZ23Nnt0CR8d2ftXH4E7tu4IgZH1F/ve/xZlMf/5fPwFR8XwfQCSWdQAAAABJRU5ErkJggg==" alt="iHeard.ai" width="24" height="24" style="object-fit: contain;" />
           <span class="button-text">${safeButtonText}</span>
         </button>
-
         <!-- Chat Window -->
         <div
           id="ai-chat-window"
@@ -1698,7 +1460,6 @@ This creates a floating chat widget that can be added to any page
               </svg>
             </div>
           </div>
-          
           <!-- Chat Messages Container -->
           <div class="ai-chat-messages-container">
             <!-- Chat Messages -->
@@ -1719,7 +1480,6 @@ This creates a floating chat widget that can be added to any page
                     </div>
                     <h2 class="welcome-title">${safeWelcomeMessage}</h2>
                   </div>
-
                   <!-- Product Discovery Section -->
                   <div class="quick-actions-section">
                     <div class="section-label">
@@ -1744,7 +1504,6 @@ This creates a floating chat widget that can be added to any page
                       </button>
                     </div>
                   </div>
-
                   <!-- Customer Support Section -->
                   <div class="quick-actions-section">
                     <div class="section-label">
@@ -1771,11 +1530,8 @@ This creates a floating chat widget that can be added to any page
                   </div>
                 </div>
               </div>
-              
-
             </div>
           </div>
-          
           <!-- Chat Input -->
           <div class="ai-chat-input">
             <div class="ai-chat-input-wrapper">
@@ -1802,19 +1558,14 @@ This creates a floating chat widget that can be added to any page
         </div>
       </div>
     `;
-    
     addWidgetStyles();
-    
     setTimeout(() => {
       setupEventListeners();
     }, 50);
   }
-  
   function addWidgetStyles() {
     if (document.getElementById('ai-widget-styles')) return;
-
     document.documentElement.style.setProperty('--ai-primary-color', widgetSettings.primaryColor);
-
     const hexToRgb = (hex) => {
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
       return result ? {
@@ -1823,7 +1574,6 @@ This creates a floating chat widget that can be added to any page
         b: parseInt(result[3], 16)
       } : null;
     };
-
     const rgb = hexToRgb(widgetSettings.primaryColor);
     if (rgb) {
       const darkerR = Math.max(0, rgb.r - 40);
@@ -1833,7 +1583,6 @@ This creates a floating chat widget that can be added to any page
       document.documentElement.style.setProperty('--ai-primary-color-dark', darkerColor);
       document.documentElement.style.setProperty('--ai-primary-color-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
     }
-
     const style = document.createElement('style');
     style.id = 'ai-widget-styles';
     style.textContent = `
@@ -1848,7 +1597,6 @@ This creates a floating chat widget that can be added to any page
   white-space: nowrap;
   border-width: 0;
 }
-
 .ai-sales-assistant-widget {
   --font-size-xs: 0.64rem;    /* 10.24px */
   --font-size-sm: 0.8rem;     /* 12.8px */
@@ -1857,7 +1605,6 @@ This creates a floating chat widget that can be added to any page
   --font-size-lg: 1.563rem;   /* 25px */
   --font-size-xl: 1.953rem;   /* 31.25px */
   --font-size-2xl: 2.441rem;  /* 39px */
-
   --space-1: 0.5rem;   /* 8px */
   --space-2: 1rem;     /* 16px */
   --space-3: 1.5rem;   /* 24px */
@@ -1866,124 +1613,99 @@ This creates a floating chat widget that can be added to any page
   --space-6: 3rem;     /* 48px */
   --space-7: 3.5rem;   /* 56px */
   --space-8: 4rem;     /* 64px */
-
   --touch-target-min: 44px;
   --touch-target-comfortable: 48px;
-
   --color-bg-primary: #ffffff;
   --color-bg-secondary: #f8f9fa;
   --color-bg-tertiary: #e9ecef;
-
   --color-text-primary: #1a1a1a;      /* 16.5:1 contrast on white */
   --color-text-secondary: #4a4a4a;    /* 10.4:1 contrast on white */
   --color-text-tertiary: #6c6c6c;     /* 7.5:1 contrast (AA Large) */
-
   --color-border-light: #e5e7eb;
   --color-border-medium: #d1d5db;
   --color-border-strong: #9ca3af;
-
   --focus-ring-color: #3b82f6;
   --focus-ring-width: 3px;
   --focus-ring-offset: 2px;
   --focus-ring: 0 0 0 var(--focus-ring-offset) var(--color-bg-primary),
                 0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width)) var(--focus-ring-color);
-
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bounce: 500ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
-
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
-
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-full: 9999px;
-
   position: fixed;
   z-index: 1000;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   font-size: var(--font-size-base);
   color: var(--color-text-primary);
 }
-
 @media (prefers-color-scheme: dark) {
   .ai-sales-assistant-widget:not(.force-light-mode) {
     --color-bg-primary: #1a1a1a;
     --color-bg-secondary: #2d2d2d;
     --color-bg-tertiary: #404040;
-
     --color-text-primary: #f5f5f5;      /* 15.8:1 contrast on dark */
     --color-text-secondary: #d4d4d4;    /* 11.5:1 contrast on dark */
     --color-text-tertiary: #a3a3a3;     /* 7.2:1 contrast (AA Large) */
-
     --color-border-light: #404040;
     --color-border-medium: #525252;
     --color-border-strong: #737373;
-
     --focus-ring-color: #60a5fa;
   }
-
   .ai-chat-window:not(.force-light-mode) {
     background: rgba(26, 26, 26, 0.98) !important;
     border-color: rgba(64, 64, 64, 0.5) !important;
   }
-
   .ai-chat-messages:not(.force-light-mode) {
     background-color: var(--color-bg-primary) !important;
   }
-
   .user-message:not(.force-light-mode) {
     background: var(--color-bg-tertiary) !important;
     color: var(--color-text-primary) !important;
   }
-
   .assistant-message:not(.force-light-mode) .message-content {
     background: var(--color-bg-secondary) !important;
     color: var(--color-text-primary) !important;
   }
 }
-
 .ai-sales-assistant-widget.position-bottom-right {
   bottom: 20px;
   right: 20px;
 }
-
 .ai-sales-assistant-widget.position-bottom-left {
   bottom: 20px;
   left: 20px;
 }
-
 .ai-sales-assistant-widget.position-top-right {
   top: 20px;
   right: 20px;
 }
-
 .ai-sales-assistant-widget.position-top-left {
   top: 20px;
   left: 20px;
 }
-
 .ai-sales-assistant-widget.position-center-right {
   top: 50%;
   right: 20px;
   transform: translateY(-50%);
 }
-
 .ai-sales-assistant-widget.position-center-left {
   top: 50%;
   left: 20px;
   transform: translateY(-50%);
 }
-
 .ai-chat-toggle {
   min-width: var(--touch-target-comfortable);
   min-height: var(--touch-target-comfortable);
-
   background: linear-gradient(135deg, var(--ai-primary-color, #ee5cee) 0%, var(--ai-primary-color-dark, #cc00cc) 100%);
   border: none;
   border-radius: var(--radius-full);
@@ -2003,20 +1725,17 @@ This creates a floating chat widget that can be added to any page
   overflow: hidden;
   animation: floatButton 3s ease-in-out infinite;
 }
-
 .ai-chat-toggle:focus {
   outline: none;
   box-shadow: var(--focus-ring),
     0 4px 15px rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.4);
 }
-
 .ai-chat-toggle:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring),
     var(--shadow-xl),
     0 4px 15px rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.5);
 }
-
 .ai-chat-toggle::before {
   content: '';
   position: absolute;
@@ -2027,33 +1746,27 @@ This creates a floating chat widget that can be added to any page
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
   transition: left 0.5s;
 }
-
 .ai-chat-toggle:hover::before {
   left: 100%;
 }
-
 .ai-chat-toggle:hover {
   transform: translateY(-3px) scale(1.02);
   box-shadow:
     0 6px 20px rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.5),
     0 15px 35px rgba(0, 0, 0, 0.2);
 }
-
 .ai-chat-toggle:active {
   transform: translateY(-1px) scale(0.98);
 }
-
 .ai-chat-toggle .button-text {
   white-space: nowrap;
   font-weight: 600;
   letter-spacing: 0.3px;
 }
-
 @keyframes floatButton {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-5px); }
 }
-
 .ai-chat-window {
   position: absolute;
   bottom: 80px;
@@ -2087,7 +1800,6 @@ This creates a floating chat widget that can be added to any page
     visibility 0.3s var(--transition-smooth),
     transform 0.3s var(--transition-bounce);
 }
-
 .ai-chat-window.ai-chat-open {
   display: grid !important;
   opacity: 1 !important;
@@ -2095,27 +1807,23 @@ This creates a floating chat widget that can be added to any page
   pointer-events: auto !important;
   transform: translateY(0) scale(1);
 }
-
 .ai-sales-assistant-widget.position-bottom-left .ai-chat-window,
 .ai-sales-assistant-widget.position-top-left .ai-chat-window,
 .ai-sales-assistant-widget.position-center-left .ai-chat-window {
   right: auto;
   left: 0;
 }
-
 .ai-sales-assistant-widget.position-top-right .ai-chat-window,
 .ai-sales-assistant-widget.position-top-left .ai-chat-window {
   bottom: auto;
   top: 70px;
 }
-
 .ai-sales-assistant-widget.position-center-right .ai-chat-window,
 .ai-sales-assistant-widget.position-center-left .ai-chat-window {
   bottom: auto;
   top: 50%;
   transform: translateY(-50%);
 }
-
 .ai-chat-header {
   position: relative;
   background: linear-gradient(135deg, var(--ai-primary-color, #ee5cee) 0%, var(--ai-primary-color-dark, #cc00cc) 100%);
@@ -2126,7 +1834,6 @@ This creates a floating chat widget that can be added to any page
   grid-area: header !important;
   box-shadow: 0 4px 20px rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.3);
 }
-
 .chat-header-content {
   position: relative;
   z-index: 2;
@@ -2135,18 +1842,15 @@ This creates a floating chat widget that can be added to any page
   align-items: center;
   padding-bottom: 16px;
 }
-
 .header-info {
   flex: 1;
 }
-
 .header-info h3 {
   margin: 0 0 4px 0;
   font-size: 18px;
   font-weight: 700;
   letter-spacing: 0.3px;
 }
-
 .header-status {
   display: flex;
   align-items: center;
@@ -2154,7 +1858,6 @@ This creates a floating chat widget that can be added to any page
   font-size: 13px;
   opacity: 0.95;
 }
-
 .status-dot {
   width: 8px;
   height: 8px;
@@ -2163,12 +1866,10 @@ This creates a floating chat widget that can be added to any page
   box-shadow: 0 0 8px rgba(74, 222, 128, 0.8);
   animation: pulse 2s ease-in-out infinite;
 }
-
 .status-text {
   font-size: 13px;
   font-weight: 500;
 }
-
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
@@ -2179,7 +1880,6 @@ This creates a floating chat widget that can be added to any page
     transform: scale(1.1);
   }
 }
-
 .header-wave-bottom {
   position: absolute;
   bottom: -1px;
@@ -2189,24 +1889,20 @@ This creates a floating chat widget that can be added to any page
   overflow: hidden;
   line-height: 0;
 }
-
 .header-wave-bottom svg {
   position: relative;
   display: block;
   width: 100%;
   height: 40px;
 }
-
 @media (prefers-reduced-motion: reduce) {
   .status-dot {
     animation: none;
   }
 }
-
 .ai-chat-close {
   min-width: var(--touch-target-min);
   min-height: var(--touch-target-min);
-
   background: rgba(255, 255, 255, 0.15);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -2220,40 +1916,33 @@ This creates a floating chat widget that can be added to any page
   justify-content: center;
   transition: all var(--transition-smooth);
 }
-
 .ai-chat-close:focus {
   outline: none;
   background: rgba(255, 255, 255, 0.3);
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5),
               0 0 0 4px rgba(255, 255, 255, 0.3);
 }
-
 .ai-chat-close:focus-visible {
   outline: none;
   background: rgba(255, 255, 255, 0.35);
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.6),
               0 0 0 5px rgba(255, 255, 255, 0.4);
 }
-
 .ai-chat-close svg {
   width: 20px;
   height: 20px;
   transition: transform var(--transition-smooth);
 }
-
 .ai-chat-close:hover {
   background: rgba(255, 255, 255, 0.25);
   transform: scale(1.05);
 }
-
 .ai-chat-close:hover svg {
   transform: rotate(90deg);
 }
-
 .ai-chat-close:active {
   transform: scale(0.95);
 }
-
 .ai-chat-messages-container {
   grid-area: messages !important;
   overflow: hidden;
@@ -2262,7 +1951,6 @@ This creates a floating chat widget that can be added to any page
   height: 100%;
   width: 100%;
 }
-
 .ai-chat-messages {
   padding: 15px;
   padding-bottom: 15px; /* Consistent padding */
@@ -2276,33 +1964,27 @@ This creates a floating chat widget that can be added to any page
   box-sizing: border-box !important;
   background: #fafafa; /* Light background to distinguish from header/footer */
 }
-
 .ai-chat-messages::-webkit-scrollbar {
   width: 6px;
 }
-
 .ai-chat-messages::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.03);
   border-radius: 10px;
   margin: 4px 0;
 }
-
 .ai-chat-messages::-webkit-scrollbar-thumb {
   background: linear-gradient(135deg, var(--ai-primary-color, #ee5cee) 0%, var(--ai-primary-color-dark, #cc00cc) 100%);
   border-radius: 10px;
   transition: all 0.3s ease;
 }
-
 .ai-chat-messages::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, var(--ai-primary-color-dark, #cc00cc) 0%, var(--ai-primary-color, #ee5cee) 100%);
   width: 8px;
 }
-
 .ai-chat-messages {
   scrollbar-width: thin;
   scrollbar-color: var(--ai-primary-color, #ee5cee) rgba(0, 0, 0, 0.03);
 }
-
 #ai-chat-messages .ai-message,
 .ai-chat-messages .ai-message,
 .ai-chat-messages-container .ai-message {
@@ -2314,49 +1996,39 @@ This creates a floating chat widget that can be added to any page
   margin-bottom: 16px !important; /* Increased spacing for better visibility */
   margin-top: 0 !important; /* Reset any top margins */
 }
-
 .ai-welcome-message {
   max-width: 100% !important;
   width: 100% !important;
 }
-
 #ai-chat-messages .ai-message:last-child,
 .ai-chat-messages .ai-message:last-child,
 .ai-chat-messages-container .ai-message:last-child {
   margin-bottom: 8px !important; /* Small bottom margin for last message */
 }
-
 .ai-sales-assistant-widget .ai-chat-messages .ai-message {
   margin-bottom: 16px !important;
   margin-top: 0 !important;
 }
-
 .ai-message.user-message {
   align-self: flex-end;
 }
-
 .ai-message.assistant-message {
   align-self: flex-start;
 }
-
 .ai-message.product-recommendation {
   margin-top: 0 !important; /* Use consistent margin pattern */
   margin-bottom: 12px !important; /* Consistent with other messages */
 }
-
 .product-content {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
 }
-
 .clickable-product {
   user-select: none;
 }
-
 .clickable-product:active {
   transform: scale(0.98) !important;
 }
-
 .message-content {
   padding: 12px 16px;
   font-size: 14.5px;
@@ -2372,7 +2044,6 @@ This creates a floating chat widget that can be added to any page
   position: relative;
   animation: slideIn 0.4s var(--transition-smooth);
 }
-
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -2383,7 +2054,6 @@ This creates a floating chat widget that can be added to any page
     transform: translateY(0);
   }
 }
-
 .user-message .message-content {
   background: linear-gradient(135deg, var(--ai-primary-color, #ee5cee) 0%, var(--ai-primary-color-dark, #cc00cc) 100%);
   color: white;
@@ -2391,7 +2061,6 @@ This creates a floating chat widget that can be added to any page
   box-shadow: 0 2px 10px rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.3);
   margin-left: auto;
 }
-
 .assistant-message .message-content {
   background: white;
   color: #1f2937;
@@ -2399,7 +2068,6 @@ This creates a floating chat widget that can be added to any page
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
-
 .ai-loading {
   padding: 10px 14px;
   border-radius: 18px;
@@ -2413,12 +2081,10 @@ This creates a floating chat widget that can be added to any page
   display: block !important;
   box-sizing: border-box !important;
 }
-
 .loading-dots {
   display: inline-flex;
   gap: 4px;
 }
-
 .loading-dots span {
   width: 6px;
   height: 6px;
@@ -2426,15 +2092,12 @@ This creates a floating chat widget that can be added to any page
   background: var(--ai-primary-color, #ee5cee);
   animation: loading-bounce 1.4s ease-in-out infinite both;
 }
-
 .loading-dots span:nth-child(1) { animation-delay: -0.32s; }
 .loading-dots span:nth-child(2) { animation-delay: -0.16s; }
-
 @keyframes loading-bounce {
   0%, 80%, 100% { transform: scale(0); }
   40% { transform: scale(1); }
 }
-
 .ai-chat-input {
   padding: 16px 20px 12px 20px;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
@@ -2450,13 +2113,11 @@ This creates a floating chat widget that can be added to any page
   border-radius: 0 0 20px 20px;
   grid-area: input !important;
 }
-
 .ai-chat-input-wrapper {
   display: flex;
   gap: 12px;
   align-items: center;
 }
-
 .ai-chat-input input {
   flex: 1;
   min-height: var(--touch-target-min);
@@ -2470,30 +2131,25 @@ This creates a floating chat widget that can be added to any page
   background: var(--color-bg-primary);
   font-family: inherit;
 }
-
 .ai-chat-input input:focus {
   outline: none;
   border-color: var(--ai-primary-color, #ee5cee);
   box-shadow: 0 0 0 3px rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.15);
 }
-
 .ai-chat-input input:focus-visible {
   outline: none;
   border-color: var(--ai-primary-color, #ee5cee);
   box-shadow: 0 0 0 2px var(--color-bg-primary),
               0 0 0 5px var(--ai-primary-color, #ee5cee);
 }
-
 .ai-chat-input input::placeholder {
   color: var(--color-text-tertiary);
 }
-
 .ai-chat-input button {
   min-width: var(--touch-target-comfortable);
   min-height: var(--touch-target-comfortable);
   width: var(--touch-target-comfortable);
   height: var(--touch-target-comfortable);
-
   background: linear-gradient(135deg, var(--ai-primary-color, #ee5cee) 0%, var(--ai-primary-color-dark, #cc00cc) 100%);
   border: none;
   border-radius: 50%;
@@ -2506,31 +2162,26 @@ This creates a floating chat widget that can be added to any page
     0 4px 12px rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.4);
   flex-shrink: 0;
 }
-
 .ai-chat-input button:focus {
   outline: none;
   box-shadow: 0 0 0 2px var(--color-bg-primary),
               0 0 0 5px var(--ai-primary-color, #ee5cee),
               0 4px 12px rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.4);
 }
-
 .ai-chat-input button:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--color-bg-primary),
               0 0 0 6px var(--ai-primary-color, #ee5cee),
               var(--shadow-lg);
 }
-
 .ai-chat-input button:hover {
   transform: scale(1.08);
   box-shadow: var(--shadow-lg),
     0 6px 16px rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.5);
 }
-
 .ai-chat-input button:active {
   transform: scale(0.95);
 }
-
 .ai-powered-footer {
   text-align: center;
   font-size: var(--font-size-xs);
@@ -2540,11 +2191,9 @@ This creates a floating chat widget that can be added to any page
   padding: 0;
   margin: 0;
 }
-
 .ai-powered-footer::before {
   content: '✨ ';
 }
-
 .skeleton {
   background: linear-gradient(
     90deg,
@@ -2556,29 +2205,24 @@ This creates a floating chat widget that can be added to any page
   animation: skeleton-loading 1.5s ease-in-out infinite;
   border-radius: var(--radius-sm);
 }
-
 @keyframes skeleton-loading {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
-
 .skeleton-message {
   padding: var(--space-2) var(--space-3);
   margin-bottom: var(--space-2);
   border-radius: var(--radius-lg);
   max-width: 80%;
 }
-
 .skeleton-line {
   height: 16px;
   margin-bottom: var(--space-1);
 }
-
 .skeleton-line:last-child {
   width: 60%;
   margin-bottom: 0;
 }
-
 .skeleton-product-card {
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-light);
@@ -2586,38 +2230,31 @@ This creates a floating chat widget that can be added to any page
   overflow: hidden;
   padding: 0;
 }
-
 .skeleton-product-image {
   width: 100%;
   height: 180px;
   background: var(--color-bg-secondary);
 }
-
 .skeleton-product-content {
   padding: var(--space-2);
 }
-
 .skeleton-product-title {
   height: 20px;
   width: 80%;
   margin-bottom: var(--space-2);
 }
-
 .skeleton-product-price {
   height: 24px;
   width: 40%;
   margin-bottom: var(--space-1);
 }
-
 .skeleton-product-description {
   height: 14px;
   width: 100%;
   margin-bottom: var(--space-1);
 }
-
 .suggestion-btn {
   min-height: var(--touch-target-min);
-
   background: var(--color-bg-primary);
   border: 2px solid var(--color-border-medium);
   color: var(--color-text-primary);
@@ -2632,20 +2269,17 @@ This creates a floating chat widget that can be added to any page
   align-items: center;
   justify-content: center;
 }
-
 .suggestion-btn:focus {
   outline: none;
   border-color: var(--ai-primary-color, #ee5cee);
   box-shadow: 0 0 0 3px rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.15);
 }
-
 .suggestion-btn:focus-visible {
   outline: none;
   border-color: var(--ai-primary-color, #ee5cee);
   box-shadow: 0 0 0 2px var(--color-bg-primary),
               0 0 0 5px var(--ai-primary-color, #ee5cee);
 }
-
 .suggestion-btn:hover {
   background: var(--ai-primary-color, #ee5cee);
   color: white;
@@ -2653,22 +2287,18 @@ This creates a floating chat widget that can be added to any page
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
-
 .suggestion-btn:active {
   transform: translateY(0);
 }
-
 .products-grid-container {
   max-width: 100% !important;
   width: 100% !important;
 }
-
 .products-grid {
   display: grid;
   gap: 14px;
   width: 100%;
 }
-
 .product-card {
   background: white;
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -2683,7 +2313,6 @@ This creates a floating chat widget that can be added to any page
   height: 100%;
   cursor: pointer;
 }
-
 .product-card:hover {
   transform: translateY(-6px) scale(1.01);
   box-shadow:
@@ -2692,7 +2321,6 @@ This creates a floating chat widget that can be added to any page
     0 0 0 1px rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.1);
   border-color: rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.2);
 }
-
 .product-image {
   width: 100%;
   height: 180px;
@@ -2702,7 +2330,6 @@ This creates a floating chat widget that can be added to any page
   position: relative;
   flex-shrink: 0;
 }
-
 .product-image::after {
   content: '';
   position: absolute;
@@ -2713,14 +2340,12 @@ This creates a floating chat widget that can be added to any page
   background: linear-gradient(to top, rgba(0, 0, 0, 0.15), transparent);
   pointer-events: none;
 }
-
 .product-details {
   padding: 16px;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
 }
-
 .product-title {
   margin: 0 0 8px 0;
   font-size: 16px;
@@ -2732,14 +2357,12 @@ This creates a floating chat widget that can be added to any page
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-
 .product-price-category {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
 }
-
 .product-price {
   font-size: 22px;
   font-weight: 800;
@@ -2749,7 +2372,6 @@ This creates a floating chat widget that can be added to any page
   background-clip: text;
   letter-spacing: -0.5px;
 }
-
 .product-category {
   background: #f3f4f6;
   color: #6b7280;
@@ -2758,7 +2380,6 @@ This creates a floating chat widget that can be added to any page
   font-size: 11px;
   font-weight: 500;
 }
-
 .product-description {
   margin: 0 0 12px 0;
   font-size: 13px;
@@ -2770,11 +2391,9 @@ This creates a floating chat widget that can be added to any page
   overflow: hidden;
   flex-grow: 1;
 }
-
 .product-tags {
   margin-bottom: 12px;
 }
-
 .product-tag {
   display: inline-block;
   background: #e5e7eb;
@@ -2785,7 +2404,6 @@ This creates a floating chat widget that can be added to any page
   margin-right: 4px;
   margin-bottom: 4px;
 }
-
 .product-action-button {
   background: linear-gradient(135deg, var(--ai-primary-color, #ee5cee) 0%, var(--ai-primary-color-dark, #cc00cc) 100%);
   color: white;
@@ -2803,16 +2421,13 @@ This creates a floating chat widget that can be added to any page
   gap: 6px;
   letter-spacing: 0.3px;
 }
-
 .product-action-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.4);
 }
-
 .product-action-button:active {
   transform: translateY(0);
 }
-
 .relevance-badge {
   position: absolute;
   top: 12px;
@@ -2831,12 +2446,10 @@ This creates a floating chat widget that can be added to any page
   letter-spacing: 0.3px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
-
 .ai-welcome-container {
   width: 100%;
   max-width: none !important;
 }
-
 .ai-welcome-screen {
   padding: 20px 18px;
   display: flex;
@@ -2844,17 +2457,14 @@ This creates a floating chat widget that can be added to any page
   gap: 18px;
   animation: fadeIn 0.4s ease;
 }
-
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
 .welcome-header {
   text-align: center;
   margin-bottom: 0;
 }
-
 .welcome-avatar {
   width: 48px;
   height: 48px;
@@ -2869,18 +2479,15 @@ This creates a floating chat widget that can be added to any page
     0 3px 6px rgba(0, 0, 0, 0.1);
   animation: floatAvatar 3s ease-in-out infinite;
 }
-
 @keyframes floatAvatar {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
   50% { transform: translateY(-6px) rotate(2deg); }
 }
-
 .welcome-avatar img {
   width: 28px;
   height: 28px;
   filter: brightness(0) invert(1);
 }
-
 .welcome-title {
   font-size: 15px;
   font-weight: 700;
@@ -2888,11 +2495,9 @@ This creates a floating chat widget that can be added to any page
   margin: 0;
   line-height: 1.3;
 }
-
 .quick-actions-section {
   margin-bottom: 4px;
 }
-
 .section-label {
   font-size: 10px;
   font-weight: 600;
@@ -2904,7 +2509,6 @@ This creates a floating chat widget that can be added to any page
   align-items: center;
   gap: 6px;
 }
-
 .section-label::before {
   content: '';
   width: 2px;
@@ -2912,13 +2516,11 @@ This creates a floating chat widget that can be added to any page
   background: var(--ai-primary-color, #ee5cee);
   border-radius: 2px;
 }
-
 .quick-actions-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 6px;
 }
-
 .quick-action-btn {
   background: white;
   border: 1.5px solid #e5e7eb;
@@ -2941,7 +2543,6 @@ This creates a floating chat widget that can be added to any page
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
   min-height: 60px;
 }
-
 .quick-action-btn::before {
   content: '';
   position: absolute;
@@ -2951,11 +2552,9 @@ This creates a floating chat widget that can be added to any page
   transition: opacity 0.25s ease;
   z-index: 0;
 }
-
 .quick-action-btn:hover::before {
   opacity: 0.06;
 }
-
 .quick-action-btn:hover {
   border-color: var(--ai-primary-color, #ee5cee);
   transform: translateY(-2px);
@@ -2963,12 +2562,10 @@ This creates a floating chat widget that can be added to any page
     0 4px 12px rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.15),
     0 2px 4px rgba(0, 0, 0, 0.08);
 }
-
 .quick-action-btn:active {
   transform: translateY(0);
   transition-duration: 0.1s;
 }
-
 .quick-action-icon {
   width: 24px;
   height: 24px;
@@ -2981,11 +2578,9 @@ This creates a floating chat widget that can be added to any page
   z-index: 1;
   transition: transform 0.25s ease;
 }
-
 .quick-action-btn:hover .quick-action-icon {
   transform: scale(1.15);
 }
-
 .quick-action-text {
   position: relative;
   z-index: 1;
@@ -2993,12 +2588,10 @@ This creates a floating chat widget that can be added to any page
   word-wrap: break-word;
   max-width: 100%;
 }
-
 .quick-action-btn:hover .quick-action-text {
   color: #111827;
   font-weight: 700;
 }
-
 @media (max-width: 480px) {
   .ai-chat-window {
     width: calc(100vw - 32px);
@@ -3009,7 +2602,6 @@ This creates a floating chat widget that can be added to any page
     left: 16px;
     right: 16px;
   }
-
   .ai-sales-assistant-widget.position-bottom-left .ai-chat-window,
   .ai-sales-assistant-widget.position-top-left .ai-chat-window,
   .ai-sales-assistant-widget.position-center-left .ai-chat-window,
@@ -3020,187 +2612,150 @@ This creates a floating chat widget that can be added to any page
     right: 16px;
     transform: none;
   }
-
   .ai-chat-toggle {
     padding: 12px 16px;
   }
-
   .ai-chat-toggle .button-text {
     display: none;
   }
-
   .ai-chat-header {
     padding: 16px;
     height: 60px;
   }
-
   .header-info h3 {
     font-size: 16px;
   }
-
   .ai-message {
     max-width: 90%;
   }
-
   .message-content {
     font-size: 14px;
     padding: 10px 14px;
   }
-
   .ai-welcome-screen {
     padding: 16px;
     gap: 16px;
   }
-
   .quick-actions-grid {
     grid-template-columns: repeat(3, 1fr);
     gap: 5px;
   }
-
   .quick-action-btn {
     padding: 6px 8px;
     font-size: 10px;
     min-height: 55px;
   }
-
   .quick-action-icon {
     font-size: 16px;
     width: 20px;
     height: 20px;
   }
-
   .welcome-title {
     font-size: 15px;
   }
-
   .section-label {
     font-size: 10px;
     margin-bottom: 10px;
   }
-
   .ai-chat-input {
     padding: 14px 16px 10px 16px;
     height: 75px !important;
   }
-
   .ai-chat-input input {
     padding: 12px 16px;
     font-size: 14px;
   }
-
   .ai-chat-input button {
     width: 42px;
     height: 42px;
   }
-
   .suggestion-btn {
     font-size: 13.5px;
     padding: 12px 16px;
   }
-
   .ai-welcome-header h3 {
     font-size: 17px;
   }
-
   .ai-avatar-container {
     width: 56px !important;
     height: 56px !important;
   }
-  
   .products-grid {
     grid-template-columns: 1fr !important; /* Single column on mobile */
     gap: 10px;
   }
-  
   .product-card {
     flex-direction: row; /* Horizontal layout on mobile */
     height: auto;
     min-height: 120px;
   }
-  
   .product-image {
     width: 100px;
     height: 120px;
     flex-shrink: 0;
   }
-  
   .product-details {
     padding: 12px;
     flex-grow: 1;
   }
-  
   .product-title {
     font-size: 14px;
     -webkit-line-clamp: 1;
     margin-bottom: 6px;
   }
-  
   .product-price {
     font-size: 16px;
   }
-  
   .product-description {
     font-size: 12px;
     -webkit-line-clamp: 2;
     margin-bottom: 8px;
   }
-  
   .product-action-button {
     padding: 8px;
     font-size: 12px;
   }
-  
   .relevance-badge {
     top: 4px;
     right: 4px;
     padding: 2px 6px;
     font-size: 10px;
   }
-  
   .product-category {
     font-size: 10px;
     padding: 1px 6px;
   }
-  
   .product-tag {
     font-size: 9px;
     padding: 1px 4px;
   }
 }
-
 @media (max-width: 768px) and (min-width: 481px) {
   .ai-chat-window {
     width: 380px;
     height: 580px;
     max-height: 580px;
   }
-
   .products-grid {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
     gap: 12px;
   }
-
   .product-image {
     height: 160px;
   }
-
   .product-title {
     font-size: 15.5px;
   }
-
   .product-price {
     font-size: 20px;
   }
-
   .ai-chat-input input {
     font-size: 14px;
   }
-
   .suggestion-btn {
     font-size: 14px;
   }
 }
-
 @media (min-width: 1025px) {
   .ai-chat-window {
     width: 400px;
@@ -3210,76 +2765,61 @@ This creates a floating chat widget that can be added to any page
     `;
     document.head.appendChild(style);
   }
-  
   function setupEventListeners() {
-    
     window.aiWidgetHandlers = window.aiWidgetHandlers || {};
-    
     const toggleBtn = document.getElementById('ai-chat-toggle-btn');
     if (toggleBtn) {
       if (window.aiWidgetHandlers.toggleHandler) {
         toggleBtn.removeEventListener('click', window.aiWidgetHandlers.toggleHandler);
       }
-      
       window.aiWidgetHandlers.toggleHandler = function(e) {
         e.preventDefault();
         e.stopPropagation();
         toggleAIChat();
       };
-      
       toggleBtn.addEventListener('click', window.aiWidgetHandlers.toggleHandler);
     } else {
     }
-    
     const closeBtn = document.getElementById('ai-chat-close-btn');
     if (closeBtn) {
       if (window.aiWidgetHandlers.closeHandler) {
         closeBtn.removeEventListener('click', window.aiWidgetHandlers.closeHandler);
       }
-      
       window.aiWidgetHandlers.closeHandler = function(e) {
         e.preventDefault();
         e.stopPropagation();
         toggleAIChat();
       };
-      
       closeBtn.addEventListener('click', window.aiWidgetHandlers.closeHandler);
     } else {
     }
-    
     const sendBtn = document.getElementById('ai-chat-send-btn');
     if (sendBtn) {
       if (window.aiWidgetHandlers.sendHandler) {
         sendBtn.removeEventListener('click', window.aiWidgetHandlers.sendHandler);
       }
-      
       window.aiWidgetHandlers.sendHandler = function(e) {
         e.preventDefault();
         e.stopPropagation();
         sendAIMessage();
       };
-      
       sendBtn.addEventListener('click', window.aiWidgetHandlers.sendHandler);
     } else {
     }
-    
     const inputField = document.getElementById('ai-chat-input-field');
     if (inputField) {
       if (window.aiWidgetHandlers.keyHandler) {
         inputField.removeEventListener('keypress', window.aiWidgetHandlers.keyHandler);
       }
-      
       window.aiWidgetHandlers.keyHandler = function(e) {
         if (e.key === 'Enter') {
           e.preventDefault();
           sendAIMessage();
         }
       };
-      
       inputField.addEventListener('keypress', window.aiWidgetHandlers.keyHandler);
     } else {
     }
-
     window.aiWidgetHandlers.escapeHandler = function(e) {
       if (e.key === 'Escape' && chatOpen) {
         e.preventDefault();
@@ -3287,19 +2827,15 @@ This creates a floating chat widget that can be added to any page
       }
     };
     document.addEventListener('keydown', window.aiWidgetHandlers.escapeHandler);
-
     window.aiWidgetHandlers.focusTrapHandler = function(e) {
       if (!chatOpen) return;
-
       const chatWindow = document.getElementById('ai-chat-window');
       if (!chatWindow) return;
-
       const focusableElements = chatWindow.querySelectorAll(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       );
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
-
       if (e.key === 'Tab') {
         if (e.shiftKey && document.activeElement === firstElement) {
           e.preventDefault();
@@ -3312,7 +2848,6 @@ This creates a floating chat widget that can be added to any page
       }
     };
     document.addEventListener('keydown', window.aiWidgetHandlers.focusTrapHandler);
-
     const suggestionBtns = document.querySelectorAll('.suggestion-btn, .quick-action-btn');
     suggestionBtns.forEach(btn => {
       btn.addEventListener('click', function(e) {
@@ -3328,33 +2863,26 @@ This creates a floating chat widget that can be added to any page
         }
       });
     });
-    
     if (!window.aiWidgetHandlers.outsideClickHandler) {
       window.aiWidgetHandlers.outsideClickHandler = function(e) {
         const chatWindow = document.getElementById('ai-chat-window');
         const widget = document.querySelector('.ai-sales-assistant-widget');
-        
         if (chatOpen && chatWindow && widget && !widget.contains(e.target)) {
           toggleAIChat();
         }
       };
-      
       document.addEventListener('click', window.aiWidgetHandlers.outsideClickHandler);
     }
   }
-  
   window.refreshAIWidget = async function() {
     await initializeWidget();
   };
-  
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeWidget);
   } else {
     initializeWidget();
   }
-  
   let workingApiUrl = null; // Cache the working URL to avoid testing all URLs every time
-
   settingsCheckInterval = setInterval(async () => {
     try {
       const shopDomain = window.Shopify?.shop || '{{ shop.permanent_domain }}';
@@ -3362,15 +2890,12 @@ This creates a floating chat widget that can be added to any page
         '{{ shop.url }}' + '/apps/widget-settings',
         window.location.protocol + '//' + window.location.host + '/apps/widget-settings'
       ];
-
       for (const url of urlsToTry) {
         try {
           const response = await fetchWithRetry(`${url}?shop=${shopDomain}&t=${Date.now()}`, {}, 1);
           const data = await response.json();
           const currentUpdate = data.settings.updatedAt;
-
           if (!workingApiUrl) workingApiUrl = url;
-
           if (window.lastSettingsUpdate && currentUpdate !== window.lastSettingsUpdate) {
               old: window.lastSettingsUpdate,
               new: currentUpdate,
