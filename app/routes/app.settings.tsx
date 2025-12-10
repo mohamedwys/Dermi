@@ -135,9 +135,19 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     
     return json({ settings });
   } catch (error) {
-    logger.error("Database error in settings loader:", error);
+    // Enhanced error logging with full details
+    logger.error("Database error in settings loader:", {
+      error: error instanceof Error ? {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      } : error,
+      shop: session.shop
+    });
+    console.error("Full database error:", error);
+
     // Return default settings if database fails
-    return json({ 
+    return json({
       settings: {
         shop: session.shop,
         ...DEFAULT_SETTINGS
@@ -192,7 +202,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       settings
     });
   } catch (error) {
-    logger.error("❌ Database save error:", error);
+    // Enhanced error logging with full details
+    logger.error("❌ Database save error:", {
+      error: error instanceof Error ? {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      } : error,
+      shop: session.shop,
+      settingsData
+    });
+    console.error("Full database save error:", error);
+
     // Return error to user instead of silent fallback
     return json({
       success: false,
