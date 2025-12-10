@@ -170,7 +170,6 @@ This creates a floating chat widget that can be added to any page
 <div id="ai-sales-assistant-container"></div>
 
 <script>
-// AI Sales Assistant Widget JavaScript
 (function() {
   let chatOpen = false;
   let conversationHistory = [];
@@ -179,8 +178,6 @@ This creates a floating chat widget that can be added to any page
   let currentSentiment = 'neutral'; // ✨ NEW: Track sentiment for styling
   let currentSuggestedActions = []; // ✨ NEW: Track suggested actions
 
-  // ✅ XSS PROTECTION: Helper function to escape HTML entities
-  // This provides defense-in-depth protection even for admin-controlled settings
   function escapeHTML(str) {
     if (!str) return '';
     const div = document.createElement('div');
@@ -188,34 +185,28 @@ This creates a floating chat widget that can be added to any page
     return div.innerHTML;
   }
 
-  // Sanitize color values to prevent CSS injection
   function sanitizeColor(color) {
     if (!color) return '#ee5cee'; // default color
-    // Only allow hex colors (#RGB or #RRGGBB)
     if (/^#([0-9A-Fa-f]{3}){1,2}$/.test(color)) {
       return color;
     }
     return '#ee5cee'; // fallback to default if invalid
   }
 
-  // ✅ SECURITY: Sanitize URLs to prevent XSS attacks
   function sanitizeUrl(url) {
     if (!url) return '';
     const urlStr = String(url).trim();
 
-    // Block dangerous protocols
     const dangerousProtocols = /^(javascript|data|vbscript|file|about):/i;
     if (dangerousProtocols.test(urlStr)) {
       console.warn('⚠️ Blocked dangerous URL protocol:', urlStr);
       return '';
     }
 
-    // Allow only http, https, or relative URLs
     if (urlStr.startsWith('http://') || urlStr.startsWith('https://') || urlStr.startsWith('/')) {
       return urlStr;
     }
 
-    // If it doesn't start with a protocol, treat as relative
     if (!urlStr.includes(':')) {
       return urlStr;
     }
@@ -224,7 +215,6 @@ This creates a floating chat widget that can be added to any page
     return '';
   }
 
-  // ✅ PERFORMANCE: Retry with exponential backoff
   async function fetchWithRetry(url, options = {}, maxRetries = 3) {
     let lastError;
 
@@ -235,7 +225,6 @@ This creates a floating chat widget that can be added to any page
           return response;
         }
 
-        // Don't retry on client errors (4xx), only server errors (5xx)
         if (response.status >= 400 && response.status < 500) {
           throw new Error(`Request failed with status ${response.status}`);
         }
@@ -244,12 +233,9 @@ This creates a floating chat widget that can be added to any page
       } catch (error) {
         lastError = error;
 
-        // Don't retry on last attempt
         if (attempt === maxRetries) break;
 
-        // Exponential backoff: 1s, 2s, 4s
         const delay = Math.pow(2, attempt) * 1000;
-        console.log(`⏳ Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
@@ -257,16 +243,13 @@ This creates a floating chat widget that can be added to any page
     throw lastError;
   }
 
-  // ✅ FEATURE: Load conversation from localStorage
   function loadConversationHistory() {
     try {
       const stored = localStorage.getItem('ai_chat_history');
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Only load if recent (within 24 hours)
         if (parsed.timestamp && (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000)) {
           conversationHistory = parsed.messages || [];
-          console.log('📥 Loaded conversation history:', conversationHistory.length, 'messages');
           return true;
         }
       }
@@ -276,7 +259,6 @@ This creates a floating chat widget that can be added to any page
     return false;
   }
 
-  // ✅ FEATURE: Save conversation to localStorage
   function saveConversationHistory() {
     try {
       localStorage.setItem('ai_chat_history', JSON.stringify({
@@ -288,16 +270,13 @@ This creates a floating chat widget that can be added to any page
     }
   }
 
-  // ✅ MEMORY: Cleanup function for widget
   let settingsCheckInterval = null;
   function cleanupWidget() {
-    // Clear interval
     if (settingsCheckInterval) {
       clearInterval(settingsCheckInterval);
       settingsCheckInterval = null;
     }
 
-    // Remove event listeners
     if (window.aiWidgetHandlers) {
       const toggleBtn = document.getElementById('ai-chat-toggle-btn');
       const closeBtn = document.getElementById('ai-chat-close-btn');
@@ -327,13 +306,10 @@ This creates a floating chat widget that can be added to any page
       }
     }
 
-    console.log('🧹 Widget cleanup complete');
   }
 
-  // Expose cleanup for testing
   window.cleanupAIWidget = cleanupWidget;
 
-  // 📊 ANALYTICS: Integration hooks
   const analyticsEvents = {
     WIDGET_OPENED: 'ai_widget_opened',
     WIDGET_CLOSED: 'ai_widget_closed',
@@ -345,7 +321,6 @@ This creates a floating chat widget that can be added to any page
   };
 
   function trackAnalytics(eventName, data = {}) {
-    // Trigger custom event for external analytics systems
     const event = new CustomEvent('ai-widget-analytics', {
       detail: {
         event: eventName,
@@ -355,12 +330,10 @@ This creates a floating chat widget that can be added to any page
     });
     window.dispatchEvent(event);
 
-    // Google Analytics (if available)
     if (typeof gtag === 'function') {
       gtag('event', eventName, data);
     }
 
-    // Google Tag Manager (if available)
     if (typeof dataLayer !== 'undefined') {
       dataLayer.push({
         event: eventName,
@@ -368,35 +341,28 @@ This creates a floating chat widget that can be added to any page
       });
     }
 
-    // Meta Pixel (if available)
     if (typeof fbq === 'function') {
       fbq('trackCustom', eventName, data);
     }
 
-    console.log('📊 Analytics:', eventName, data);
   }
 
-  // Expose analytics for custom integrations
   window.aiWidgetAnalytics = trackAnalytics;
 
-  // 🌐 OFFLINE SUPPORT: Message queue
   let messageQueue = [];
   let isOnline = navigator.onLine;
 
-  // Load queued messages from localStorage
   function loadMessageQueue() {
     try {
       const stored = localStorage.getItem('ai_message_queue');
       if (stored) {
         messageQueue = JSON.parse(stored);
-        console.log('📥 Loaded message queue:', messageQueue.length, 'messages');
       }
     } catch (e) {
       console.error('Failed to load message queue:', e);
     }
   }
 
-  // Save message queue to localStorage
   function saveMessageQueue() {
     try {
       localStorage.setItem('ai_message_queue', JSON.stringify(messageQueue));
@@ -405,45 +371,36 @@ This creates a floating chat widget that can be added to any page
     }
   }
 
-  // Process queued messages when back online
   function processMessageQueue() {
     if (!isOnline || messageQueue.length === 0) return;
 
-    console.log('📤 Processing queued messages:', messageQueue.length);
 
     const queue = [...messageQueue];
     messageQueue = [];
     saveMessageQueue();
 
     queue.forEach(queuedMessage => {
-      // Add queued indicator
       addMessageToChat('user', `${queuedMessage.message} 📤`);
 
-      // Attempt to send
       setTimeout(() => {
         sendMessageToServer(queuedMessage.message);
       }, 500);
     });
   }
 
-  // Monitor online/offline status
   window.addEventListener('online', () => {
     isOnline = true;
-    console.log('🌐 Back online');
     showNotification('Back online! Sending queued messages...', 'success');
     processMessageQueue();
   });
 
   window.addEventListener('offline', () => {
     isOnline = false;
-    console.log('📡 Offline mode activated');
     showNotification('You\'re offline. Messages will be queued.', 'info');
   });
 
-  // Load queue on init
   loadMessageQueue();
 
-  // ✨ NEW: Apply sentiment-based styling to chat widget
   function applySentimentStyling(sentiment) {
     const chatWidget = document.getElementById('ai-chat-widget');
     const chatHeader = document.querySelector('.ai-chat-header');
@@ -451,7 +408,6 @@ This creates a floating chat widget that can be added to any page
 
     if (!chatWidget) return;
 
-    // Define sentiment color schemes (subtle variations)
     const sentimentStyles = {
       positive: {
         headerGradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', // Bright green
@@ -475,7 +431,6 @@ This creates a floating chat widget that can be added to any page
 
     const style = sentimentStyles[sentiment] || sentimentStyles.neutral;
 
-    // Apply styling with smooth transitions
     if (chatHeader) {
       chatHeader.style.transition = 'all 0.5s ease';
       chatHeader.style.background = style.headerGradient;
@@ -487,7 +442,6 @@ This creates a floating chat widget that can be added to any page
       messagesContainer.style.backgroundColor = style.messagesBg;
     }
 
-    // Update quick reply buttons color
     const quickReplyButtons = document.querySelectorAll('.quick-reply-btn');
     quickReplyButtons.forEach(btn => {
       btn.style.transition = 'all 0.3s ease';
@@ -496,7 +450,6 @@ This creates a floating chat widget that can be added to any page
     });
   }
 
-  // Helper function to adjust color brightness
   function adjustColor(color, percent) {
     const num = parseInt(color.replace('#', ''), 16);
     const amt = Math.round(2.55 * percent);
@@ -509,7 +462,6 @@ This creates a floating chat widget that can be added to any page
       .toString(16).slice(1);
   }
 
-  // Get settings from block settings or fetch from API
   const blockSettings = {
     enabled: {{ block.settings.enabled | json }},
     position: {{ block.settings.position | json }},
@@ -532,9 +484,7 @@ This creates a floating chat widget that can be added to any page
     helpText: {{ block.settings.help_text | json }}
   };
   
-  // Toggle chat window
   window.toggleAIChat = function() {
-    console.log('🔄 AI Widget: toggleAIChat called, current state:', chatOpen);
     const chatWindow = document.getElementById('ai-chat-window');
     const toggleBtn = document.getElementById('ai-chat-toggle-btn');
 
@@ -545,69 +495,55 @@ This creates a floating chat widget that can be added to any page
 
     chatOpen = !chatOpen;
 
-    // 📊 ANALYTICS: Track open/close
     trackAnalytics(chatOpen ? analyticsEvents.WIDGET_OPENED : analyticsEvents.WIDGET_CLOSED, {
       timestamp: new Date().toISOString(),
       conversationLength: conversationHistory.length
     });
 
-    // ✨ ACCESSIBILITY: Update aria-expanded attribute
     if (toggleBtn) {
       toggleBtn.setAttribute('aria-expanded', chatOpen.toString());
       toggleBtn.setAttribute('aria-label', chatOpen ? 'Close AI chat assistant' : 'Open AI chat assistant');
     }
 
-    // Use CSS classes for better control and smoother animations
     if (chatOpen) {
       chatWindow.classList.add('ai-chat-open');
     } else {
       chatWindow.classList.remove('ai-chat-open');
     }
 
-    console.log('✅ AI Widget: Chat window toggled to:', chatOpen ? 'open' : 'closed');
-    console.log('🔍 AI Widget: Chat window classes:', chatWindow.className);
-    console.log('🔍 AI Widget: Chat window computed display:', window.getComputedStyle(chatWindow).display);
 
     if (chatOpen) {
-      // ✨ ACCESSIBILITY: Focus input field when opening
       const inputField = document.getElementById('ai-chat-input-field');
       if (inputField) {
-        // Wait for CSS transition to start before focusing
         setTimeout(() => inputField.focus(), 200);
       }
-      // Ensure scroll starts at the top when chat opens
       setTimeout(() => {
         scrollToTop();
       }, 250);
     } else {
-      // ✨ ACCESSIBILITY: Return focus to toggle button when closing
       if (toggleBtn) {
         setTimeout(() => toggleBtn.focus(), 100);
       }
     }
   };
   
-  // Handle enter key press
   window.handleChatKeyPress = function(event) {
     if (event.key === 'Enter') {
       sendAIMessage();
     }
   };
   
-  // Send message to AI
   window.sendAIMessage = function() {
     const inputField = document.getElementById('ai-chat-input-field');
     const message = inputField.value.trim();
 
     if (!message) return;
 
-    // 📊 ANALYTICS: Track message sent
     trackAnalytics(analyticsEvents.MESSAGE_SENT, {
       messageLength: message.length,
       conversationPosition: conversationHistory.length + 1
     });
 
-    // 🌐 OFFLINE SUPPORT: Queue message if offline
     if (!isOnline) {
       addMessageToChat('user', `${message} 📭 (Queued)`);
       messageQueue.push({
@@ -620,43 +556,29 @@ This creates a floating chat widget that can be added to any page
       return;
     }
 
-    // Hide welcome screen after first message
     hideWelcomeScreen();
 
-    // Add user message to chat
     addMessageToChat('user', message);
     inputField.value = '';
 
-    // Show loading
     showLoading(true);
     
-    // Send to AI service using the app proxy (single endpoint for both settings and chat)
     const shopUrl = '{{ shop.url }}';
     
-    // Function to send message via app proxy
     const sendChatMessage = async () => {
-      console.log('🚀 Sending chat message via app proxy');
 
-      // ✨ DEBUG: Log detected language
       const detectedLocale = navigator.language || navigator.userLanguage || 'en';
-      console.log('🌍 Detected browser language:', detectedLocale);
-      console.log('💰 Shop currency:', '{{ shop.currency }}');
 
       try {
-        // Build context object
         const contextData = {
           page: window.location.pathname,
           productId: getProductIdFromPage(),
           conversationHistory: conversationHistory,
           shopDomain: '{{ shop.myshopify_domain }}',
-          // ✨ NEW: Detect user's browser language
           locale: navigator.language || navigator.userLanguage || 'en',
-          // Also send currency from Shopify if available
           currency: '{{ shop.currency }}' || 'USD'
         };
 
-        // ✨ DEBUG: Log full context being sent
-        console.log('📤 Sending context:', JSON.stringify(contextData, null, 2));
 
         const response = await fetchWithRetry(`${shopUrl}/apps/widget-settings`, {
            method: 'POST',
@@ -672,77 +594,61 @@ This creates a floating chat widget that can be added to any page
            })
          });
 
-         console.log('✅ Success! Chat message sent via app proxy');
          return await response.json();
        } catch (error) {
-         console.log('❌ Failed to send chat message via app proxy:', error);
          throw error;
        }
      };
      
-     // Send the chat message
      sendChatMessage()
       .then(data => {
       showLoading(false);
 
-      // Handle both old format (data.response) and new N8N format (data.message)
       let responseMessage = data.response || data.message;
 
       if (responseMessage) {
-        // 📊 ANALYTICS: Track message received
         trackAnalytics(analyticsEvents.MESSAGE_RECEIVED, {
           responseLength: responseMessage.length,
           hasRecommendations: !!(data.recommendations && data.recommendations.length > 0),
           hasSuggestions: !!(data.quickReplies && data.quickReplies.length > 0)
         });
 
-        // Add the main AI response
         addMessageToChat('assistant', responseMessage);
 
-        // ✨ NEW: Display product recommendations with enhanced cards
         if (data.recommendations && data.recommendations.length > 0) {
           displayProductRecommendations(data.recommendations);
         }
 
-        // ✨ NEW: Display quick replies if available
         if (data.quickReplies && data.quickReplies.length > 0) {
           displayQuickReplies(data.quickReplies);
         } else {
-          // Clear quick replies if none provided
           displayQuickReplies([]);
         }
 
-        // ✨ NEW: Display suggested actions if available
         if (data.suggestedActions && data.suggestedActions.length > 0) {
           displaySuggestedActions(data.suggestedActions);
         } else {
-          // Clear suggested actions if none provided
           displaySuggestedActions([]);
         }
 
-        // ✨ NEW: Track sentiment for styling
         if (data.sentiment) {
           currentSentiment = data.sentiment;
           applySentimentStyling(data.sentiment);
         }
 
-        // ✨ NEW: Human escalation prompt
         if (data.requiresHumanEscalation) {
           displayHumanEscalationPrompt();
         }
 
-        // Update conversation history
         conversationHistory.push(
           { role: 'user', content: message },
           { role: 'assistant', content: responseMessage }
         );
 
-        // Keep only last 10 messages
         if (conversationHistory.length > 10) {
           conversationHistory = conversationHistory.slice(-10);
         }
 
-        // ✅ FEATURE: Save conversation to localStorage
         saveConversationHistory();
       } else {
         addMessageToChat('assistant', 'Sorry, I encountered an error. Please try again.');
@@ -752,7 +658,6 @@ This creates a floating chat widget that can be added to any page
       showLoading(false);
       console.error('AI Assistant Error:', error);
 
-      // 📊 ANALYTICS: Track error
       trackAnalytics(analyticsEvents.ERROR_OCCURRED, {
         errorMessage: error.message,
         errorType: error.name
@@ -762,7 +667,6 @@ This creates a floating chat widget that can be added to any page
     });
   };
   
-  // Add message to chat
   function addMessageToChat(sender, message) {
     const messagesContainer = document.getElementById('ai-chat-messages');
     const messageDiv = document.createElement('div');
@@ -771,17 +675,13 @@ This creates a floating chat widget that can be added to any page
     const messageContent = document.createElement('div');
     messageContent.className = 'message-content';
 
-    // ✅ XSS FIX: Use textContent and createElement instead of innerHTML
-    // Split message by newlines and create text nodes with <br> elements
     const cleanMessage = message.trim();
     const lines = cleanMessage.split('\n');
 
     lines.forEach((line, index) => {
-      // Create text node for each line (safe from XSS)
       const textNode = document.createTextNode(line);
       messageContent.appendChild(textNode);
 
-      // Add line break if not the last line
       if (index < lines.length - 1) {
         messageContent.appendChild(document.createElement('br'));
       }
@@ -790,15 +690,12 @@ This creates a floating chat widget that can be added to any page
     messageDiv.appendChild(messageContent);
     messagesContainer.appendChild(messageDiv);
 
-    // Scroll to bottom with smooth animation
     scrollToBottom();
   }
   
-  // Smooth scroll to bottom function
   function scrollToBottom() {
     const messagesContainer = document.getElementById('ai-chat-messages');
     if (messagesContainer) {
-      // Use setTimeout to ensure the new message is rendered before scrolling
       setTimeout(() => {
         messagesContainer.scrollTo({
           top: messagesContainer.scrollHeight,
@@ -808,11 +705,9 @@ This creates a floating chat widget that can be added to any page
     }
   }
   
-  // Smooth scroll to top function
   function scrollToTop() {
     const messagesContainer = document.getElementById('ai-chat-messages');
     if (messagesContainer) {
-      // Use setTimeout to ensure the chat window is fully rendered before scrolling
       setTimeout(() => {
         messagesContainer.scrollTo({
           top: 0,
@@ -822,7 +717,6 @@ This creates a floating chat widget that can be added to any page
     }
   }
 
-  // ✨ NEW: Display quick reply buttons
   function displayQuickReplies(quickReplies) {
     if (!quickReplies || quickReplies.length === 0) {
       currentQuickReplies = [];
@@ -833,11 +727,9 @@ This creates a floating chat widget that can be added to any page
 
     currentQuickReplies = quickReplies;
 
-    // Remove existing quick replies
     const existingContainer = document.getElementById('quick-replies-container');
     if (existingContainer) existingContainer.remove();
 
-    // Create quick replies container
     const container = document.createElement('div');
     container.id = 'quick-replies-container';
     container.style.cssText = `
@@ -851,7 +743,6 @@ This creates a floating chat widget that can be added to any page
       -webkit-overflow-scrolling: touch;
     `;
 
-    // Create quick reply buttons
     quickReplies.forEach(reply => {
       const button = document.createElement('button');
       button.textContent = reply;
@@ -870,7 +761,6 @@ This creates a floating chat widget that can be added to any page
         flex-shrink: 0;
       `;
 
-      // Hover effect
       button.onmouseover = () => {
         button.style.background = widgetSettings.primaryColor || '#ee5cee';
         button.style.color = 'white';
@@ -884,9 +774,7 @@ This creates a floating chat widget that can be added to any page
         button.style.boxShadow = 'none';
       };
 
-      // Click handler
       button.onclick = () => {
-        // 📊 ANALYTICS: Track suggestion click
         trackAnalytics(analyticsEvents.SUGGESTION_CLICKED, {
           suggestion: reply
         });
@@ -901,7 +789,6 @@ This creates a floating chat widget that can be added to any page
       container.appendChild(button);
     });
 
-    // Insert before the input field
     const chatFooter = document.querySelector('.ai-chat-footer') ||
                        document.getElementById('ai-chat-input-field')?.parentElement;
     if (chatFooter) {
@@ -909,9 +796,7 @@ This creates a floating chat widget that can be added to any page
     }
   }
 
-  // ✨ NEW: Display Suggested Actions Bar
   function displaySuggestedActions(suggestedActions) {
-    // Clear if no actions
     if (!suggestedActions || suggestedActions.length === 0) {
       currentSuggestedActions = [];
       const existingBar = document.getElementById('suggested-actions-bar');
@@ -921,11 +806,9 @@ This creates a floating chat widget that can be added to any page
 
     currentSuggestedActions = suggestedActions;
 
-    // Remove existing actions bar
     const existingBar = document.getElementById('suggested-actions-bar');
     if (existingBar) existingBar.remove();
 
-    // Create actions bar container
     const actionsBar = document.createElement('div');
     actionsBar.id = 'suggested-actions-bar';
     actionsBar.style.cssText = `
@@ -939,13 +822,11 @@ This creates a floating chat widget that can be added to any page
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     `;
 
-    // Create action buttons
     suggestedActions.forEach(action => {
       const button = document.createElement('button');
       button.textContent = action.label;
       button.className = 'suggested-action-btn';
 
-      // Icon based on action type
       const icons = {
         'view_product': '👁️',
         'add_to_cart': '🛒',
@@ -973,10 +854,8 @@ This creates a floating chat widget that can be added to any page
         justify-content: center;
       `;
 
-      // Add icon before text
       button.innerHTML = `<span style="font-size: 16px;">${icon}</span> ${escapeHTML(action.label)}`;
 
-      // Hover effects
       button.onmouseover = () => {
         button.style.transform = 'translateY(-2px)';
         button.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
@@ -988,7 +867,6 @@ This creates a floating chat widget that can be added to any page
         button.style.filter = 'brightness(1)';
       };
 
-      // Click handler
       button.onclick = () => {
         handleSuggestedAction(action);
       };
@@ -996,7 +874,6 @@ This creates a floating chat widget that can be added to any page
       actionsBar.appendChild(button);
     });
 
-    // Insert after the last message in chat
     const messagesContainer = document.getElementById('ai-chat-messages');
     if (messagesContainer) {
       messagesContainer.appendChild(actionsBar);
@@ -1004,13 +881,10 @@ This creates a floating chat widget that can be added to any page
     }
   }
 
-  // ✨ NEW: Show notification (for cart actions)
   function showNotification(message, type = 'success') {
-    // Remove existing notification
     const existingNotif = document.getElementById('cart-notification');
     if (existingNotif) existingNotif.remove();
 
-    // Create notification
     const notification = document.createElement('div');
     notification.id = 'cart-notification';
     notification.style.cssText = `
@@ -1042,19 +916,16 @@ This creates a floating chat widget that can be added to any page
 
     document.body.appendChild(notification);
 
-    // Auto-remove after 3 seconds
     setTimeout(() => {
       notification.style.animation = 'slideOutRight 0.3s ease';
       setTimeout(() => notification.remove(), 300);
     }, 3000);
   }
 
-  // ✨ NEW: Add product to Shopify cart
   async function addToCart(productHandle, variantId, quantity = 1) {
     try {
       showNotification('Adding to cart...', 'info');
 
-      // If we have a variant ID, use it directly
       if (variantId) {
         const response = await fetch('/cart/add.js', {
           method: 'POST',
@@ -1076,11 +947,9 @@ This creates a floating chat widget that can be added to any page
         const data = await response.json();
         showNotification('Added to cart! 🛒', 'success');
 
-        // Update cart count if there's a cart icon on the page
         updateCartCount();
         return true;
       } else {
-        // If no variant ID, fetch product to get first available variant
         const productResponse = await fetch(`/products/${productHandle}.js`);
         if (!productResponse.ok) {
           throw new Error('Product not found');
@@ -1093,7 +962,6 @@ This creates a floating chat widget that can be added to any page
           throw new Error('Product is out of stock');
         }
 
-        // Add the first available variant
         const addResponse = await fetch('/cart/add.js', {
           method: 'POST',
           headers: {
@@ -1122,12 +990,10 @@ This creates a floating chat widget that can be added to any page
     }
   }
 
-  // ✨ NEW: Update cart count badge
   function updateCartCount() {
     fetch('/cart.js')
       .then(res => res.json())
       .then(cart => {
-        // Try to find and update cart count elements
         const cartCountElements = document.querySelectorAll('[data-cart-count], .cart-count, #cart-count');
         cartCountElements.forEach(el => {
           el.textContent = cart.item_count;
@@ -1136,11 +1002,9 @@ This creates a floating chat widget that can be added to any page
       .catch(err => console.error('Failed to update cart count:', err));
   }
 
-  // ✨ NEW: Handle Suggested Action clicks
   function handleSuggestedAction(action) {
     switch(action.action) {
       case 'view_product':
-        // Open product page
         if (action.data) {
           const productUrl = action.data.startsWith('http')
             ? action.data
@@ -1153,9 +1017,7 @@ This creates a floating chat widget that can be added to any page
         break;
 
       case 'add_to_cart':
-        // ✨ ENHANCED: Full cart integration
         if (action.data) {
-          // action.data can be product handle or variant ID
           const isVariantId = /^\d+$/.test(action.data);
           if (isVariantId) {
             addToCart(null, action.data);
@@ -1166,31 +1028,23 @@ This creates a floating chat widget that can be added to any page
         break;
 
       case 'compare':
-        // Compare products (future feature)
-        console.log('Compare products:', action.data);
         addMessageToChat('assistant', 'Product comparison feature coming soon! ⚖️');
         break;
 
       case 'custom':
-        // Custom action - can be extended
-        console.log('Custom action:', action.data);
         break;
 
       default:
-        console.log('Unknown action:', action.action);
     }
   }
 
-  // ✨ NEW: Display Human Escalation Prompt
   function displayHumanEscalationPrompt() {
     const messagesContainer = document.getElementById('ai-chat-messages');
     if (!messagesContainer) return;
 
-    // Check if escalation prompt already exists
     const existingPrompt = document.getElementById('escalation-prompt');
     if (existingPrompt) return; // Don't show multiple times
 
-    // Create escalation prompt container
     const escalationPrompt = document.createElement('div');
     escalationPrompt.id = 'escalation-prompt';
     escalationPrompt.className = 'ai-message assistant-message';
@@ -1203,7 +1057,6 @@ This creates a floating chat widget that can be added to any page
       box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
     `;
 
-    // Header with icon
     const header = document.createElement('div');
     header.style.cssText = `
       display: flex;
@@ -1229,7 +1082,6 @@ This creates a floating chat widget that can be added to any page
 
     escalationPrompt.appendChild(header);
 
-    // Message
     const message = document.createElement('p');
     message.style.cssText = `
       margin: 0 0 16px 0;
@@ -1240,7 +1092,6 @@ This creates a floating chat widget that can be added to any page
     message.textContent = 'It looks like you might need personalized assistance. Our support team is ready to help you!';
     escalationPrompt.appendChild(message);
 
-    // Action buttons
     const buttonsContainer = document.createElement('div');
     buttonsContainer.style.cssText = `
       display: flex;
@@ -1248,7 +1099,6 @@ This creates a floating chat widget that can be added to any page
       flex-wrap: wrap;
     `;
 
-    // Connect button
     const connectBtn = document.createElement('button');
     connectBtn.textContent = '💬 Talk to Support';
     connectBtn.style.cssText = `
@@ -1277,8 +1127,6 @@ This creates a floating chat widget that can be added to any page
     };
 
     connectBtn.onclick = () => {
-      // Open contact page or support email
-      // You can customize this URL to your shop's contact page
       const safeUrl = sanitizeUrl('/pages/contact');
       if (safeUrl) {
         window.open(safeUrl, '_blank', 'noopener,noreferrer');
@@ -1286,7 +1134,6 @@ This creates a floating chat widget that can be added to any page
     };
     buttonsContainer.appendChild(connectBtn);
 
-    // Continue with AI button
     const continueBtn = document.createElement('button');
     continueBtn.textContent = '🤖 Continue with AI';
     continueBtn.style.cssText = `
@@ -1313,7 +1160,6 @@ This creates a floating chat widget that can be added to any page
     };
 
     continueBtn.onclick = () => {
-      // Just dismiss the prompt
       escalationPrompt.style.animation = 'fadeOut 0.3s ease';
       setTimeout(() => escalationPrompt.remove(), 300);
       addMessageToChat('assistant', 'No problem! I\'m here to help. What else can I assist you with? 😊');
@@ -1322,16 +1168,13 @@ This creates a floating chat widget that can be added to any page
 
     escalationPrompt.appendChild(buttonsContainer);
 
-    // Insert into messages
     messagesContainer.appendChild(escalationPrompt);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
 
-  // Display enhanced product recommendations
   function displayProductRecommendations(recommendations) {
     const messagesContainer = document.getElementById('ai-chat-messages');
     
-    // Add a container for all product cards
     const productsContainer = document.createElement('div');
     productsContainer.className = 'ai-message assistant-message products-grid-container';
     productsContainer.style.marginBottom = '16px';
@@ -1347,7 +1190,6 @@ This creates a floating chat widget that can be added to any page
     gridContent.style.width = '100%';
     
     recommendations.forEach((product, index) => {
-      // Create individual product card
       const productCard = document.createElement('div');
       productCard.className = 'product-card clickable-product';
       productCard.style.backgroundColor = '#fff';
@@ -1359,18 +1201,14 @@ This creates a floating chat widget that can be added to any page
       productCard.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
       productCard.style.position = 'relative';
 
-      // ✅ XSS FIX: Build product card using DOM methods instead of innerHTML
 
-      // Product image (if available)
       if (product.image) {
         const imageDiv = document.createElement('div');
         imageDiv.className = 'product-image';
         imageDiv.style.width = '100%';
         imageDiv.style.height = '160px';
-        // Sanitize URL to prevent XSS
         const sanitizedImageUrl = sanitizeUrl(product.image);
         if (sanitizedImageUrl) {
-          // CSS.escape for additional safety in CSS context
           const escapedUrl = sanitizedImageUrl.replace(/'/g, "\\'");
           imageDiv.style.backgroundImage = `url('${escapedUrl}')`;
         }
@@ -1379,7 +1217,6 @@ This creates a floating chat widget that can be added to any page
         imageDiv.style.backgroundColor = '#f8f9fa';
         imageDiv.style.position = 'relative';
 
-        // ✨ ENHANCED: Top-left badges (discount, low stock)
         const badgesContainer = document.createElement('div');
         badgesContainer.style.position = 'absolute';
         badgesContainer.style.top = '8px';
@@ -1388,7 +1225,6 @@ This creates a floating chat widget that can be added to any page
         badgesContainer.style.flexDirection = 'column';
         badgesContainer.style.gap = '6px';
 
-        // Discount badge (if available)
         if (product.badge || product.discountPercent) {
           const discountBadge = document.createElement('div');
           discountBadge.style.background = '#ef4444';
@@ -1402,7 +1238,6 @@ This creates a floating chat widget that can be added to any page
           badgesContainer.appendChild(discountBadge);
         }
 
-        // Low stock badge (if low stock)
         if (product.isLowStock && product.inventory) {
           const stockBadge = document.createElement('div');
           stockBadge.style.background = '#f59e0b';
@@ -1420,7 +1255,6 @@ This creates a floating chat widget that can be added to any page
           imageDiv.appendChild(badgesContainer);
         }
 
-        // ✨ ENHANCED: Match score badge (top-right)
         if (product.relevanceScore) {
           const matchBadge = document.createElement('div');
           matchBadge.style.position = 'absolute';
@@ -1440,11 +1274,9 @@ This creates a floating chat widget that can be added to any page
         productCard.appendChild(imageDiv);
       }
 
-      // Product details container
       const detailsDiv = document.createElement('div');
       detailsDiv.style.padding = '16px';
 
-      // Product title
       const titleH4 = document.createElement('h4');
       titleH4.style.margin = '0 0 8px 0';
       titleH4.style.fontSize = '16px';
@@ -1458,7 +1290,6 @@ This creates a floating chat widget that can be added to any page
       titleH4.textContent = product.title || 'Untitled Product'; // Safe textContent
       detailsDiv.appendChild(titleH4);
 
-      // ✨ ENHANCED: Rating stars (if available)
       if (product.rating || product.reviewCount) {
         const ratingDiv = document.createElement('div');
         ratingDiv.style.display = 'flex';
@@ -1466,7 +1297,6 @@ This creates a floating chat widget that can be added to any page
         ratingDiv.style.gap = '6px';
         ratingDiv.style.marginBottom = '8px';
 
-        // Star rating
         const rating = product.rating || 0;
         const fullStars = Math.floor(rating);
         const hasHalfStar = rating % 1 >= 0.5;
@@ -1477,7 +1307,6 @@ This creates a floating chat widget that can be added to any page
         starsSpan.textContent = '★'.repeat(fullStars) + (hasHalfStar ? '½' : '') + '☆'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0));
         ratingDiv.appendChild(starsSpan);
 
-        // Review count
         if (product.reviewCount) {
           const reviewSpan = document.createElement('span');
           reviewSpan.style.fontSize = '12px';
@@ -1489,7 +1318,6 @@ This creates a floating chat widget that can be added to any page
         detailsDiv.appendChild(ratingDiv);
       }
 
-      // ✨ ENHANCED: Price display with strikethrough for discounts
       const priceRow = document.createElement('div');
       priceRow.style.display = 'flex';
       priceRow.style.justifyContent = 'space-between';
@@ -1501,7 +1329,6 @@ This creates a floating chat widget that can be added to any page
       priceContainer.style.flexDirection = 'column';
       priceContainer.style.gap = '2px';
 
-      // Show original price with strikethrough if discounted
       if (product.compareAtPrice && parseFloat(product.compareAtPrice) > parseFloat(product.price)) {
         const originalPriceSpan = document.createElement('span');
         originalPriceSpan.style.fontSize = '13px';
@@ -1511,7 +1338,6 @@ This creates a floating chat widget that can be added to any page
         priceContainer.appendChild(originalPriceSpan);
       }
 
-      // Current price
       const priceDiv = document.createElement('div');
       priceDiv.style.fontSize = '20px';
       priceDiv.style.fontWeight = '700';
@@ -1534,7 +1360,6 @@ This creates a floating chat widget that can be added to any page
       }
       detailsDiv.appendChild(priceRow);
 
-      // Description
       const descP = document.createElement('p');
       descP.style.margin = '0 0 12px 0';
       descP.style.fontSize = '13px';
@@ -1547,7 +1372,6 @@ This creates a floating chat widget that can be added to any page
       descP.textContent = product.description || 'No description available'; // Safe textContent
       detailsDiv.appendChild(descP);
 
-      // ✨ ENHANCED: Urgency message (if available)
       if (product.urgencyMessage) {
         const urgencyDiv = document.createElement('div');
         urgencyDiv.style.display = 'flex';
@@ -1574,7 +1398,6 @@ This creates a floating chat widget that can be added to any page
         detailsDiv.appendChild(urgencyDiv);
       }
 
-      // Tags (if available)
       if (product.tags && product.tags.length > 0) {
         const tagsDiv = document.createElement('div');
         tagsDiv.style.marginBottom = '12px';
@@ -1596,7 +1419,6 @@ This creates a floating chat widget that can be added to any page
         detailsDiv.appendChild(tagsDiv);
       }
 
-      // Action button
       const actionButton = document.createElement('div');
       actionButton.style.background = widgetSettings.primaryColor;
       actionButton.style.color = 'white';
@@ -1611,12 +1433,10 @@ This creates a floating chat widget that can be added to any page
 
       productCard.appendChild(detailsDiv);
       
-      // Add click handler to open product page
       productCard.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
 
-        // 📊 ANALYTICS: Track product click
         trackAnalytics(analyticsEvents.PRODUCT_CLICKED, {
           productTitle: product.title,
           productHandle: product.handle,
@@ -1624,21 +1444,18 @@ This creates a floating chat widget that can be added to any page
           relevanceScore: product.relevanceScore
         });
 
-        // Use full URL if available, otherwise construct relative URL
         const productUrl = product.fullUrl || `/products/${product.handle}`;
         const safeUrl = sanitizeUrl(productUrl);
         if (safeUrl) {
           window.open(safeUrl, '_blank', 'noopener,noreferrer');
         }
 
-        // Add visual feedback
         this.style.transform = 'scale(0.98)';
         setTimeout(() => {
           this.style.transform = 'scale(1)';
         }, 150);
       });
       
-      // Add hover effects
       productCard.addEventListener('mouseenter', function() {
         this.style.borderColor = widgetSettings.primaryColor;
         this.style.transform = 'translateY(-4px)';
@@ -1657,7 +1474,6 @@ This creates a floating chat widget that can be added to any page
     productsContainer.appendChild(gridContent);
     messagesContainer.appendChild(productsContainer);
     
-    // Add a "Browse More Products" button if there are multiple recommendations
     if (recommendations.length > 2) {
       const browseMoreDiv = document.createElement('div');
       browseMoreDiv.className = 'ai-message assistant-message';
@@ -1697,28 +1513,22 @@ This creates a floating chat widget that can be added to any page
       messagesContainer.appendChild(browseMoreDiv);
     }
     
-    // Scroll to bottom after adding recommendations
     scrollToBottom();
   }
   
-  // Show/hide loading indicator
-  // 💀 ENHANCED: Skeleton loading with smooth animations
   function showLoading(show) {
     const messagesContainer = document.getElementById('ai-chat-messages');
     let loadingDiv = document.getElementById('ai-loading');
 
     if (show) {
-      // Remove any existing loading indicator first
       if (loadingDiv) {
         loadingDiv.remove();
       }
 
-      // Create skeleton loading message
       loadingDiv = document.createElement('div');
       loadingDiv.id = 'ai-loading';
       loadingDiv.className = 'ai-message assistant-message skeleton-message';
 
-      // Create skeleton lines
       for (let i = 0; i < 3; i++) {
         const line = document.createElement('div');
         line.className = 'skeleton skeleton-line';
@@ -1726,25 +1536,19 @@ This creates a floating chat widget that can be added to any page
         loadingDiv.appendChild(line);
       }
 
-      // Find the last actual message (excluding welcome message) and insert loading after it
       if (messagesContainer) {
-        // Get all message elements, excluding the welcome message
         const allMessages = messagesContainer.querySelectorAll('.ai-message:not(.ai-welcome-message)');
 
         if (allMessages.length > 0) {
-          // Insert after the last actual message
           const lastMessage = allMessages[allMessages.length - 1];
           lastMessage.insertAdjacentElement('afterend', loadingDiv);
         } else {
-          // If no actual messages yet, append to container
           messagesContainer.appendChild(loadingDiv);
         }
 
-        // Auto-scroll to show the loading indicator
         scrollToBottom();
       }
     } else {
-      // Hide/remove loading indicator with fade out
       if (loadingDiv) {
         loadingDiv.style.opacity = '0';
         loadingDiv.style.transition = 'opacity 0.3s ease';
@@ -1753,16 +1557,13 @@ This creates a floating chat widget that can be added to any page
     }
   }
   
-  // Hide welcome screen after first interaction
   function hideWelcomeScreen() {
     const welcomeMessage = document.querySelector('.ai-welcome-message');
     if (welcomeMessage) {
       welcomeMessage.style.display = 'none';
-      console.log('✅ AI Widget: Welcome screen hidden');
     }
   }
   
-  // Get product ID from current page
   function getProductIdFromPage() {
     const productMatch = window.location.pathname.match(/\/products\/([^\/]+)/);
     if (productMatch) {
@@ -1771,92 +1572,64 @@ This creates a floating chat widget that can be added to any page
     return null;
   }
   
-  // Load widget settings and initialize
   async function initializeWidget() {
     try {
-      // ✅ FEATURE: Load conversation history from localStorage
       loadConversationHistory();
 
-      // Use block settings or fetch from API as fallback
       widgetSettings = blockSettings;
 
-      // Debug current context
-      console.log('🏪 Current shop domain:', window.Shopify?.shop || '{{ shop.permanent_domain }}');
-      console.log('🌐 Current location:', window.location.href);
-      console.log('🔧 Block settings:', blockSettings);
       
-      // Try to fetch updated settings from API
       const shopDomain = window.Shopify?.shop || '{{ shop.permanent_domain }}';
-      // Use app proxy URL (proper way for theme extensions)
       const shopUrl = '{{ shop.url }}';
       const possibleSettingsUrls = [
-        // Use app proxy URL - requests are forwarded to your app server
         shopUrl + '/apps/widget-settings',
-        // Fallback to current host
         window.location.protocol + '//' + window.location.host + '/apps/widget-settings'
       ];
       
       let apiSuccess = false;
       for (const appUrl of possibleSettingsUrls) {
         try {
-          console.log(`🔄 AI Widget: Trying to fetch settings from ${appUrl}`);
           const timestamp = Date.now();
           const response = await fetchWithRetry(`${appUrl}?shop=${shopDomain}&t=${timestamp}`, {}, 2);
           const data = await response.json();
-          console.log(`✅ AI Widget: Successfully fetched settings from ${appUrl}`, data.settings);
 
-          // Detect if we're in theme editor (multiple ways to check)
           const isThemeEditor = !!(
             window.Shopify?.designMode ||
             window.location.search.includes('oseid=') ||
             window.location.pathname.includes('/editor')
           );
 
-          console.log('🎨 Theme Editor Detection:', {
             'Shopify.designMode': window.Shopify?.designMode,
             'URL has oseid': window.location.search.includes('oseid='),
             'Is theme editor': isThemeEditor
           });
 
-          // In theme editor, prioritize block settings; on storefront, prioritize API settings
           if (isThemeEditor) {
             widgetSettings = { ...data.settings, ...blockSettings };  // Theme editor: block settings override
-            console.log('🎨 Theme Editor Mode: Using block settings to override API settings');
           } else {
             widgetSettings = { ...blockSettings, ...data.settings }; // Storefront: API settings override
-            console.log('🌐 Storefront Mode: Using API settings to override block settings');
           }
           apiSuccess = true;
 
-          // Initialize lastSettingsUpdate with current timestamp for auto-refresh
           if (typeof window.lastSettingsUpdate === 'undefined') {
             window.lastSettingsUpdate = data.settings.updatedAt;
           }
           break;
         } catch (e) {
-          console.log(`❌ AI Widget: Error fetching from ${appUrl}:`, e);
           continue;
         }
       }
       
       if (!apiSuccess) {
-        console.log('⚠️ AI Widget: Could not fetch settings from API, using block settings', blockSettings);
       }
       
-      // Debug logging
-      console.log('AI Widget: Settings loaded (updated):', widgetSettings);
       
-      // Only create widget if enabled
       if (!widgetSettings.enabled) {
-        console.log('AI Widget: Disabled, not creating widget');
         return;
       }
       
-      // Create the widget HTML
       createWidget();
       
-      // Add debugging to console to verify settings are applied
-      console.log('AI Widget: Widget created with settings:', {
         position: widgetSettings.position,
         primaryColor: widgetSettings.primaryColor,
         buttonText: widgetSettings.buttonText,
@@ -1865,7 +1638,6 @@ This creates a floating chat widget that can be added to any page
       
     } catch (error) {
       console.error('Failed to load AI Sales Assistant settings:', error);
-      // Use block settings as fallback
       widgetSettings = blockSettings;
       if (widgetSettings.enabled) {
         createWidget();
@@ -1873,17 +1645,13 @@ This creates a floating chat widget that can be added to any page
     }
   }
   
-  // Create the widget HTML
   function createWidget() {
     const container = document.getElementById('ai-sales-assistant-container');
     if (!container || !widgetSettings) return;
     
-    console.log('AI Widget: Creating widget with position:', widgetSettings.position);
     
-    // Clear any existing widget
     container.innerHTML = '';
     
-    // ✅ XSS FIX: Escape all widget settings before injecting into HTML
     const safePosition = String(widgetSettings.position).replace(/[^a-z-]/gi, ''); // Only allow letters and hyphens
     const safeButtonText = escapeHTML(widgetSettings.buttonText);
     const safeChatTitle = escapeHTML(widgetSettings.chatTitle);
@@ -2048,23 +1816,18 @@ This creates a floating chat widget that can be added to any page
       </div>
     `;
     
-    // Add CSS styles
     addWidgetStyles();
     
-    // Add event listeners after DOM is ready
     setTimeout(() => {
       setupEventListeners();
     }, 50);
   }
   
-  // Add CSS styles for the widget
   function addWidgetStyles() {
     if (document.getElementById('ai-widget-styles')) return;
 
-    // Set CSS variables for dynamic theming
     document.documentElement.style.setProperty('--ai-primary-color', widgetSettings.primaryColor);
 
-    // Generate gradient colors from primary color
     const hexToRgb = (hex) => {
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
       return result ? {
@@ -2076,7 +1839,6 @@ This creates a floating chat widget that can be added to any page
 
     const rgb = hexToRgb(widgetSettings.primaryColor);
     if (rgb) {
-      // Create darker shade for gradients
       const darkerR = Math.max(0, rgb.r - 40);
       const darkerG = Math.max(0, rgb.g - 40);
       const darkerB = Math.max(0, rgb.b - 40);
@@ -2088,7 +1850,6 @@ This creates a floating chat widget that can be added to any page
     const style = document.createElement('style');
     style.id = 'ai-widget-styles';
     style.textContent = `
-/* ✨ ACCESSIBILITY: Screen reader only class */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -2101,9 +1862,7 @@ This creates a floating chat widget that can be added to any page
   border-width: 0;
 }
 
-/* 🎨 DESIGN SYSTEM: CSS Custom Properties */
 .ai-sales-assistant-widget {
-  /* === Typography Scale (Major Third: 1.25x) === */
   --font-size-xs: 0.64rem;    /* 10.24px */
   --font-size-sm: 0.8rem;     /* 12.8px */
   --font-size-base: 1rem;     /* 16px */
@@ -2112,7 +1871,6 @@ This creates a floating chat widget that can be added to any page
   --font-size-xl: 1.953rem;   /* 31.25px */
   --font-size-2xl: 2.441rem;  /* 39px */
 
-  /* === 8pt Grid Spacing System === */
   --space-1: 0.5rem;   /* 8px */
   --space-2: 1rem;     /* 16px */
   --space-3: 1.5rem;   /* 24px */
@@ -2122,11 +1880,9 @@ This creates a floating chat widget that can be added to any page
   --space-7: 3.5rem;   /* 56px */
   --space-8: 4rem;     /* 64px */
 
-  /* === Touch Targets (min 44px) === */
   --touch-target-min: 44px;
   --touch-target-comfortable: 48px;
 
-  /* === Colors - Light Mode (WCAG AAA Compliant) === */
   --color-bg-primary: #ffffff;
   --color-bg-secondary: #f8f9fa;
   --color-bg-tertiary: #e9ecef;
@@ -2139,33 +1895,28 @@ This creates a floating chat widget that can be added to any page
   --color-border-medium: #d1d5db;
   --color-border-strong: #9ca3af;
 
-  /* === Focus States === */
   --focus-ring-color: #3b82f6;
   --focus-ring-width: 3px;
   --focus-ring-offset: 2px;
   --focus-ring: 0 0 0 var(--focus-ring-offset) var(--color-bg-primary),
                 0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width)) var(--focus-ring-color);
 
-  /* === Transitions === */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-bounce: 500ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
-  /* === Shadows === */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
 
-  /* === Border Radius === */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-full: 9999px;
 
-  /* === Base Styles === */
   position: fixed;
   z-index: 1000;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -2173,10 +1924,8 @@ This creates a floating chat widget that can be added to any page
   color: var(--color-text-primary);
 }
 
-/* 🌙 DARK MODE: Automatic Detection */
 @media (prefers-color-scheme: dark) {
   .ai-sales-assistant-widget:not(.force-light-mode) {
-    /* === Colors - Dark Mode (WCAG AAA Compliant) === */
     --color-bg-primary: #1a1a1a;
     --color-bg-secondary: #2d2d2d;
     --color-bg-tertiary: #404040;
@@ -2212,7 +1961,6 @@ This creates a floating chat widget that can be added to any page
   }
 }
 
-/* Position variants */
 .ai-sales-assistant-widget.position-bottom-right {
   bottom: 20px;
   right: 20px;
@@ -2245,9 +1993,7 @@ This creates a floating chat widget that can be added to any page
   transform: translateY(-50%);
 }
 
-/* 🎯 ENHANCED: Modern Toggle Button with Proper Touch Targets */
 .ai-chat-toggle {
-  /* Touch Target: 48px minimum */
   min-width: var(--touch-target-comfortable);
   min-height: var(--touch-target-comfortable);
 
@@ -2271,7 +2017,6 @@ This creates a floating chat widget that can be added to any page
   animation: floatButton 3s ease-in-out infinite;
 }
 
-/* ✨ ACCESSIBILITY: Focus States */
 .ai-chat-toggle:focus {
   outline: none;
   box-shadow: var(--focus-ring),
@@ -2317,13 +2062,11 @@ This creates a floating chat widget that can be added to any page
   letter-spacing: 0.3px;
 }
 
-/* Floating Animation */
 @keyframes floatButton {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-5px); }
 }
 
-/* Modern Chat Window with Glassmorphism */
 .ai-chat-window {
   position: absolute;
   bottom: 80px;
@@ -2386,7 +2129,6 @@ This creates a floating chat widget that can be added to any page
   transform: translateY(-50%);
 }
 
-/* 🌊 Header with Wavy Bottom Edge */
 .ai-chat-header {
   position: relative;
   background: linear-gradient(135deg, var(--ai-primary-color, #ee5cee) 0%, var(--ai-primary-color-dark, #cc00cc) 100%);
@@ -2398,7 +2140,6 @@ This creates a floating chat widget that can be added to any page
   box-shadow: 0 4px 20px rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.3);
 }
 
-/* Header content */
 .chat-header-content {
   position: relative;
   z-index: 2;
@@ -2408,7 +2149,6 @@ This creates a floating chat widget that can be added to any page
   padding-bottom: 16px;
 }
 
-/* Header info section */
 .header-info {
   flex: 1;
 }
@@ -2420,7 +2160,6 @@ This creates a floating chat widget that can be added to any page
   letter-spacing: 0.3px;
 }
 
-/* Header status */
 .header-status {
   display: flex;
   align-items: center;
@@ -2443,7 +2182,6 @@ This creates a floating chat widget that can be added to any page
   font-weight: 500;
 }
 
-/* Pulsing Online Status Dot */
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
@@ -2455,7 +2193,6 @@ This creates a floating chat widget that can be added to any page
   }
 }
 
-/* Wavy bottom edge */
 .header-wave-bottom {
   position: absolute;
   bottom: -1px;
@@ -2473,16 +2210,13 @@ This creates a floating chat widget that can be added to any page
   height: 40px;
 }
 
-/* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
   .status-dot {
     animation: none;
   }
 }
 
-/* 🎯 ENHANCED: Close Button with Touch Target & Focus State */
 .ai-chat-close {
-  /* Touch Target: 44px minimum */
   min-width: var(--touch-target-min);
   min-height: var(--touch-target-min);
 
@@ -2556,7 +2290,6 @@ This creates a floating chat widget that can be added to any page
   background: #fafafa; /* Light background to distinguish from header/footer */
 }
 
-/* Modern Custom Scrollbar */
 .ai-chat-messages::-webkit-scrollbar {
   width: 6px;
 }
@@ -2578,7 +2311,6 @@ This creates a floating chat widget that can be added to any page
   width: 8px;
 }
 
-/* Firefox scrollbar */
 .ai-chat-messages {
   scrollbar-width: thin;
   scrollbar-color: var(--ai-primary-color, #ee5cee) rgba(0, 0, 0, 0.03);
@@ -2596,7 +2328,6 @@ This creates a floating chat widget that can be added to any page
   margin-top: 0 !important; /* Reset any top margins */
 }
 
-/* Welcome screen should take full width */
 .ai-welcome-message {
   max-width: 100% !important;
   width: 100% !important;
@@ -2608,7 +2339,6 @@ This creates a floating chat widget that can be added to any page
   margin-bottom: 8px !important; /* Small bottom margin for last message */
 }
 
-/* Force spacing with even higher specificity */
 .ai-sales-assistant-widget .ai-chat-messages .ai-message {
   margin-bottom: 16px !important;
   margin-top: 0 !important;
@@ -2640,7 +2370,6 @@ This creates a floating chat widget that can be added to any page
   transform: scale(0.98) !important;
 }
 
-/* Enhanced Messages with Gradients and Animations */
 .message-content {
   padding: 12px 16px;
   font-size: 14.5px;
@@ -2657,7 +2386,6 @@ This creates a floating chat widget that can be added to any page
   animation: slideIn 0.4s var(--transition-smooth);
 }
 
-/* Slide-in Animation */
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -2669,7 +2397,6 @@ This creates a floating chat widget that can be added to any page
   }
 }
 
-/* User Message - Gradient Background with Asymmetric Border Radius */
 .user-message .message-content {
   background: linear-gradient(135deg, var(--ai-primary-color, #ee5cee) 0%, var(--ai-primary-color-dark, #cc00cc) 100%);
   color: white;
@@ -2678,7 +2405,6 @@ This creates a floating chat widget that can be added to any page
   margin-left: auto;
 }
 
-/* AI Message - Clean White Bubble with Asymmetric Border Radius */
 .assistant-message .message-content {
   background: white;
   color: #1f2937;
@@ -2722,7 +2448,6 @@ This creates a floating chat widget that can be added to any page
   40% { transform: scale(1); }
 }
 
-/* Modern Input Area with Gradient Send Button */
 .ai-chat-input {
   padding: 16px 20px 12px 20px;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
@@ -2745,7 +2470,6 @@ This creates a floating chat widget that can be added to any page
   align-items: center;
 }
 
-/* 🎯 ENHANCED: Input Field with WCAG AAA Compliant Colors */
 .ai-chat-input input {
   flex: 1;
   min-height: var(--touch-target-min);
@@ -2760,7 +2484,6 @@ This creates a floating chat widget that can be added to any page
   font-family: inherit;
 }
 
-/* ✨ ACCESSIBILITY: Input Focus States */
 .ai-chat-input input:focus {
   outline: none;
   border-color: var(--ai-primary-color, #ee5cee);
@@ -2778,9 +2501,7 @@ This creates a floating chat widget that can be added to any page
   color: var(--color-text-tertiary);
 }
 
-/* 🎯 ENHANCED: Send Button with Touch Target & Focus State */
 .ai-chat-input button {
-  /* Touch Target: 48px */
   min-width: var(--touch-target-comfortable);
   min-height: var(--touch-target-comfortable);
   width: var(--touch-target-comfortable);
@@ -2799,7 +2520,6 @@ This creates a floating chat widget that can be added to any page
   flex-shrink: 0;
 }
 
-/* ✨ ACCESSIBILITY: Send Button Focus States */
 .ai-chat-input button:focus {
   outline: none;
   box-shadow: 0 0 0 2px var(--color-bg-primary),
@@ -2824,7 +2544,6 @@ This creates a floating chat widget that can be added to any page
   transform: scale(0.95);
 }
 
-/* Powered by AI Footer */
 .ai-powered-footer {
   text-align: center;
   font-size: var(--font-size-xs);
@@ -2839,7 +2558,6 @@ This creates a floating chat widget that can be added to any page
   content: '✨ ';
 }
 
-/* 💀 SKELETON LOADING STATES */
 .skeleton {
   background: linear-gradient(
     90deg,
@@ -2910,9 +2628,7 @@ This creates a floating chat widget that can be added to any page
   margin-bottom: var(--space-1);
 }
 
-/* 🎯 ENHANCED: Suggestion Buttons with Touch Targets */
 .suggestion-btn {
-  /* Touch Target: 44px minimum */
   min-height: var(--touch-target-min);
 
   background: var(--color-bg-primary);
@@ -2930,7 +2646,6 @@ This creates a floating chat widget that can be added to any page
   justify-content: center;
 }
 
-/* ✨ ACCESSIBILITY: Suggestion Button Focus States */
 .suggestion-btn:focus {
   outline: none;
   border-color: var(--ai-primary-color, #ee5cee);
@@ -2956,8 +2671,6 @@ This creates a floating chat widget that can be added to any page
   transform: translateY(0);
 }
 
-/* Mobile responsiveness */
-/* Modern Product Grid Styles */
 .products-grid-container {
   max-width: 100% !important;
   width: 100% !important;
@@ -2969,7 +2682,6 @@ This creates a floating chat widget that can be added to any page
   width: 100%;
 }
 
-/* Modern Product Cards with Enhanced Shadows */
 .product-card {
   background: white;
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -2994,7 +2706,6 @@ This creates a floating chat widget that can be added to any page
   border-color: rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.2);
 }
 
-/* Product Image with Subtle Gradient Overlay */
 .product-image {
   width: 100%;
   height: 180px;
@@ -3042,7 +2753,6 @@ This creates a floating chat widget that can be added to any page
   margin-bottom: 12px;
 }
 
-/* Gradient Text for Prices */
 .product-price {
   font-size: 22px;
   font-weight: 800;
@@ -3089,7 +2799,6 @@ This creates a floating chat widget that can be added to any page
   margin-bottom: 4px;
 }
 
-/* Gradient CTA Button with Arrow Icon */
 .product-action-button {
   background: linear-gradient(135deg, var(--ai-primary-color, #ee5cee) 0%, var(--ai-primary-color-dark, #cc00cc) 100%);
   color: white;
@@ -3117,7 +2826,6 @@ This creates a floating chat widget that can be added to any page
   transform: translateY(0);
 }
 
-/* Glassmorphic Relevance Badge */
 .relevance-badge {
   position: absolute;
   top: 12px;
@@ -3137,13 +2845,11 @@ This creates a floating chat widget that can be added to any page
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-/* AI Welcome Interface Styles - Modern Design */
 .ai-welcome-container {
   width: 100%;
   max-width: none !important;
 }
 
-/* 🎯 PART 2: Modern Welcome Screen Redesign - ULTRA COMPACT */
 .ai-welcome-screen {
   padding: 20px 18px;
   display: flex;
@@ -3157,7 +2863,6 @@ This creates a floating chat widget that can be added to any page
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Welcome Header */
 .welcome-header {
   text-align: center;
   margin-bottom: 0;
@@ -3197,7 +2902,6 @@ This creates a floating chat widget that can be added to any page
   line-height: 1.3;
 }
 
-/* Quick Actions Section */
 .quick-actions-section {
   margin-bottom: 4px;
 }
@@ -3222,7 +2926,6 @@ This creates a floating chat widget that can be added to any page
   border-radius: 2px;
 }
 
-/* Modern Quick Action Buttons - ULTRA COMPACT (3 per row) */
 .quick-actions-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -3252,7 +2955,6 @@ This creates a floating chat widget that can be added to any page
   min-height: 60px;
 }
 
-/* Gradient overlay on hover */
 .quick-action-btn::before {
   content: '';
   position: absolute;
@@ -3280,7 +2982,6 @@ This creates a floating chat widget that can be added to any page
   transition-duration: 0.1s;
 }
 
-/* Icon styling - centered above text */
 .quick-action-icon {
   width: 24px;
   height: 24px;
@@ -3298,7 +2999,6 @@ This creates a floating chat widget that can be added to any page
   transform: scale(1.15);
 }
 
-/* Text styling - centered below icon */
 .quick-action-text {
   position: relative;
   z-index: 1;
@@ -3312,7 +3012,6 @@ This creates a floating chat widget that can be added to any page
   font-weight: 700;
 }
 
-/* Responsive Design - Mobile (≤480px) */
 @media (max-width: 480px) {
   .ai-chat-window {
     width: calc(100vw - 32px);
@@ -3361,7 +3060,6 @@ This creates a floating chat widget that can be added to any page
     padding: 10px 14px;
   }
 
-  /* Mobile Welcome Screen */
   .ai-welcome-screen {
     padding: 16px;
     gap: 16px;
@@ -3422,7 +3120,6 @@ This creates a floating chat widget that can be added to any page
     height: 56px !important;
   }
   
-  /* Mobile Product Grid Styles */
   .products-grid {
     grid-template-columns: 1fr !important; /* Single column on mobile */
     gap: 10px;
@@ -3484,7 +3181,6 @@ This creates a floating chat widget that can be added to any page
   }
 }
 
-/* Responsive Design - Tablet (481px - 768px) */
 @media (max-width: 768px) and (min-width: 481px) {
   .ai-chat-window {
     width: 380px;
@@ -3518,7 +3214,6 @@ This creates a floating chat widget that can be added to any page
   }
 }
 
-/* Responsive Design - Desktop Large (>1024px) */
 @media (min-width: 1025px) {
   .ai-chat-window {
     width: 400px;
@@ -3529,17 +3224,12 @@ This creates a floating chat widget that can be added to any page
     document.head.appendChild(style);
   }
   
-  // Setup event listeners for widget buttons
   function setupEventListeners() {
-    console.log('🔧 AI Widget: Setting up event listeners');
     
-    // Store references to event handlers so we can remove them if needed
     window.aiWidgetHandlers = window.aiWidgetHandlers || {};
     
-    // Toggle button event listener
     const toggleBtn = document.getElementById('ai-chat-toggle-btn');
     if (toggleBtn) {
-      // Remove existing listener if any
       if (window.aiWidgetHandlers.toggleHandler) {
         toggleBtn.removeEventListener('click', window.aiWidgetHandlers.toggleHandler);
       }
@@ -3547,20 +3237,16 @@ This creates a floating chat widget that can be added to any page
       window.aiWidgetHandlers.toggleHandler = function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('🖱️ AI Widget: Toggle button clicked');
         toggleAIChat();
       };
       
       toggleBtn.addEventListener('click', window.aiWidgetHandlers.toggleHandler);
-      console.log('✅ AI Widget: Toggle button event listener added');
     } else {
       console.warn('⚠️ AI Widget: Toggle button not found');
     }
     
-    // Close button event listener
     const closeBtn = document.getElementById('ai-chat-close-btn');
     if (closeBtn) {
-      // Remove existing listener if any
       if (window.aiWidgetHandlers.closeHandler) {
         closeBtn.removeEventListener('click', window.aiWidgetHandlers.closeHandler);
       }
@@ -3568,20 +3254,16 @@ This creates a floating chat widget that can be added to any page
       window.aiWidgetHandlers.closeHandler = function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('🖱️ AI Widget: Close button clicked');
         toggleAIChat();
       };
       
       closeBtn.addEventListener('click', window.aiWidgetHandlers.closeHandler);
-      console.log('✅ AI Widget: Close button event listener added');
     } else {
       console.warn('⚠️ AI Widget: Close button not found');
     }
     
-    // Send button event listener
     const sendBtn = document.getElementById('ai-chat-send-btn');
     if (sendBtn) {
-      // Remove existing listener if any
       if (window.aiWidgetHandlers.sendHandler) {
         sendBtn.removeEventListener('click', window.aiWidgetHandlers.sendHandler);
       }
@@ -3593,15 +3275,12 @@ This creates a floating chat widget that can be added to any page
       };
       
       sendBtn.addEventListener('click', window.aiWidgetHandlers.sendHandler);
-      console.log('✅ AI Widget: Send button event listener added');
     } else {
       console.warn('⚠️ AI Widget: Send button not found');
     }
     
-    // Input field event listener for Enter key
     const inputField = document.getElementById('ai-chat-input-field');
     if (inputField) {
-      // Remove existing listener if any
       if (window.aiWidgetHandlers.keyHandler) {
         inputField.removeEventListener('keypress', window.aiWidgetHandlers.keyHandler);
       }
@@ -3614,12 +3293,10 @@ This creates a floating chat widget that can be added to any page
       };
       
       inputField.addEventListener('keypress', window.aiWidgetHandlers.keyHandler);
-      console.log('✅ AI Widget: Input field event listener added');
     } else {
       console.warn('⚠️ AI Widget: Input field not found');
     }
 
-    // ✨ ACCESSIBILITY: Escape key handler to close chat
     window.aiWidgetHandlers.escapeHandler = function(e) {
       if (e.key === 'Escape' && chatOpen) {
         e.preventDefault();
@@ -3627,9 +3304,7 @@ This creates a floating chat widget that can be added to any page
       }
     };
     document.addEventListener('keydown', window.aiWidgetHandlers.escapeHandler);
-    console.log('✅ AI Widget: Escape key handler added');
 
-    // ✨ ACCESSIBILITY: Focus trap for dialog
     window.aiWidgetHandlers.focusTrapHandler = function(e) {
       if (!chatOpen) return;
 
@@ -3642,14 +3317,11 @@ This creates a floating chat widget that can be added to any page
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
 
-      // Tab key pressed
       if (e.key === 'Tab') {
-        // Shift + Tab: focus last element if at first
         if (e.shiftKey && document.activeElement === firstElement) {
           e.preventDefault();
           lastElement.focus();
         }
-        // Tab: focus first element if at last
         else if (!e.shiftKey && document.activeElement === lastElement) {
           e.preventDefault();
           firstElement.focus();
@@ -3657,9 +3329,7 @@ This creates a floating chat widget that can be added to any page
       }
     };
     document.addEventListener('keydown', window.aiWidgetHandlers.focusTrapHandler);
-    console.log('✅ AI Widget: Focus trap handler added');
 
-    // Add suggestion button event listeners (both old and new styles)
     const suggestionBtns = document.querySelectorAll('.suggestion-btn, .quick-action-btn');
     suggestionBtns.forEach(btn => {
       btn.addEventListener('click', function(e) {
@@ -3667,8 +3337,6 @@ This creates a floating chat widget that can be added to any page
         e.stopPropagation();
         const prompt = this.getAttribute('data-prompt');
         if (prompt) {
-          console.log('🖱️ AI Widget: Quick action clicked:', prompt);
-          // Auto-fill input and send message
           const inputField = document.getElementById('ai-chat-input-field');
           if (inputField) {
             inputField.value = prompt;
@@ -3677,48 +3345,38 @@ This creates a floating chat widget that can be added to any page
         }
       });
     });
-    console.log('✅ AI Widget: Suggestion button listeners added:', suggestionBtns.length);
     
-    // Add click outside to close functionality (only add once)
     if (!window.aiWidgetHandlers.outsideClickHandler) {
       window.aiWidgetHandlers.outsideClickHandler = function(e) {
         const chatWindow = document.getElementById('ai-chat-window');
         const widget = document.querySelector('.ai-sales-assistant-widget');
         
         if (chatOpen && chatWindow && widget && !widget.contains(e.target)) {
-          console.log('🖱️ AI Widget: Clicked outside, closing chat');
           toggleAIChat();
         }
       };
       
       document.addEventListener('click', window.aiWidgetHandlers.outsideClickHandler);
-      console.log('✅ AI Widget: Outside click listener added');
     }
   }
   
-  // Add manual refresh function for debugging
   window.refreshAIWidget = async function() {
-    console.log('🔄 AI Widget: Manual refresh triggered');
     await initializeWidget();
   };
   
-  // Initialize when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeWidget);
   } else {
     initializeWidget();
   }
   
-  // ✅ MEMORY: Check for setting updates every 5 minutes with proper cleanup
   let workingApiUrl = null; // Cache the working URL to avoid testing all URLs every time
 
   settingsCheckInterval = setInterval(async () => {
     try {
       const shopDomain = window.Shopify?.shop || '{{ shop.permanent_domain }}';
       const urlsToTry = workingApiUrl ? [workingApiUrl] : [
-        // Use app proxy URL - properly forwarded to your app server
         '{{ shop.url }}' + '/apps/widget-settings',
-        // Fallback to current host
         window.location.protocol + '//' + window.location.host + '/apps/widget-settings'
       ];
 
@@ -3728,29 +3386,24 @@ This creates a floating chat widget that can be added to any page
           const data = await response.json();
           const currentUpdate = data.settings.updatedAt;
 
-          // Cache the working URL
           if (!workingApiUrl) workingApiUrl = url;
 
           if (window.lastSettingsUpdate && currentUpdate !== window.lastSettingsUpdate) {
-            console.log('🔄 AI Widget: Settings updated, refreshing widget...', {
               old: window.lastSettingsUpdate,
               new: currentUpdate,
               newSettings: data.settings
             });
             widgetSettings = { ...blockSettings, ...data.settings };
             createWidget();
-            console.log('✅ AI Widget: Widget refreshed with new settings');
           }
           window.lastSettingsUpdate = currentUpdate;
           break; // Success, stop trying other URLs
         } catch (e) {
-          // If the cached URL fails, reset it to try all URLs next time
           if (url === workingApiUrl) workingApiUrl = null;
           continue;
         }
       }
     } catch (e) {
-      // Silently fail
     }
   }, 300000); // 5 minutes (300,000ms) - much more reasonable for production
 })();
