@@ -5,6 +5,9 @@
  * Implements OWASP security best practices and Shopify App Store requirements.
  */
 
+import { logger } from "./logger.server";
+import { randomBytes } from "crypto";
+
 export interface SecurityHeadersConfig {
   /** Enable Content Security Policy */
   enableCSP?: boolean;
@@ -304,4 +307,115 @@ export function getContextualSecurityHeaders(request: Request): HeadersInit {
 
   // Default security headers
   return getSecurityHeaders();
+}
+
+/**
+ * Generate a cryptographically secure nonce for CSP
+ * @returns Base64-encoded nonce string
+ */
+export function generateNonce(): string {
+  return randomBytes(16).toString('base64');
+}
+
+/**
+ * Enhanced CSP for Shopify embedded apps with nonce support
+ * Removes unsafe-eval for better security
+ *
+ * @param nonce - Optional nonce for inline scripts
+ * @returns CSP header value
+ */
+export function getEnhancedEmbeddedAppCSP(nonce?: string): string {
+  const scriptSrc = nonce
+    ? `'self' 'nonce-${nonce}' https://cdn.shopify.com`
+    : `'self' 'unsafe-inline' https://cdn.shopify.com`;
+
+  return [
+    "default-src 'self'",
+    `script-src ${scriptSrc}`,
+    "style-src 'self' 'unsafe-inline' https://cdn.shopify.com https://fonts.googleapis.com",
+    "img-src 'self' data: https: blob:",
+    "font-src 'self' data: https://cdn.shopify.com https://fonts.gstatic.com",
+    "connect-src 'self' https://*.myshopify.com https://*.shopify.com https://admin.shopify.com",
+    "frame-ancestors https://*.myshopify.com https://admin.shopify.com",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+    "upgrade-insecure-requests",
+  ].join('; ');
+}
+
+/**
+ * Strict CSP for public pages (landing page, legal pages)
+ * Most restrictive policy for maximum security
+ *
+ * @param nonce - Optional nonce for inline scripts
+ * @returns CSP header value
+ */
+export function getPublicPageCSP(nonce?: string): string {
+  const scriptSrc = nonce
+    ? `'self' 'nonce-${nonce}'`
+    : `'self' 'unsafe-inline'`;
+
+  return [
+    "default-src 'self'",
+    `script-src ${scriptSrc} https://cdn.jsdelivr.net`,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "img-src 'self' data: https:",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "connect-src 'self'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+    "upgrade-insecure-requests",
+  ].join('; ');
+}
+
+/**
+ * Get complete security headers with enhanced CSP
+ *
+ * @param context - Context type: 'embedded-app', 'public', or 'api'
+ * @param nonce - Optional nonce for inline scripts
+ * @returns Complete security headers object
+ */
+export function getEnhancedSecurityHeaders(
+  context: 'embedded-app' | 'public' | 'api' = 'public',
+  nonce?: string
+): HeadersInit {
+  const headers: Record<string, string> = {
+    'X-Content-Type-Options': 'nosniff',
+    'X-XSS-Protection': '1; mode=block',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'X-DNS-Prefetch-Control': 'off',
+    'X-Download-Options': 'noopen',
+    'X-Permitted-Cross-Domain-Policies': 'none',
+  };
+
+  // Add context-specific CSP
+  if (context === 'embedded-app') {
+    headers['Content-Security-Policy'] = getEnhancedEmbeddedAppCSP(nonce);
+    // Allow framing from Shopify admin
+    headers['X-Frame-Options'] = 'ALLOW-FROM https://admin.shopify.com';
+  } else if (context === 'public') {
+    headers['Content-Security-Policy'] = getPublicPageCSP(nonce);
+    headers['X-Frame-Options'] = 'DENY';
+    headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload';
+  } else if (context === 'api') {
+    // API endpoints don't need CSP
+    headers['X-Frame-Options'] = 'DENY';
+  }
+
+  // Permissions Policy (disable unnecessary features)
+  headers['Permissions-Policy'] = [
+    'camera=()',
+    'microphone=()',
+    'geolocation=()',
+    'payment=()',
+    'usb=()',
+    'magnetometer=()',
+    'gyroscope=()',
+    'accelerometer=()',
+  ].join(', ');
+
+  return headers;
 }

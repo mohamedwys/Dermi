@@ -15,6 +15,7 @@ import { captureException } from "./lib/sentry.client";
 import { useChangeLanguage } from "remix-i18next/react";
 import clientI18n from "./i18n/i18next.client";
 import { I18nextProvider } from "react-i18next";
+import { generateNonce, getEnhancedSecurityHeaders } from "./lib/security-headers.server";
 
 // ✅ Import LanguageSwitcher
 import { LanguageSwitcher } from "./components/LanguageSwitcher";
@@ -27,20 +28,34 @@ export async function loader({ request }: { request: Request }) {
   const { getLocaleFromRequest } = await import("./i18n/i18next.server");
   const locale = await getLocaleFromRequest(request);
 
-  return json({
-    locale,
-    ENV: {
-      SENTRY_DSN: process.env.SENTRY_DSN,
-      NODE_ENV: process.env.NODE_ENV,
+  // Generate nonce for inline scripts
+  const nonce = generateNonce();
+
+  // Determine context based on route
+  const url = new URL(request.url);
+  const isAppRoute = url.pathname.startsWith('/app');
+  const context = isAppRoute ? 'embedded-app' : 'public';
+
+  return json(
+    {
+      locale,
+      nonce,
+      ENV: {
+        SENTRY_DSN: process.env.SENTRY_DSN,
+        NODE_ENV: process.env.NODE_ENV,
+      },
     },
-  });
+    {
+      headers: getEnhancedSecurityHeaders(context, nonce),
+    }
+  );
 }
 
 // ❌ No action — locale switching is handled by /set-locale
 
 // ---------------------- APP COMPONENT ----------------------
 export default function App() {
-  const { locale } = useLoaderData<typeof loader>();
+  const { locale, nonce } = useLoaderData<typeof loader>();
   useChangeLanguage(locale);
 
   return (
@@ -57,6 +72,7 @@ export default function App() {
           <Meta />
           <Links />
           <script
+            nonce={nonce}
             dangerouslySetInnerHTML={{
               __html: `window.ENV = ${JSON.stringify({
                 SENTRY_DSN: process.env.SENTRY_DSN,
@@ -72,8 +88,8 @@ export default function App() {
           </div>
 
           <Outlet />
-          <ScrollRestoration />
-          <Scripts />
+          <ScrollRestoration nonce={nonce} />
+          <Scripts nonce={nonce} />
         </body>
       </html>
     </I18nextProvider>
