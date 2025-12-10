@@ -2,19 +2,26 @@
 
 ## 🔴 Issue Identified
 
-Your widget settings cannot be saved/loaded due to a **missing Prisma client**.
+Your widget settings cannot be saved/loaded due to a **missing WidgetSettings table**.
 
 ### Error Symptoms:
 ```
-{"level":50,"time":"2025-12-10T11:16:59.445Z","env":"production","app":"iheard-ai","msg":"Database error in settings loader:"}
+The table `public.WidgetSettings` does not exist in the current database.
+```
+
+Full error:
+```
+PrismaClientKnownRequestError:
+Invalid `prisma.widgetSettings.findUnique()` invocation:
+The table `public.WidgetSettings` does not exist in the current database.
 ```
 
 ### Root Cause:
-The Prisma client was not generated after deployment. This typically happens:
-- ✗ After fresh clone/deployment
-- ✗ After dependency updates
-- ✗ After database schema changes
-- ✗ Missing `node_modules/.prisma/client` directory
+The database schema was not pushed to your production database. This typically happens:
+- ✗ First deployment to new database
+- ✗ Database was reset/recreated
+- ✗ Migrations not run during deployment
+- ✗ Schema changes not applied
 
 ---
 
@@ -36,26 +43,29 @@ This will:
 
 ## ✅ Manual Fix (Option 2)
 
-### Step 1: Generate Prisma Client
-```bash
-npm run prisma:generate
-```
-
-Or directly:
-```bash
-npx prisma generate
-```
-
-### Step 2: Push Schema to Database
+### Step 1: Push Schema to Database (Creates Missing Table)
 ```bash
 npx prisma db push
 ```
 
+This will:
+- ✅ Create the `WidgetSettings` table
+- ✅ Create all other missing tables (Session, ChatMessage, etc.)
+- ✅ Apply the current schema to your database
+
+### Step 2: Verify Table Created
+```bash
+npx prisma studio
+```
+
+Navigate to `WidgetSettings` table - should now exist.
+
 ### Step 3: Restart Server
 ```bash
-# Kill existing server
+# In development
 npm run dev
-# Or in production
+
+# In production (if needed)
 npm run build && npm start
 ```
 
