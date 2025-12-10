@@ -2,6 +2,8 @@ import type { ActionFunctionArgs } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 import { prisma as db } from "../db.server";
 import { getWebhookSecurityHeaders } from "../lib/security-headers.server";
+import { logger } from "../lib/logger.server";
+import { randomBytes } from "crypto";
 
 /**
  * GDPR Webhook: Shop Data Redaction
@@ -15,7 +17,19 @@ import { getWebhookSecurityHeaders } from "../lib/security-headers.server";
  * Timeline: Triggered 48 hours after app uninstallation.
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
+  const correlationId = randomBytes(16).toString("hex");
+  const webhookLogger = logger.child({ correlationId, webhook: "shop/redact" });
+
+  webhookLogger.info({
+    headers: {
+      topic: request.headers.get("X-Shopify-Topic"),
+      domain: request.headers.get("X-Shopify-Shop-Domain"),
+    }
+  }, "GDPR webhook received: shop data redaction (48hr post-uninstall)");
+
   const { shop, topic } = await authenticate.webhook(request);
+
+  webhookLogger.info({ shop, topic }, "Webhook authenticated successfully");
 
 
   try {
@@ -87,6 +101,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return deletionStats;
     });
 
+    webhookLogger.info({
+      shop,
+      deletionStats: result,
+      totalRecordsDeleted: Object.values(result).reduce((sum, count) => sum + count, 0)
+    }, "Shop data deleted successfully");
 
     return new Response(JSON.stringify({
       success: true,
@@ -100,6 +119,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     });
 
   } catch (error) {
+    webhookLogger.error({
+      shop,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    }, "Error deleting shop data - manual cleanup required");
+
     // Return success to Shopify to prevent retries
     // Manual investigation will be needed if this fails
     return new Response(JSON.stringify({

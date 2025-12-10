@@ -2,6 +2,8 @@ import type { ActionFunctionArgs } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 import { prisma as db } from "../db.server";
 import { getWebhookSecurityHeaders } from "../lib/security-headers.server";
+import { logger } from "../lib/logger.server";
+import { randomBytes } from "crypto";
 
 /**
  * App Uninstalled Webhook
@@ -13,7 +15,19 @@ import { getWebhookSecurityHeaders } from "../lib/security-headers.server";
  * We do comprehensive cleanup here to ensure data is removed promptly.
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
+  const correlationId = randomBytes(16).toString("hex");
+  const webhookLogger = logger.child({ correlationId, webhook: "app/uninstalled" });
+
+  webhookLogger.info({
+    headers: {
+      topic: request.headers.get("X-Shopify-Topic"),
+      domain: request.headers.get("X-Shopify-Shop-Domain"),
+    }
+  }, "Webhook received: app uninstalled");
+
   const { shop, session, topic } = await authenticate.webhook(request);
+
+  webhookLogger.info({ shop, topic }, "Webhook authenticated successfully");
 
 
   try {
@@ -84,6 +98,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return deletionStats;
     });
 
+    webhookLogger.info({
+      shop,
+      deletionStats: result,
+      totalRecordsDeleted: Object.values(result).reduce((sum, count) => sum + count, 0)
+    }, "App data cleaned up successfully on uninstall");
 
     return new Response(JSON.stringify({
       success: true,
@@ -95,6 +114,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     });
 
   } catch (error) {
+    webhookLogger.error({
+      shop,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    }, "Error during app uninstall cleanup - shop/redact webhook will retry in 48 hours");
 
     // Return success to prevent webhook retries
     // The shop/redact webhook (48 hours later) will catch any missed data

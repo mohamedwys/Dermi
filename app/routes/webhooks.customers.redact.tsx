@@ -2,6 +2,8 @@ import type { ActionFunctionArgs } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 import { prisma as db } from "../db.server";
 import { getWebhookSecurityHeaders } from "../lib/security-headers.server";
+import { logger } from "../lib/logger.server";
+import { randomBytes } from "crypto";
 
 /**
  * GDPR Webhook: Customer Data Redaction
@@ -15,7 +17,19 @@ import { getWebhookSecurityHeaders } from "../lib/security-headers.server";
  * Timeline: Must complete within 30 days of receiving the request.
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
+  const correlationId = randomBytes(16).toString("hex");
+  const webhookLogger = logger.child({ correlationId, webhook: "customers/redact" });
+
+  webhookLogger.info({
+    headers: {
+      topic: request.headers.get("X-Shopify-Topic"),
+      domain: request.headers.get("X-Shopify-Shop-Domain"),
+    }
+  }, "GDPR webhook received: customer data redaction");
+
   const { shop, payload, topic } = await authenticate.webhook(request);
+
+  webhookLogger.info({ shop, topic }, "Webhook authenticated successfully");
 
 
   try {
@@ -24,7 +38,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const customerEmail = payload.customer?.email;
     const customerPhone = payload.customer?.phone;
 
+    webhookLogger.info({
+      customerId: customerId ? "[REDACTED]" : undefined,
+      hasEmail: !!customerEmail,
+      hasPhone: !!customerPhone
+    }, "Processing customer data redaction");
+
     if (!customerId && !customerEmail) {
+      webhookLogger.warn("No customer identifier in payload");
       return new Response(JSON.stringify({
         error: "No customer identifier provided"
       }), {
@@ -47,6 +68,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     });
 
     const profileIds = userProfiles.map((p) => p.id);
+
+    webhookLogger.info({
+      profileCount: profileIds.length
+    }, "Found customer profiles to delete");
 
     if (profileIds.length > 0) {
       // Delete all related data in a transaction to ensure data integrity
@@ -91,6 +116,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         // If your analytics contain personal data, delete those records too.
       });
 
+      webhookLogger.info({
+        profilesDeleted: profileIds.length,
+        customerId: customerId ? "[REDACTED]" : undefined
+      }, "Customer data deleted successfully");
 
       return new Response(JSON.stringify({
         success: true,
@@ -103,6 +132,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         headers: { "Content-Type": "application/json", ...getWebhookSecurityHeaders() }
       });
     } else {
+      webhookLogger.info({
+        customerId: customerId ? "[REDACTED]" : undefined
+      }, "No customer data found to delete");
 
       return new Response(JSON.stringify({
         success: true,
@@ -115,6 +147,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
   } catch (error) {
+    webhookLogger.error({
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    }, "Error deleting customer data - manual intervention required");
 
     // Log the error but return success to Shopify
     // This prevents webhook retries while we investigate the issue

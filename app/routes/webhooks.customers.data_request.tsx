@@ -2,6 +2,8 @@ import type { ActionFunctionArgs } from "@remix-run/node";
 import { authenticate } from "../shopify.server";
 import { prisma as db } from "../db.server";
 import { getWebhookSecurityHeaders } from "../lib/security-headers.server";
+import { logger } from "../lib/logger.server";
+import { randomBytes } from "crypto";
 
 /**
  * GDPR Webhook: Customer Data Request
@@ -13,7 +15,19 @@ import { getWebhookSecurityHeaders } from "../lib/security-headers.server";
  * Reference: https://shopify.dev/docs/apps/build/privacy-law-compliance
  */
 export const action = async ({ request }: ActionFunctionArgs) => {
+  const correlationId = randomBytes(16).toString("hex");
+  const webhookLogger = logger.child({ correlationId, webhook: "customers/data_request" });
+
+  webhookLogger.info({
+    headers: {
+      topic: request.headers.get("X-Shopify-Topic"),
+      domain: request.headers.get("X-Shopify-Shop-Domain"),
+    }
+  }, "GDPR webhook received: customer data request");
+
   const { shop, payload, topic } = await authenticate.webhook(request);
+
+  webhookLogger.info({ shop, topic }, "Webhook authenticated successfully");
 
 
   try {
@@ -22,7 +36,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const customerEmail = payload.customer?.email;
     const customerPhone = payload.customer?.phone;
 
+    webhookLogger.info({
+      customerId: customerId ? "[REDACTED]" : undefined,
+      hasEmail: !!customerEmail,
+      hasPhone: !!customerPhone
+    }, "Processing customer data request");
+
     if (!customerId && !customerEmail) {
+      webhookLogger.warn("No customer identifier in payload");
       return new Response(JSON.stringify({
         error: "No customer identifier provided"
       }), {
@@ -120,6 +141,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       avg_confidence: a.avgConfidence,
     }));
 
+    webhookLogger.info({
+      profileCount: customerData.profiles.length,
+      sessionCount: customerData.chat_sessions.length,
+      messageCount: customerData.chat_messages.length,
+      analyticsCount: customerData.analytics.length
+    }, "Customer data collected successfully");
 
     // Return the collected data
     // Note: Shopify will store this and provide it to the customer
@@ -132,6 +159,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     });
 
   } catch (error) {
+    webhookLogger.error({
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    }, "Error collecting customer data");
 
     // Return error but don't fail the webhook
     return new Response(JSON.stringify({
