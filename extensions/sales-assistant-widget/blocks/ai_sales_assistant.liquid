@@ -642,7 +642,7 @@ This creates a floating chat widget that can be added to any page
         color: ${widgetSettings.primaryColor || '#ee5cee'};
         padding: 8px 16px;
         border-radius: 20px;
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 500;
         cursor: pointer;
         white-space: nowrap;
@@ -718,7 +718,7 @@ This creates a floating chat widget that can be added to any page
         border: none;
         padding: 10px 18px;
         border-radius: 8px;
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 600;
         cursor: pointer;
         display: flex;
@@ -1096,7 +1096,7 @@ This creates a floating chat widget that can be added to any page
       detailsDiv.style.padding = '16px';
       const titleH4 = document.createElement('h4');
       titleH4.style.margin = '0 0 8px 0';
-      titleH4.style.fontSize = '16px';
+      titleH4.style.fontSize = '17px';
       titleH4.style.fontWeight = '600';
       titleH4.style.color = '#1f2937';
       titleH4.style.lineHeight = '1.3';
@@ -1147,7 +1147,7 @@ This creates a floating chat widget that can be added to any page
         priceContainer.appendChild(originalPriceSpan);
       }
       const priceDiv = document.createElement('div');
-      priceDiv.style.fontSize = '20px';
+      priceDiv.style.fontSize = '21px';
       priceDiv.style.fontWeight = '700';
       priceDiv.style.color = product.compareAtPrice ? '#ef4444' : widgetSettings.primaryColor;
       priceDiv.textContent = product.priceFormatted || `$${parseFloat(product.price || '0').toFixed(2)}`;
@@ -1167,7 +1167,7 @@ This creates a floating chat widget that can be added to any page
       detailsDiv.appendChild(priceRow);
       const descP = document.createElement('p');
       descP.style.margin = '0 0 12px 0';
-      descP.style.fontSize = '13px';
+      descP.style.fontSize = '14px';
       descP.style.color = '#6b7280';
       descP.style.lineHeight = '1.4';
       descP.style.display = '-webkit-box';
@@ -1222,7 +1222,7 @@ This creates a floating chat widget that can be added to any page
       actionButton.style.textAlign = 'center';
       actionButton.style.padding = '10px';
       actionButton.style.borderRadius = '8px';
-      actionButton.style.fontSize = '14px';
+      actionButton.style.fontSize = '15px';
       actionButton.style.fontWeight = '600';
       actionButton.style.marginTop = 'auto';
       actionButton.textContent = 'View Product →';
@@ -1272,7 +1272,7 @@ This creates a floating chat widget that can be added to any page
       browseButton.style.color = widgetSettings.primaryColor;
       browseButton.style.padding = '10px 20px';
       browseButton.style.borderRadius = '25px';
-      browseButton.style.fontSize = '14px';
+      browseButton.style.fontSize = '15px';
       browseButton.style.fontWeight = '600';
       browseButton.style.cursor = 'pointer';
       browseButton.style.transition = 'all 0.2s ease';
@@ -1398,14 +1398,8 @@ This creates a floating chat widget that can be added to any page
           aria-labelledby="ai-chat-title"
           aria-modal="true"
         >
-          <!-- Chat Header with Animated Wave Effect -->
+          <!-- Chat Header with Curvy Bottom -->
           <div class="ai-chat-header">
-            <!-- Animated Wave Layers -->
-            <div class="header-waves">
-              <div class="header-wave-layer wave-1"></div>
-              <div class="header-wave-layer wave-2"></div>
-              <div class="header-wave-layer wave-3"></div>
-            </div>
             <div class="chat-header-content">
               <div class="header-info">
                 <h3 id="ai-chat-title">${safeChatTitle}</h3>
@@ -1425,6 +1419,10 @@ This creates a floating chat widget that can be added to any page
                 </svg>
               </button>
             </div>
+            <!-- Curvy Bottom SVG -->
+            <svg class="header-curve" viewBox="0 0 400 30" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0,0 Q200,30 400,0 L400,30 L0,30 Z" fill="white"/>
+            </svg>
           </div>
           <!-- Chat Messages Container -->
           <div class="ai-chat-messages-container">
@@ -1561,14 +1559,14 @@ This creates a floating chat widget that can be added to any page
   border-width: 0;
 }
 .ai-sales-assistant-widget {
-  /* Modern Typography Scale */
-  --font-size-xs: 0.75rem;    /* 12px */
-  --font-size-sm: 0.875rem;   /* 14px */
-  --font-size-base: 1rem;     /* 16px */
-  --font-size-md: 1.125rem;   /* 18px */
-  --font-size-lg: 1.25rem;    /* 20px */
-  --font-size-xl: 1.5rem;     /* 24px */
-  --font-size-2xl: 2rem;      /* 32px */
+  /* Modern Typography Scale - Increased for better readability */
+  --font-size-xs: 0.8125rem;  /* 13px */
+  --font-size-sm: 0.9375rem;  /* 15px */
+  --font-size-base: 1.0625rem; /* 17px */
+  --font-size-md: 1.1875rem;  /* 19px */
+  --font-size-lg: 1.3125rem;  /* 21px */
+  --font-size-xl: 1.5625rem;  /* 25px */
+  --font-size-2xl: 2.125rem;  /* 34px */
 
   /* Refined Spacing System */
   --space-1: 0.25rem;  /* 4px */
@@ -1809,28 +1807,16 @@ This creates a floating chat widget that can be added to any page
 }
 .ai-chat-header {
   position: relative;
-  background: linear-gradient(135deg, var(--color-accent, #3b82f6) 0%, var(--color-accent-hover, #2563eb) 100%);
+  background: linear-gradient(135deg, var(--ai-primary-color, #3b82f6) 0%, var(--ai-primary-color-dark, #2563eb) 100%);
   color: var(--color-text-inverse);
-  padding: var(--space-5);
-  overflow: hidden;
-  min-height: 72px;
+  padding: var(--space-5) var(--space-5) 0 var(--space-5);
+  overflow: visible;
+  min-height: 90px;
   z-index: 1;
   box-sizing: border-box;
   grid-area: header !important;
-  box-shadow: 0 2px 12px rgba(var(--color-accent-rgb), 0.15);
+  box-shadow: 0 2px 12px rgba(var(--ai-primary-color-rgb, 59, 130, 246), 0.15);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
-}
-
-.ai-chat-header::before {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 0;
-  right: 0;
-  height: 20px;
-  background: inherit;
-  filter: blur(10px);
-  opacity: 0.3;
 }
 
 .chat-header-content {
@@ -1884,22 +1870,15 @@ This creates a floating chat widget that can be added to any page
     transform: scale(1.2);
   }
 }
-/* Simple decorative element instead of complex waves */
-.header-waves {
+/* Curvy bottom for header */
+.header-curve {
   position: absolute;
-  bottom: 0;
+  bottom: -1px;
   left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    transparent 100%);
-  opacity: 0.5;
-}
-
-.header-wave-layer {
-  display: none; /* Removed complex wave animations */
+  width: 100%;
+  height: 30px;
+  z-index: 1;
+  display: block;
 }
 
 /* Accessibility - Reduce motion */
