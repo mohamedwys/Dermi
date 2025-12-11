@@ -51,10 +51,12 @@ export function getSecurityHeaders(
 
   // Content Security Policy (CSP)
   // Prevents XSS attacks by controlling which resources can be loaded
+  // SECURITY: Removed 'unsafe-eval' - not needed for Shopify apps
+  // Use nonces for inline scripts instead of 'unsafe-inline' where possible
   if (config.enableCSP) {
     headers['Content-Security-Policy'] = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.shopify.com https://cdn.jsdelivr.net",
+      "script-src 'self' 'unsafe-inline' https://cdn.shopify.com https://cdn.jsdelivr.net",
       "style-src 'self' 'unsafe-inline' https://cdn.shopify.com",
       "img-src 'self' data: https: blob:",
       "font-src 'self' data: https://cdn.shopify.com",
@@ -73,9 +75,13 @@ export function getSecurityHeaders(
 
   // X-Frame-Options
   // Prevents clickjacking attacks
+  // NOTE: Deprecated in favor of CSP frame-ancestors directive
+  // CSP frame-ancestors provides better browser support and more flexibility
+  // We handle frame protection via CSP, so X-Frame-Options is not needed here
   if (config.enableFrameProtection) {
-    // Allow framing from Shopify admin
-    headers['X-Frame-Options'] = 'ALLOW-FROM https://admin.shopify.com';
+    // For non-embedded contexts, deny all framing
+    // For embedded Shopify apps, CSP frame-ancestors handles this
+    // Do not set X-Frame-Options to avoid conflicts with CSP
   }
 
   // X-Content-Type-Options
@@ -319,12 +325,14 @@ export function generateNonce(): string {
 
 /**
  * Enhanced CSP for Shopify embedded apps with nonce support
- * Removes unsafe-eval for better security
+ * SECURITY: Removed 'unsafe-eval' - not needed for Shopify apps
+ * Uses nonces for inline scripts when available for better security
  *
  * @param nonce - Optional nonce for inline scripts
  * @returns CSP header value
  */
 export function getEnhancedEmbeddedAppCSP(nonce?: string): string {
+  // When nonce is available, use it instead of unsafe-inline for better security
   const scriptSrc = nonce
     ? `'self' 'nonce-${nonce}' https://cdn.shopify.com`
     : `'self' 'unsafe-inline' https://cdn.shopify.com`;
@@ -394,8 +402,8 @@ export function getEnhancedSecurityHeaders(
   // Add context-specific CSP
   if (context === 'embedded-app') {
     headers['Content-Security-Policy'] = getEnhancedEmbeddedAppCSP(nonce);
-    // Allow framing from Shopify admin
-    headers['X-Frame-Options'] = 'ALLOW-FROM https://admin.shopify.com';
+    // NOTE: X-Frame-Options not needed - CSP frame-ancestors handles this
+    // CSP frame-ancestors has better browser support than X-Frame-Options ALLOW-FROM
   } else if (context === 'public') {
     headers['Content-Security-Policy'] = getPublicPageCSP(nonce);
     headers['X-Frame-Options'] = 'DENY';

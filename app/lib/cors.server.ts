@@ -77,10 +77,12 @@ export function getSecureCorsHeaders(request: Request): HeadersInit {
     };
   } else {
     // Origin is not whitelisted - restrict access
+    // SECURITY: Omit Access-Control-Allow-Origin header instead of empty string
+    // This is clearer to browsers that CORS is denied
     return {
-      'Access-Control-Allow-Origin': '', // No access
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
+      'Vary': 'Origin',
     };
   }
 }

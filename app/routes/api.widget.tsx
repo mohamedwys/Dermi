@@ -1,4 +1,5 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
+import { getSecureCorsHeaders } from "../lib/cors.server";
 
 /**
  * Standalone AI Sales Assistant Widget Script
@@ -386,14 +387,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 })();
 `;
 
+  // SECURITY: Use secure CORS validation instead of wildcard
+  // Only allow requests from whitelisted Shopify domains
+  const corsHeaders = getSecureCorsHeaders(request);
+
   return new Response(widgetJavaScript, {
     status: 200,
     headers: {
       "Content-Type": "application/javascript; charset=utf-8",
       "Cache-Control": "public, max-age=60",
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET",
-      "Access-Control-Allow-Headers": "Content-Type",
+      ...corsHeaders,
     },
   });
 }; 

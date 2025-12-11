@@ -162,18 +162,43 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     webhookLogger.error({
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined
-    }, "Error collecting customer data");
+    }, "Error collecting customer data - manual intervention may be required");
 
-    // Return error but don't fail the webhook
-    return new Response(JSON.stringify({
-      error: "Error collecting customer data",
-      message: error instanceof Error ? error.message : 'Unknown error',
-    }), {
-      status: 500,
-      headers: {
-        "Content-Type": "application/json",
-        ...getWebhookSecurityHeaders()
-      }
-    });
+    // GDPR COMPLIANCE: Return 500 to trigger Shopify retry for transient errors
+    // This ensures we don't miss customer data requests due to temporary issues
+    const isTransientError = error instanceof Error && (
+      error.message.includes('connection') ||
+      error.message.includes('timeout') ||
+      error.message.includes('ECONNREFUSED')
+    );
+
+    if (isTransientError) {
+      webhookLogger.warn("Transient error detected - Shopify will retry");
+      return new Response(JSON.stringify({
+        error: "Temporary error collecting customer data",
+        message: "Will retry automatically",
+        retry_recommended: true,
+      }), {
+        status: 500, // Triggers Shopify retry
+        headers: {
+          "Content-Type": "application/json",
+          ...getWebhookSecurityHeaders()
+        }
+      });
+    } else {
+      // Permanent error - return 200 to prevent retries but log for manual review
+      webhookLogger.error("Permanent error - manual review required");
+      return new Response(JSON.stringify({
+        error: "Error collecting customer data",
+        message: error instanceof Error ? error.message : 'Unknown error',
+        manual_review_required: true,
+      }), {
+        status: 200, // Prevent infinite retries
+        headers: {
+          "Content-Type": "application/json",
+          ...getWebhookSecurityHeaders()
+        }
+      });
+    }
   }
 };
