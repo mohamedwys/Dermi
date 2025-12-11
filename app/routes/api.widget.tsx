@@ -165,9 +165,27 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         #ai-toggle-btn.open svg.close { transform: rotate(0) scale(1); }
         #ai-chat-window { position: absolute; bottom: 80px; right: 0; width: 380px; max-width: calc(100vw - 40px); height: 600px; max-height: calc(100vh - 120px); background: white; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); display: flex; flex-direction: column; opacity: 0; transform: scale(0.95) translateY(10px); pointer-events: none; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
         #ai-chat-window.open { opacity: 1; transform: scale(1) translateY(0); pointer-events: auto; }
-        .ai-chat-header { background: linear-gradient(135deg, \${primaryColor}, \${adjustBrightness(primaryColor, -20)}); color: white; padding: 20px; border-radius: 16px 16px 0 0; display: flex; align-items: center; justify-content: space-between; }
-        .ai-chat-header h3 { margin: 0; font-size: 18px; font-weight: 600; }
-        .ai-header-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .ai-chat-header { background: linear-gradient(135deg, \${primaryColor}, \${adjustBrightness(primaryColor, -20)}); color: white; padding: 20px; border-radius: 16px 16px 0 0; display: flex; align-items: center; justify-content: space-between; position: relative; overflow: hidden; }
+        .ai-header-waves { position: absolute; bottom: -2px; left: 0; width: 100%; height: 60px; pointer-events: none; }
+        .ai-wave { position: absolute; bottom: 0; left: 0; width: 200%; height: 100%; }
+        .ai-wave path { fill: rgba(255, 255, 255, 0.15); }
+        .ai-wave.wave-1 { animation: wave-animation-1 12s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite; opacity: 0.4; }
+        .ai-wave.wave-2 { animation: wave-animation-2 15s cubic-bezier(0.36, 0.45, 0.63, 0.53) -3s infinite; opacity: 0.3; }
+        .ai-wave.wave-3 { animation: wave-animation-3 18s cubic-bezier(0.36, 0.45, 0.63, 0.53) -6s infinite; opacity: 0.2; }
+        @keyframes wave-animation-1 {
+          0%, 100% { transform: translateX(0) translateY(0); }
+          50% { transform: translateX(-25%) translateY(-8px); }
+        }
+        @keyframes wave-animation-2 {
+          0%, 100% { transform: translateX(0) translateY(0); }
+          50% { transform: translateX(-30%) translateY(-10px); }
+        }
+        @keyframes wave-animation-3 {
+          0%, 100% { transform: translateX(0) translateY(0); }
+          50% { transform: translateX(-20%) translateY(-6px); }
+        }
+        .ai-chat-header h3 { margin: 0; font-size: 18px; font-weight: 600; position: relative; z-index: 1; }
+        .ai-header-close { background: rgba(255,255,255,0.2); border: none; color: white; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; position: relative; z-index: 1; }
         .ai-header-close:hover { background: rgba(255,255,255,0.3); }
         #ai-messages { flex: 1; overflow-y: auto; padding: 20px; background: #f9fafb; display: flex; flex-direction: column; gap: 12px; }
         #ai-messages::-webkit-scrollbar { width: 6px; }
@@ -213,6 +231,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
             <button class="ai-header-close" aria-label="Close chat" onclick="window.toggleAIChat()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
             </button>
+            <div class="ai-header-waves">
+              <svg class="ai-wave wave-1" viewBox="0 0 1200 60" preserveAspectRatio="none">
+                <path d="M0,30 C150,50 350,10 600,30 C850,50 1050,10 1200,30 L1200,60 L0,60 Z"></path>
+              </svg>
+              <svg class="ai-wave wave-2" viewBox="0 0 1200 60" preserveAspectRatio="none">
+                <path d="M0,20 C200,40 400,0 600,25 C800,45 1000,5 1200,25 L1200,60 L0,60 Z"></path>
+              </svg>
+              <svg class="ai-wave wave-3" viewBox="0 0 1200 60" preserveAspectRatio="none">
+                <path d="M0,35 C180,55 420,15 600,35 C780,55 1020,15 1200,35 L1200,60 L0,60 Z"></path>
+              </svg>
+            </div>
           </div>
           <div id="ai-messages">
             <div class="ai-msg assistant">\${escapeHTML(settings.welcomeMessage)}<div class="ai-msg-time">\${formatTimestamp()}</div></div>
