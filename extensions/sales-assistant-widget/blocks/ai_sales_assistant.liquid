@@ -1763,7 +1763,7 @@ This creates a floating chat widget that can be added to any page
   background: var(--ai-primary-color, #ee5cee);
   color: white;
   padding: 24px;
-  overflow: hidden;
+  overflow: visible;
   min-height: 85px;
   z-index: 1;
   box-sizing: border-box;
@@ -1823,12 +1823,12 @@ This creates a floating chat widget that can be added to any page
 /* Wave Container */
 .header-waves {
   position: absolute;
-  bottom: 0;
+  bottom: -30px;
   left: 0;
   width: 100%;
   height: 60px;
-  overflow: hidden;
-  z-index: 0;
+  overflow: visible;
+  z-index: 10;
   pointer-events: none;
 }
 
