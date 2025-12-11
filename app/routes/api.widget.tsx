@@ -412,7 +412,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     status: 200,
     headers: {
       "Content-Type": "application/javascript; charset=utf-8",
-      "Cache-Control": "public, max-age=60",
+      "Cache-Control": "public, max-age=0, must-revalidate", // Force fresh load
       ...corsHeaders,
     },
   });
