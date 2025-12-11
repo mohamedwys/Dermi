@@ -1374,7 +1374,6 @@ This creates a floating chat widget that can be added to any page
         <button
           class="ai-chat-toggle"
           id="ai-chat-toggle-btn"
-          style="background-color: ${safePrimaryColor};"
           aria-label="Open AI chat assistant"
           aria-expanded="false"
           aria-controls="ai-chat-window"
@@ -1420,8 +1419,8 @@ This creates a floating chat widget that can be added to any page
               </button>
             </div>
             <!-- Curvy Bottom SVG -->
-            <svg class="header-curve" viewBox="0 0 400 30" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M0,0 Q200,30 400,0 L400,30 L0,30 Z" fill="white"/>
+            <svg class="header-curve" viewBox="0 0 400 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0,0 Q100,35 200,20 T400,0 L400,40 L0,40 Z" fill="white"/>
             </svg>
           </div>
           <!-- Chat Messages Container -->
@@ -1681,7 +1680,7 @@ This creates a floating chat widget that can be added to any page
 .ai-chat-toggle {
   min-width: var(--touch-target-comfortable);
   min-height: var(--touch-target-comfortable);
-  background: linear-gradient(135deg, var(--color-accent, #3b82f6) 0%, var(--color-accent-hover, #2563eb) 100%);
+  background: linear-gradient(135deg, var(--ai-primary-color, #3b82f6) 0%, var(--ai-primary-color-dark, #2563eb) 100%);
   border: none;
   border-radius: var(--radius-full);
   color: var(--color-text-inverse);
@@ -1693,7 +1692,7 @@ This creates a floating chat widget that can be added to any page
   padding: var(--space-3) var(--space-5);
   font-size: var(--font-size-sm);
   font-weight: 600;
-  box-shadow: var(--shadow-lg), 0 4px 20px rgba(var(--color-accent-rgb), 0.3);
+  box-shadow: var(--shadow-lg), 0 4px 20px rgba(var(--ai-primary-color-rgb), 0.3);
   transition: all var(--transition-smooth);
   position: relative;
   overflow: hidden;
@@ -1702,12 +1701,12 @@ This creates a floating chat widget that can be added to any page
 
 .ai-chat-toggle:focus {
   outline: none;
-  box-shadow: var(--focus-ring), 0 4px 20px rgba(var(--color-accent-rgb), 0.3);
+  box-shadow: var(--focus-ring), 0 4px 20px rgba(var(--ai-primary-color-rgb), 0.3);
 }
 
 .ai-chat-toggle:focus-visible {
   outline: none;
-  box-shadow: var(--focus-ring), var(--shadow-xl), 0 4px 20px rgba(var(--color-accent-rgb), 0.4);
+  box-shadow: var(--focus-ring), var(--shadow-xl), 0 4px 20px rgba(var(--ai-primary-color-rgb), 0.4);
 }
 
 .ai-chat-toggle::before {
@@ -1727,8 +1726,8 @@ This creates a floating chat widget that can be added to any page
 
 .ai-chat-toggle:hover {
   transform: translateY(-2px) scale(1.03);
-  box-shadow: var(--shadow-xl), 0 8px 30px rgba(var(--color-accent-rgb), 0.4);
-  background: linear-gradient(135deg, var(--color-accent-hover, #2563eb) 0%, var(--color-accent, #3b82f6) 100%);
+  box-shadow: var(--shadow-xl), 0 8px 30px rgba(var(--ai-primary-color-rgb), 0.4);
+  background: linear-gradient(135deg, var(--ai-primary-color-dark, #2563eb) 0%, var(--ai-primary-color, #3b82f6) 100%);
 }
 
 .ai-chat-toggle:active {
@@ -1873,10 +1872,10 @@ This creates a floating chat widget that can be added to any page
 /* Curvy bottom for header */
 .header-curve {
   position: absolute;
-  bottom: -1px;
+  bottom: -2px;
   left: 0;
   width: 100%;
-  height: 30px;
+  height: 40px;
   z-index: 1;
   display: block;
 }
@@ -1970,18 +1969,18 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-messages::-webkit-scrollbar-thumb {
-  background: var(--color-accent);
+  background: var(--ai-primary-color);
   border-radius: var(--radius-full);
   transition: all var(--transition-smooth);
 }
 
 .ai-chat-messages::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent-hover);
+  background: var(--ai-primary-color-dark);
 }
 
 .ai-chat-messages {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-accent) var(--color-bg-tertiary);
+  scrollbar-color: var(--ai-primary-color) var(--color-bg-tertiary);
 }
 #ai-chat-messages .ai-message,
 .ai-chat-messages .ai-message,
@@ -2055,10 +2054,10 @@ This creates a floating chat widget that can be added to any page
 }
 
 .user-message .message-content {
-  background: linear-gradient(135deg, var(--color-accent, #3b82f6) 0%, var(--color-accent-hover, #2563eb) 100%);
+  background: linear-gradient(135deg, var(--ai-primary-color, #3b82f6) 0%, var(--ai-primary-color-dark, #2563eb) 100%);
   color: var(--color-text-inverse);
   border-radius: var(--radius-lg) var(--radius-lg) var(--radius-xs) var(--radius-lg);
-  box-shadow: var(--shadow-sm), 0 2px 8px rgba(var(--color-accent-rgb), 0.2);
+  box-shadow: var(--shadow-sm), 0 2px 8px rgba(var(--ai-primary-color-rgb), 0.2);
   margin-left: auto;
 }
 
@@ -2159,15 +2158,15 @@ This creates a floating chat widget that can be added to any page
 
 .ai-chat-input input:focus {
   outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.1);
+  border-color: var(--ai-primary-color);
+  box-shadow: 0 0 0 3px rgba(var(--ai-primary-color-rgb), 0.1);
   background: var(--color-bg-primary);
 }
 
 .ai-chat-input input:focus-visible {
   outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(var(--color-accent-rgb), 0.15);
+  border-color: var(--ai-primary-color);
+  box-shadow: 0 0 0 3px rgba(var(--ai-primary-color-rgb), 0.15);
 }
 
 .ai-chat-input input::placeholder {
@@ -2179,7 +2178,7 @@ This creates a floating chat widget that can be added to any page
   min-height: var(--touch-target-comfortable);
   width: var(--touch-target-comfortable);
   height: var(--touch-target-comfortable);
-  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+  background: linear-gradient(135deg, var(--ai-primary-color) 0%, var(--ai-primary-color-dark) 100%);
   border: none;
   border-radius: 50%;
   cursor: pointer;
@@ -2187,27 +2186,27 @@ This creates a floating chat widget that can be added to any page
   align-items: center;
   justify-content: center;
   transition: all var(--transition-smooth);
-  box-shadow: var(--shadow-md), 0 2px 8px rgba(var(--color-accent-rgb), 0.3);
+  box-shadow: var(--shadow-md), 0 2px 8px rgba(var(--ai-primary-color-rgb), 0.3);
   flex-shrink: 0;
 }
 
 .ai-chat-input button:focus {
   outline: none;
   box-shadow: 0 0 0 2px var(--color-bg-primary),
-              0 0 0 4px var(--color-accent),
-              0 2px 8px rgba(var(--color-accent-rgb), 0.3);
+              0 0 0 4px var(--ai-primary-color),
+              0 2px 8px rgba(var(--ai-primary-color-rgb), 0.3);
 }
 
 .ai-chat-input button:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--color-bg-primary),
-              0 0 0 4px var(--color-accent),
+              0 0 0 4px var(--ai-primary-color),
               var(--shadow-lg);
 }
 
 .ai-chat-input button:hover {
   transform: scale(1.08);
-  box-shadow: var(--shadow-lg), 0 4px 12px rgba(var(--color-accent-rgb), 0.4);
+  box-shadow: var(--shadow-lg), 0 4px 12px rgba(var(--ai-primary-color-rgb), 0.4);
 }
 
 .ai-chat-input button:active {
