@@ -52,7 +52,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   // ============================================================================
 
   const SHOP_DOMAIN = ${JSON.stringify(shopDomain)};
-  const API_BASE_URL = ${JSON.stringify(process.env.SHOPIFY_APP_URL || '')};
+  // IMPORTANT: Fallback to production URL if env var not set
+  const API_BASE_URL = ${JSON.stringify(process.env.SHOPIFY_APP_URL || 'https://shopibot.vercel.app')};
 
   // Prevent multiple instances
   if (window.aiSalesAssistantLoaded) {
