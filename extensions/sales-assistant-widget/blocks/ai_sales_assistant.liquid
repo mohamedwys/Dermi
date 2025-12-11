@@ -1391,8 +1391,14 @@ This creates a floating chat widget that can be added to any page
           aria-labelledby="ai-chat-title"
           aria-modal="true"
         >
-          <!-- Chat Header with Wavy Bottom Edge -->
+          <!-- Chat Header with Animated Wave Effect -->
           <div class="ai-chat-header">
+            <!-- Animated Wave Layers -->
+            <div class="header-waves">
+              <div class="wave wave-1"></div>
+              <div class="wave wave-2"></div>
+              <div class="wave wave-3"></div>
+            </div>
             <div class="chat-header-content">
               <div class="header-info">
                 <h3 id="ai-chat-title">${safeChatTitle}</h3>
@@ -1411,12 +1417,6 @@ This creates a floating chat widget that can be added to any page
                   <path d="M13.5 4.5L4.5 13.5M4.5 4.5L13.5 13.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </button>
-            </div>
-            <!-- Wavy bottom edge -->
-            <div class="header-wave-bottom">
-              <svg viewBox="0 0 1200 40" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M0,25 Q600,5 1200,25 L1200,40 L0,40 Z" fill="white"/>
-              </svg>
             </div>
           </div>
           <!-- Chat Messages Container -->
@@ -1785,10 +1785,12 @@ This creates a floating chat widget that can be added to any page
 }
 .ai-chat-header {
   position: relative;
-  background: var(--ai-primary-color, #ee5cee);
+  background: linear-gradient(135deg, var(--ai-primary-color, #ee5cee) 0%, var(--ai-primary-dark, #d24dd2) 100%);
   color: white;
-  padding: 18px 8px 0 8px;
-  z-index: 10;
+  padding: 24px;
+  overflow: hidden;
+  min-height: 80px;
+  z-index: 1;
   box-sizing: border-box;
   grid-area: header !important;
   box-shadow: 0 4px 20px rgba(var(--ai-primary-color-rgb, 238, 92, 238), 0.3);
@@ -1839,23 +1841,101 @@ This creates a floating chat widget that can be added to any page
     transform: scale(1.1);
   }
 }
-.header-wave-bottom {
+/* ============================================
+   PROMINENT WAVE EFFECT FOR CHAT HEADER
+   ============================================ */
+
+/* Wave Container */
+.header-waves {
   position: absolute;
-  bottom: -1px;
+  top: 0;
   left: 0;
   width: 100%;
-  height: 40px;
+  height: 100%;
   overflow: hidden;
-  line-height: 0;
+  z-index: 0;
+  pointer-events: none;
 }
-.header-wave-bottom svg {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: 40px;
+
+/* Individual Wave Layers */
+.wave {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  width: 200%;
+  height: 120px;
+  background-repeat: repeat-x;
+  background-position: 0 bottom;
+  transform-origin: center bottom;
+  will-change: transform;
 }
+
+/* Wave 1 - Background Layer (Most subtle) */
+.wave-1 {
+  background-size: 50% 120px;
+  animation: wave-animation-1 15s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite;
+  opacity: 0.2;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z' fill='white' opacity='1'/%3E%3Cpath d='M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z' fill='white' opacity='1'/%3E%3C/svg%3E");
+}
+
+/* Wave 2 - Middle Layer */
+.wave-2 {
+  background-size: 50% 140px;
+  animation: wave-animation-2 20s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite;
+  opacity: 0.3;
+  animation-delay: -5s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='white' opacity='1'/%3E%3Cpath d='M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z' fill='white' opacity='1'/%3E%3C/svg%3E");
+}
+
+/* Wave 3 - Foreground Layer (Most prominent) */
+.wave-3 {
+  background-size: 50% 160px;
+  animation: wave-animation-3 25s cubic-bezier(0.36, 0.45, 0.63, 0.53) infinite;
+  opacity: 0.4;
+  animation-delay: -10s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z' fill='white' opacity='1'/%3E%3Cpath d='M1200,0H0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z' fill='white' opacity='1'/%3E%3C/svg%3E");
+}
+
+/* Wave Animations - Smooth flowing motion */
+@keyframes wave-animation-1 {
+  0% {
+    transform: translateX(0) translateZ(0) scaleY(1);
+  }
+  50% {
+    transform: translateX(-25%) translateZ(0) scaleY(0.95);
+  }
+  100% {
+    transform: translateX(-50%) translateZ(0) scaleY(1);
+  }
+}
+
+@keyframes wave-animation-2 {
+  0% {
+    transform: translateX(0) translateZ(0) scaleY(1);
+  }
+  50% {
+    transform: translateX(-25%) translateZ(0) scaleY(1.05);
+  }
+  100% {
+    transform: translateX(-50%) translateZ(0) scaleY(1);
+  }
+}
+
+@keyframes wave-animation-3 {
+  0% {
+    transform: translateX(0) translateZ(0) scaleY(1);
+  }
+  50% {
+    transform: translateX(-25%) translateZ(0) scaleY(0.98);
+  }
+  100% {
+    transform: translateX(-50%) translateZ(0) scaleY(1);
+  }
+}
+/* Accessibility - Reduce motion */
 @media (prefers-reduced-motion: reduce) {
-  .status-dot {
+  .status-dot,
+  .wave {
     animation: none;
   }
 }
@@ -2574,7 +2654,7 @@ This creates a floating chat widget that can be added to any page
   }
   .ai-chat-header {
     padding: 16px;
-    height: 60px;
+    min-height: 60px;
   }
   .header-info h3 {
     font-size: 16px;
