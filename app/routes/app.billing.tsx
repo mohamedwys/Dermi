@@ -19,6 +19,7 @@ import {
 import { authenticate } from "../shopify.server";
 import { useTranslation } from "react-i18next";
 import { logger } from "../lib/logger.server";
+import { PLAN_NAMES, isValidPlanName } from "../config/billing";
 
 export const handle = {
   i18n: "common",
@@ -30,7 +31,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   logger.debug({ shop: session.shop }, 'Loading billing page');
 
   const { hasActivePayment, appSubscriptions } = await billing.check({
-    plans: ["Starter Plan", "Professional Plan"] as any,
+    plans: PLAN_NAMES as any,
     isTest: process.env.NODE_ENV !== "production",
   });
 
@@ -56,7 +57,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   logger.info({ shop: session.shop, plan }, 'Billing plan selected');
 
-  if (!plan || !["Starter Plan", "Professional Plan"].includes(plan)) {
+  if (!plan || !isValidPlanName(plan)) {
     logger.warn({ shop: session.shop, plan }, 'Invalid plan selected');
     return json({ error: "Invalid plan selected" }, { status: 400 });
   }

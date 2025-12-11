@@ -2,6 +2,7 @@ import axios from 'axios';
 import { getEmbeddingService, isEmbeddingServiceAvailable } from './embedding.service';
 import { personalizationService, type UserPreferences } from './personalization.service';
 import { logger, logError, createLogger } from '../lib/logger.server';
+import { TIMEOUTS } from '../config/limits';
 // import db from '../db.server';
 
 // Enhanced N8N Response with rich features
@@ -168,7 +169,7 @@ export class N8NService {
 
       const response = await axios.post(this.webhookUrl, request, {
         headers,
-        timeout: 30000, // 30 second timeout
+        timeout: TIMEOUTS.N8N_WEBHOOK_MS,
       });
 
       this.logger.debug({

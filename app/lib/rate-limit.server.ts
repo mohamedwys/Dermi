@@ -12,6 +12,8 @@
  * - Support for serverless/edge functions
  */
 
+import { logger } from './logger.server';
+
 interface RateLimitEntry {
   count: number;
   resetAt: number;

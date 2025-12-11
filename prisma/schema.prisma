@@ -7,8 +7,8 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url      = env("DATABASE_URL")
-  // directUrl = env("DIRECT_URL")
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Session {
@@ -77,6 +77,7 @@ model UserProfile {
 
   @@unique([shop, sessionId])
   @@index([shop, customerId])
+  @@index([shop, updatedAt]) // For efficient active users queries (analytics.service.ts:getActiveUsers)
 }
 
 // Store chat sessions with context
@@ -110,6 +111,7 @@ model ChatMessage {
   timestamp       DateTime    @default(now())
 
   @@index([sessionId, timestamp])
+  @@index([role, timestamp]) // For filtering messages by role (user/assistant) with time ordering
 }
 
 // Analytics for tracking performance
@@ -130,4 +132,5 @@ model ChatAnalytics {
 
   @@unique([shop, date])
   @@index([shop, date])
+  @@index([date]) // For efficient time-series queries across all shops
 }

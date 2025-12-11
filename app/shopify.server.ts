@@ -7,6 +7,7 @@ import {
 } from "@shopify/shopify-app-remix/server";
 // ✅ Keep MemorySessionStorage (required even for token auth)
 import { MemorySessionStorage } from "@shopify/shopify-app-session-storage-memory";
+import { BILLING_PLANS } from "./config/billing";
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -23,17 +24,17 @@ const shopify = shopifyApp({
     removeRest: true,
   },
   billing: {
-    "Starter Plan": {
-      amount: 25.0,
-      currencyCode: "USD",
-      interval: "EVERY_30_DAYS", // ✅ correct string
-      trialDays: 7,
+    [BILLING_PLANS.STARTER.name]: {
+      amount: BILLING_PLANS.STARTER.amount,
+      currencyCode: BILLING_PLANS.STARTER.currencyCode,
+      interval: BILLING_PLANS.STARTER.interval,
+      trialDays: BILLING_PLANS.STARTER.trialDays,
     },
-    "Professional Plan": {
-      amount: 79.0,
-      currencyCode: "USD",
-      interval: "EVERY_30_DAYS",
-      trialDays: 7,
+    [BILLING_PLANS.PROFESSIONAL.name]: {
+      amount: BILLING_PLANS.PROFESSIONAL.amount,
+      currencyCode: BILLING_PLANS.PROFESSIONAL.currencyCode,
+      interval: BILLING_PLANS.PROFESSIONAL.interval,
+      trialDays: BILLING_PLANS.PROFESSIONAL.trialDays,
     },
   },
   ...(process.env.SHOP_CUSTOM_DOMAIN

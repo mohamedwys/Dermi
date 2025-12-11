@@ -1,5 +1,7 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { getSecureCorsHeaders } from "../lib/cors.server";
+import { rateLimit, RateLimitPresets } from "../lib/rate-limit.server";
+import { RATE_LIMITS } from "../config/limits";
 
 /**
  * Standalone AI Sales Assistant Widget Script
@@ -17,6 +19,20 @@ import { getSecureCorsHeaders } from "../lib/cors.server";
  * - Supports customization (colors, position, text)
  */
 export const loader = async ({ request }: LoaderFunctionArgs) => {
+  // SECURITY: Apply rate limiting to prevent abuse
+  const rateLimitResponse = rateLimit(request, {
+    windowMs: RATE_LIMITS.WIDGET_RATE_WINDOW_SECONDS * 1000,
+    maxRequests: RATE_LIMITS.WIDGET_REQUESTS_PER_MINUTE,
+    message: 'Widget script requested too frequently. Please try again in a moment.',
+  }, {
+    useShop: true, // Rate limit per shop domain
+    namespace: 'widget-script',
+  });
+
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   const url = new URL(request.url);
   const shopDomain = url.searchParams.get("shop");
 
