@@ -46,20 +46,6 @@ interface ProductInfo {
   description?: string;
 }
 
-interface ShopifyProductEdge {
-  node: {
-    id: string;
-    title: string;
-    handle: string;
-    description?: string;
-    featuredImage?: { url?: string };
-    variants: {
-      edges: Array<{
-        node: { price: string };
-      }>;
-    };
-  };
-}
 
 type Intent = 
   | { type: "PRODUCT_SEARCH"; query: string }
@@ -100,10 +86,11 @@ const quickActions = [
 ];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  return json({}); // no data needed
+  return json({}); // no initial data needed
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
+  // ✅ Auth is handled automatically by Shopify App Bridge in embedded mode
   const { admin } = await authenticate.admin(request);
   const formData = await request.formData();
   const userMessage = formData.get("message");
@@ -114,52 +101,63 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   try {
     const intent = detectIntent(userMessage);
+    console.log("🔍 Detected intent:", intent);
 
     if (intent.type === "PRODUCT_SEARCH") {
       const variables: { first: number; query?: string } = { first: 8 };
-        if (intent.query === "bestseller") {
-          variables.query = "tag:bestseller";
-        } else if (intent.query === "t-shirt") {
-          variables.query = "product_type:t-shirt";
-        } else if (intent.query === "shoe") {
-          variables.query = "product_type:shoe";
-        } else if (intent.query === "new") {
-          variables.query = "created_at:>now-30d";
-        }
-        // else: no query = all active products
+      if (intent.query === "bestseller") {
+        variables.query = "tag:bestseller";
+      } else if (intent.query === "t-shirt") {
+        variables.query = "product_type:t-shirt";
+      } else if (intent.query === "shoe") {
+        variables.query = "product_type:shoe";
+      } else if (intent.query === "new") {
+        variables.query = "created_at:>now-30d";
+      }
+      // else: fetch all active products
 
-        const response = await admin.graphql(`
-          query getProductsByIntent($first: Int!, $query: String) {
-            products(first: $first, query: $query) {
-              edges {
-                node {
-                  id
-                  title
-                  handle
-                  description
-                  featuredImage { url }
-                  variants(first: 1) {
-                    edges { node { price } }
-                  }
+      console.log("📦 Fetching products with variables:", variables);
+
+      const response = await admin.graphql(`
+        query getProductsByIntent($first: Int!, $query: String) {
+          products(first: $first, query: $query) {
+            edges {
+              node {
+                id
+                title
+                handle
+                description
+                featuredImage { url }
+                variants(first: 1) {
+                  edges { node { price } }
                 }
               }
             }
           }
-        `, { variables });
+        }
+      `, { variables });
+
       const responseJson = await response.json();
-      const edges = (responseJson?.data?.products?.edges as ShopifyProductEdge[] | undefined) || [];
-      const products: ProductInfo[] = edges.map(edge => {
-        const node = edge.node;
-        const price = node.variants.edges[0]?.node?.price || "0.00";
+      console.log("📤 Shopify GraphQL response:", JSON.stringify(responseJson, null, 2));
+
+      const edges = responseJson?.data?.products?.edges || [];
+      console.log("📊 Number of product edges returned:", edges.length);
+
+      const products: ProductInfo[] = edges.map((edge: any) => {
+        const node = edge?.node;
+        if (!node) return null;
+        const price = node.variants?.edges?.[0]?.node?.price || "0.00";
         return {
-          id: node.id,
-          title: node.title,
-          handle: node.handle,
+          id: node.id || "",
+          title: node.title || "Untitled",
+          handle: node.handle || "",
           description: node.description || "",
           image: node.featuredImage?.url,
-          price: price
+          price: typeof price === "string" ? price : "0.00"
         };
-      });
+      }).filter(Boolean) as ProductInfo[];
+
+      console.log("✅ Final parsed products:", products.length);
 
       const messages: Record<string, string> = {
         "t-shirt": "👕 Voici nos t-shirts disponibles :",
@@ -169,28 +167,38 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         "product": "📦 Voici quelques produits que vous pourriez aimer :"
       };
 
+      const responseText = messages[intent.query] || messages["product"];
+
+      console.log("💬 Assistant response:", responseText);
+      console.log("🛒 Recommendations count:", products.length);
+
       return json({ 
-        response: messages[intent.query] || messages["product"],
+        response: responseText,
         recommendations: products,
         confidence: 1.0
       });
     }
 
-    // General chat
+    // General chat — no products
     const n8nResponse = await n8nService.processUserMessage({
       userMessage,
       products: [],
       context: { previousMessages: [] }
     });
-    
+
+    const fallbackMessage = String(n8nResponse.message || "Désolé, je n’ai pas compris.");
+    console.log("🤖 AI response (non-product):", fallbackMessage);
+
     return json({ 
-      response: String(n8nResponse.message || "Désolé, je n’ai pas compris."),
+      response: fallbackMessage,
       recommendations: [],
       confidence: typeof n8nResponse.confidence === "number" ? n8nResponse.confidence : 0.7
     });
   } catch (error) {
-    // ✅ FIXED: logger only takes one arg (common pattern)
-    logger.error(`Error in sales assistant action: ${error instanceof Error ? error.message : String(error)}`);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("💥 Error in action:", errorMessage);
+    logger.error(`Error in sales assistant action: ${errorMessage}`);
+
     return json({ 
       response: "Désolé, une erreur est survenue. Veuillez réessayer.",
       recommendations: [],
