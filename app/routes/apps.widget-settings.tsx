@@ -206,55 +206,45 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     // Get products for context (skip on Vercel due to MemorySessionStorage limitations)
     let products = [];
-
-    if (process.env.VERCEL !== '1' && admin) {
       try {
-        const response = await admin.graphql(`
+        // Use unauthenticated admin (uses offline token, works in production)
+        const { admin: shopAdmin } = await unauthenticated.admin(shopDomain);
+        
+        const response = await shopAdmin.graphql(`
           #graphql
           query getProducts($first: Int!) {
-            products(first: $first) {
+            products(first: $first, query: "status:active") {
               edges {
                 node {
                   id
                   title
                   handle
                   description
-                  featuredImage {
-                    url
-                  }
+                  featuredImage { url }
                   variants(first: 1) {
-                    edges {
-                      node {
-                        price
-                      }
-                    }
+                    edges { node { price } }
                   }
                 }
               }
             }
           }
-        `, {
-          variables: { first: 50 }
-        });
+        `, { variables: { first: 20 } });
 
-        const responseData = (response as any).data;
-        products = responseData?.products?.edges?.map((edge: any) => ({
+        const responseData = (await response.json()) as any;
+        products = responseData?.data?.products?.edges?.map((edge: any) => ({
           id: edge.node.id,
           title: edge.node.title,
           handle: edge.node.handle,
-          description: edge.node.description,
+          description: edge.node.description || '',
           image: edge.node.featuredImage?.url,
-          price: edge.node.variants.edges[0]?.node.price || "0.00"
+          price: edge.node.variants.edges[0]?.node.price || '0.00'
         })) || [];
 
-        routeLogger.info({ count: products.length }, 'Fetched products from Shopify');
+        routeLogger.info({ count: products.length, shop: shopDomain }, '✅ Fetched products via App Proxy');
       } catch (error) {
-        routeLogger.debug('Could not fetch products from Shopify');
+        routeLogger.warn({ error: (error as Error).message }, '❌ Failed to fetch products');
         products = [];
       }
-    } else {
-      routeLogger.debug('Running on Vercel - skipping Shopify product fetch');
-    }
 
     // Enhanced context for better AI responses
     const enhancedContext = {
