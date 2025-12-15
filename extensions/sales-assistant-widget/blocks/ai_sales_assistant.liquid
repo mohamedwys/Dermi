@@ -143,6 +143,9 @@
 
 <div id="ai-sales-assistant-container"></div>
 
+{%- stylesheet 'ai-sales-assistant.css' -%}
+{%- javascript 'ai-sales-assistant.js' -%}
+
 <script>
   window.aiSalesAssistantSettings = {
     enabled: {{ block.settings.enabled | default: true | json }},
@@ -168,21 +171,4 @@
     shopDomain: '{{ shop.permanent_domain }}',
     currency: '{{ shop.currency }}' || 'USD'
   };
-
-  if (typeof window.aiWidgetInitialized === 'undefined') {
-    window.aiWidgetInitialized = true;
-
-    // Load CSS from theme app extension assets
-    var link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = '{{ "ai-sales-assistant.css" | asset_url }}';
-    document.head.appendChild(link);
-
-    // Load JS as module from theme app extension assets
-    var script = document.createElement('script');
-    script.src = '{{ "ai-sales-assistant.js" | asset_url }}';
-    script.type = 'module';
-    script.defer = true;
-    document.head.appendChild(script);
-  }
 </script>
