@@ -1,4 +1,37 @@
 /* Styles are inline in the Liquid file */
+
+#ai-sales-assistant-container {
+  position: fixed;
+  z-index: 999999;
+  bottom: 20px;
+  right: 20px;
+}
+#ai-sales-assistant-container.position-bottom-left {
+  right: auto;
+  left: 20px;
+}
+#ai-sales-assistant-container.position-top-right {
+  bottom: auto;
+  top: 20px;
+}
+#ai-sales-assistant-container.position-top-left {
+  bottom: auto;
+  top: 20px;
+  right: auto;
+  left: 20px;
+}
+#ai-sales-assistant-container.position-center-right {
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+#ai-sales-assistant-container.position-center-left {
+  bottom: auto;
+  top: 50%;
+  right: auto;
+  left: 20px;
+  transform: translateY(-50%);
+}
 .sr-only {
   position: absolute;
   width: 1px;
