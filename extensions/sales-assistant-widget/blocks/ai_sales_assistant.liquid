@@ -2949,7 +2949,7 @@ function adjustColor(color, percent) {
     width: 100% !important;
     height: 140px !important;
   }
-    
+
   .product-details {
     padding: 12px;
     flex-grow: 1;
@@ -2992,9 +2992,16 @@ function adjustColor(color, percent) {
     height: 580px;
     max-height: 580px;
   }
+  /* ✅ KEEP HORIZONTAL SCROLL FOR TABLET */
   .products-grid {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
-    gap: 12px;
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 12px !important;
+  }
+  
+  .product-card {
+    min-width: 260px !important;
+    max-width: 260px !important;
   }
   .product-image {
     height: 160px;
