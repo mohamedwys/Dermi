@@ -1063,24 +1063,43 @@ function handleSuggestedAction(action) {
 // ======================
 
 function toggleAIChat() {
+  // Toggle chat state
   chatOpen = !chatOpen;
-  trackAnalytics(chatOpen ? analyticsEvents.WIDGET_OPENED : analyticsEvents.WIDGET_CLOSED, {
-    timestamp: new Date().toISOString(),
-    conversationLength: conversationHistory.length
-  });
 
+  // Track analytics
+  trackAnalytics(
+    chatOpen ? analyticsEvents.WIDGET_OPENED : analyticsEvents.WIDGET_CLOSED,
+    {
+      timestamp: new Date().toISOString(),
+      conversationLength: conversationHistory.length
+    }
+  );
+
+  // Update toggle button accessibility attributes
   if (elements.toggleBtn) {
     elements.toggleBtn.setAttribute('aria-expanded', chatOpen.toString());
-    elements.toggleBtn.setAttribute('aria-label', chatOpen ? 'Close AI chat assistant' : 'Open AI chat assistant');
+    elements.toggleBtn.setAttribute(
+      'aria-label',
+      chatOpen ? 'Close AI chat assistant' : 'Open AI chat assistant'
+    );
   }
 
-  if (chatOpen) {
-    elements.chatWindow?.classList.add('ai-chat-open');
-    setTimeout(() => elements.inputField?.focus(), 200);
-    scrollToBottom();
-  } else {
-    elements.chatWindow?.classList.remove('ai-chat-open');
-    setTimeout(() => elements.toggleBtn?.focus(), 100);
+  // Show or hide chat window
+  if (elements.chatWindow) {
+    if (chatOpen) {
+      elements.chatWindow.classList.add('ai-chat-open');
+      // Focus input after opening
+      setTimeout(() => {
+        elements.inputField?.focus();
+      }, 200);
+      scrollToBottom();
+    } else {
+      elements.chatWindow.classList.remove('ai-chat-open');
+      // Return focus to toggle button after closing
+      setTimeout(() => {
+        elements.toggleBtn?.focus();
+      }, 100);
+    }
   }
 }
 
@@ -1162,15 +1181,20 @@ function createWidget() {
   }
 
   // Set CSS variables for theming
-  document.documentElement.style.setProperty('--ai-primary-color', widgetSettings.primaryColor);
-  const rgb = hexToRgb(widgetSettings.primaryColor);
-  if (rgb) {
-    const darker = `rgb(${Math.max(0, rgb.r - 40)}, ${Math.max(0, rgb.g - 40)}, ${Math.max(0, rgb.b - 40)})`;
-    document.documentElement.style.setProperty('--ai-primary-color-dark', darker);
-    document.documentElement.style.setProperty('--ai-primary-color-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+  if (widgetSettings.primaryColor) {
+    document.documentElement.style.setProperty('--ai-primary-color', widgetSettings.primaryColor);
+    const rgb = hexToRgb(widgetSettings.primaryColor);
+    if (rgb) {
+      const darker = `rgb(${Math.max(0, rgb.r - 40)}, ${Math.max(0, rgb.g - 40)}, ${Math.max(0, rgb.b - 40)})`;
+      document.documentElement.style.setProperty('--ai-primary-color-dark', darker);
+      document.documentElement.style.setProperty('--ai-primary-color-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`);
+    }
   }
 
-  const safePosition = String(widgetSettings.position).replace(/[^a-z-]/gi, '');
+  // Sanitize position string
+  const safePosition = String(widgetSettings.position || 'bottom-right').replace(/[^a-z-]/gi, '');
+
+  // Render widget HTML
   container.innerHTML = `
     <div class="ai-sales-assistant-widget position-${safePosition}" data-widget-id="ai-sales-assistant">
       <button class="ai-chat-toggle" id="ai-chat-toggle-btn" aria-label="Open AI chat assistant" aria-expanded="false" aria-controls="ai-chat-window">
@@ -1182,14 +1206,14 @@ function createWidget() {
           <path d="M7 13C7 12.7239 7.22386 12.5 7.5 12.5H16.5C16.7761 12.5 17 12.7239 17 13C17 13.2761 16.7761 13.5 16.5 13.5H7.5C7.22386 13.5 7 13.2761 7 13Z" fill="currentColor"/>
           <path d="M7 15.5C7 15.2239 7.22386 15 7.5 15H13.5C13.7761 15 14 15.2239 14 15.5C14 15.7761 13.7761 16 13.5 16H7.5C7.22386 16 7 15.7761 7 15.5Z" fill="currentColor"/>
         </svg>
-        <span class="button-text">${escapeHTML(widgetSettings.buttonText)}</span>
+        <span class="button-text">${escapeHTML(widgetSettings.buttonText || 'Chat')}</span>
       </button>
 
       <div id="ai-chat-window" class="ai-chat-window" style="display: none;" role="dialog" aria-labelledby="ai-chat-title" aria-modal="true">
         <div class="ai-chat-header">
           <div class="chat-header-content">
             <div class="header-info">
-              <h3 id="ai-chat-title">${escapeHTML(widgetSettings.chatTitle)}</h3>
+              <h3 id="ai-chat-title">${escapeHTML(widgetSettings.chatTitle || 'AI Assistant')}</h3>
               <div class="header-status">
                 <span class="status-dot"></span>
                 <span class="status-text">${escapeHTML(widgetSettings.statusText || 'Online')}</span>
@@ -1211,47 +1235,47 @@ function createWidget() {
             <div class="ai-message assistant-message ai-welcome-message">
               <div class="ai-welcome-screen">
                 <div class="welcome-header">
-                  <h2 class="welcome-title">${escapeHTML(widgetSettings.welcomeMessage)}</h2>
+                  <h2 class="welcome-title">${escapeHTML(widgetSettings.welcomeMessage || 'Hello! How can I assist you?')}</h2>
                 </div>
                 <div class="quick-actions-section">
-                  <div class="section-label"><span>${escapeHTML(widgetSettings.sectionDiscoveryLabel)}</span></div>
+                  <div class="section-label"><span>${escapeHTML(widgetSettings.sectionDiscoveryLabel || 'Discover')}</span></div>
                   <div class="quick-actions-grid">
                     <button class="quick-action-btn" data-prompt="What are your best-selling products?">
                       <span class="quick-action-icon">🏆</span>
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.bestSellersText)}</span>
+                      <span class="quick-action-text">${escapeHTML(widgetSettings.bestSellersText || 'Best Sellers')}</span>
                     </button>
                     <button class="quick-action-btn" data-prompt="Show me new arrivals">
                       <span class="quick-action-icon">✨</span>
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.newArrivalsText)}</span>
+                      <span class="quick-action-text">${escapeHTML(widgetSettings.newArrivalsText || 'New Arrivals')}</span>
                     </button>
                     <button class="quick-action-btn" data-prompt="What products are on sale?">
                       <span class="quick-action-icon">🔥</span>
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.onSaleText)}</span>
+                      <span class="quick-action-text">${escapeHTML(widgetSettings.onSaleText || 'On Sale')}</span>
                     </button>
                     <button class="quick-action-btn" data-prompt="Show me recommendations for me">
                       <span class="quick-action-icon">💎</span>
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.recommendationsText)}</span>
+                      <span class="quick-action-text">${escapeHTML(widgetSettings.recommendationsText || 'Recommended')}</span>
                     </button>
                   </div>
                 </div>
                 <div class="quick-actions-section">
-                  <div class="section-label"><span>${escapeHTML(widgetSettings.sectionSupportLabel)}</span></div>
+                  <div class="section-label"><span>${escapeHTML(widgetSettings.sectionSupportLabel || 'Support')}</span></div>
                   <div class="quick-actions-grid">
                     <button class="quick-action-btn" data-prompt="Tell me about shipping and delivery">
                       <span class="quick-action-icon">📦</span>
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.shippingText)}</span>
+                      <span class="quick-action-text">${escapeHTML(widgetSettings.shippingText || 'Shipping')}</span>
                     </button>
                     <button class="quick-action-btn" data-prompt="What is your return policy?">
                       <span class="quick-action-icon">↩️</span>
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.returnsText)}</span>
+                      <span class="quick-action-text">${escapeHTML(widgetSettings.returnsText || 'Returns')}</span>
                     </button>
                     <button class="quick-action-btn" data-prompt="How can I track my order?">
                       <span class="quick-action-icon">🔍</span>
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.trackOrderText)}</span>
+                      <span class="quick-action-text">${escapeHTML(widgetSettings.trackOrderText || 'Track Order')}</span>
                     </button>
                     <button class="quick-action-btn" data-prompt="I need help with something">
                       <span class="quick-action-icon">💬</span>
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.helpText)}</span>
+                      <span class="quick-action-text">${escapeHTML(widgetSettings.helpText || 'Help')}</span>
                     </button>
                   </div>
                 </div>
@@ -1262,7 +1286,7 @@ function createWidget() {
 
         <div class="ai-chat-input">
           <div class="ai-chat-input-wrapper">
-            <input type="text" id="ai-chat-input-field" placeholder="${escapeHTML(widgetSettings.inputPlaceholder)}" aria-label="Type your message" />
+            <input type="text" id="ai-chat-input-field" placeholder="${escapeHTML(widgetSettings.inputPlaceholder || 'Type a message...')}" aria-label="Type your message" />
             <button id="ai-chat-send-btn" aria-label="Send message">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M18 2L9 11M18 2L12 18L9 11M18 2L2 8L9 11" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -1275,8 +1299,30 @@ function createWidget() {
     </div>
   `;
 
+  // Cache DOM elements and attach event listeners
   cacheDOMElements();
   setupEventListeners();
+}
+function cacheDOMElements() {
+  elements.toggleBtn = document.getElementById('ai-chat-toggle-btn');
+  elements.chatWindow = document.getElementById('ai-chat-window');
+  elements.closeBtn = document.getElementById('ai-chat-close-btn');
+  elements.inputField = document.getElementById('ai-chat-input-field');
+  elements.messagesContainer = document.getElementById('ai-chat-messages');
+  elements.sendBtn = document.getElementById('ai-chat-send-btn');
+}
+
+function setupEventListeners() {
+  if (!elements.toggleBtn || !elements.chatWindow) return;
+
+  elements.toggleBtn.addEventListener('click', toggleAIChat);
+  elements.closeBtn?.addEventListener('click', () => {
+    if (chatOpen) toggleAIChat();
+  });
+  elements.sendBtn?.addEventListener('click', sendMessage);
+  elements.inputField?.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendMessage();
+  });
 }
 
 // ======================
