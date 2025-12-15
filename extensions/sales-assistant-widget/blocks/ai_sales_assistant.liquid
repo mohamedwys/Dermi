@@ -1000,299 +1000,496 @@ This creates a floating chat widget that can be added to any page
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
   }
   function displayProductRecommendations(recommendations) {
-    const messagesContainer = document.getElementById('ai-chat-messages');
-    const productsContainer = document.createElement('div');
-    productsContainer.className = 'ai-message assistant-message products-grid-container';
-    productsContainer.style.marginBottom = '16px';
-    productsContainer.style.maxWidth = '100%';
-    productsContainer.style.width = '100%';
-    const gridContent = document.createElement('div');
-    gridContent.className = 'products-grid';
-    gridContent.style.display = 'grid';
-    gridContent.style.gridTemplateColumns = recommendations.length === 1 ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))';
-    gridContent.style.gap = '12px';
-    gridContent.style.padding = '0';
-    gridContent.style.width = '100%';
-    recommendations.forEach((product, index) => {
-      const productCard = document.createElement('div');
-      productCard.className = 'product-card clickable-product';
-      productCard.style.backgroundColor = '#fff';
-      productCard.style.border = '1px solid #e5e7eb';
-      productCard.style.borderRadius = '12px';
-      productCard.style.overflow = 'hidden';
-      productCard.style.cursor = 'pointer';
-      productCard.style.transition = 'all 0.3s ease';
-      productCard.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-      productCard.style.position = 'relative';
-      if (product.image) {
-        const imageDiv = document.createElement('div');
-        imageDiv.className = 'product-image';
-        imageDiv.style.width = '100%';
-        imageDiv.style.height = '160px';
-        const sanitizedImageUrl = sanitizeUrl(product.image);
-        if (sanitizedImageUrl) {
-          const escapedUrl = sanitizedImageUrl.replace(/'/g, "\\'");
-          imageDiv.style.backgroundImage = `url('${escapedUrl}')`;
-        }
-        imageDiv.style.backgroundSize = 'cover';
-        imageDiv.style.backgroundPosition = 'center';
-        imageDiv.style.backgroundColor = '#f8f9fa';
-        imageDiv.style.position = 'relative';
-        const badgesContainer = document.createElement('div');
-        badgesContainer.style.position = 'absolute';
-        badgesContainer.style.top = '8px';
-        badgesContainer.style.left = '8px';
-        badgesContainer.style.display = 'flex';
-        badgesContainer.style.flexDirection = 'column';
-        badgesContainer.style.gap = '6px';
-        if (product.badge || product.discountPercent) {
-          const discountBadge = document.createElement('div');
-          discountBadge.style.background = '#ef4444';
-          discountBadge.style.color = 'white';
-          discountBadge.style.padding = '4px 10px';
-          discountBadge.style.borderRadius = '6px';
-          discountBadge.style.fontSize = '12px';
-          discountBadge.style.fontWeight = '700';
-          discountBadge.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
-          discountBadge.textContent = product.badge || `${product.discountPercent}% OFF`;
-          badgesContainer.appendChild(discountBadge);
-        }
-        if (product.isLowStock && product.inventory) {
-          const stockBadge = document.createElement('div');
-          stockBadge.style.background = '#f59e0b';
-          stockBadge.style.color = 'white';
-          stockBadge.style.padding = '4px 10px';
-          stockBadge.style.borderRadius = '6px';
-          stockBadge.style.fontSize = '11px';
-          stockBadge.style.fontWeight = '600';
-          stockBadge.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
-          stockBadge.textContent = `Only ${product.inventory} left!`;
-          badgesContainer.appendChild(stockBadge);
-        }
-        if (badgesContainer.children.length > 0) {
-          imageDiv.appendChild(badgesContainer);
-        }
-        if (product.relevanceScore) {
-          const matchBadge = document.createElement('div');
-          matchBadge.style.position = 'absolute';
-          matchBadge.style.top = '8px';
-          matchBadge.style.right = '8px';
-          matchBadge.style.background = 'rgba(0, 0, 0, 0.7)';
-          matchBadge.style.color = 'white';
-          matchBadge.style.padding = '4px 8px';
-          matchBadge.style.borderRadius = '12px';
-          matchBadge.style.fontSize = '11px';
-          matchBadge.style.fontWeight = '600';
-          matchBadge.style.backdropFilter = 'blur(4px)';
-          matchBadge.textContent = `${product.relevanceScore}% match`;
-          imageDiv.appendChild(matchBadge);
-        }
-        productCard.appendChild(imageDiv);
+  const messagesContainer = document.getElementById('ai-chat-messages');
+  
+  // Main container for products
+  const productsContainer = document.createElement('div');
+  productsContainer.className = 'ai-message assistant-message products-grid-container';
+  productsContainer.style.marginBottom = '16px';
+  productsContainer.style.maxWidth = '100%';
+  productsContainer.style.width = '100%';
+  productsContainer.style.backgroundColor = 'transparent';
+  productsContainer.style.border = 'none';
+  productsContainer.style.boxShadow = 'none';
+  productsContainer.style.padding = '0';
+
+  // Horizontal scrolling container
+  const gridContent = document.createElement('div');
+  gridContent.className = 'products-grid';
+  gridContent.style.display = 'flex';
+  gridContent.style.overflowX = 'auto';
+  gridContent.style.overflowY = 'hidden';
+  gridContent.style.gap = '12px';
+  gridContent.style.padding = '12px 8px';
+  gridContent.style.scrollSnapType = 'x mandatory';
+  gridContent.style.webkitOverflowScrolling = 'touch';
+  gridContent.style.scrollbarWidth = 'thin';
+  gridContent.style.scrollbarColor = `${widgetSettings.primaryColor} #f3f4f6`;
+  
+  // Add scroll hint for mobile
+  if (recommendations.length > 1) {
+    const scrollHint = document.createElement('div');
+    scrollHint.style.textAlign = 'center';
+    scrollHint.style.fontSize = '12px';
+    scrollHint.style.color = '#6b7280';
+    scrollHint.style.marginBottom = '8px';
+    scrollHint.style.fontWeight = '500';
+    scrollHint.innerHTML = '👈 Swipe to see more 👉';
+    scrollHint.style.animation = 'fadeOut 3s ease forwards';
+    productsContainer.appendChild(scrollHint);
+  }
+
+  recommendations.forEach((product, index) => {
+    const productCard = document.createElement('div');
+    productCard.className = 'product-card clickable-product';
+    productCard.style.backgroundColor = '#fff';
+    productCard.style.border = '1px solid #e5e7eb';
+    productCard.style.borderRadius = '16px';
+    productCard.style.overflow = 'hidden';
+    productCard.style.cursor = 'pointer';
+    productCard.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+    productCard.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)';
+    productCard.style.position = 'relative';
+    
+    // ✅ CRITICAL: Fixed width for horizontal scroll
+    productCard.style.minWidth = '280px';
+    productCard.style.maxWidth = '280px';
+    productCard.style.flexShrink = '0';
+    productCard.style.scrollSnapAlign = 'start';
+    productCard.style.display = 'flex';
+    productCard.style.flexDirection = 'column';
+    productCard.style.height = 'auto';
+
+    // Product Image Section
+    if (product.image) {
+      const imageDiv = document.createElement('div');
+      imageDiv.className = 'product-image';
+      imageDiv.style.width = '100%';
+      imageDiv.style.height = '180px';
+      imageDiv.style.position = 'relative';
+      imageDiv.style.overflow = 'hidden';
+      
+      const sanitizedImageUrl = sanitizeUrl(product.image);
+      if (sanitizedImageUrl) {
+        const escapedUrl = sanitizedImageUrl.replace(/'/g, "\\'");
+        imageDiv.style.backgroundImage = `url('${escapedUrl}')`;
       }
-      const detailsDiv = document.createElement('div');
-      detailsDiv.style.padding = '16px';
-      const titleH4 = document.createElement('h4');
-      titleH4.style.margin = '0 0 8px 0';
-      titleH4.style.fontSize = '19px';
-      titleH4.style.fontWeight = '600';
-      titleH4.style.color = '#1f2937';
-      titleH4.style.lineHeight = '1.3';
-      titleH4.style.display = '-webkit-box';
-      titleH4.style.webkitLineClamp = '2';
-      titleH4.style.webkitBoxOrient = 'vertical';
-      titleH4.style.overflow = 'hidden';
-      titleH4.textContent = product.title || 'Untitled Product'; // Safe textContent
-      detailsDiv.appendChild(titleH4);
-      if (product.rating || product.reviewCount) {
-        const ratingDiv = document.createElement('div');
-        ratingDiv.style.display = 'flex';
-        ratingDiv.style.alignItems = 'center';
-        ratingDiv.style.gap = '6px';
-        ratingDiv.style.marginBottom = '8px';
-        const rating = product.rating || 0;
-        const fullStars = Math.floor(rating);
-        const hasHalfStar = rating % 1 >= 0.5;
-        const starsSpan = document.createElement('span');
-        starsSpan.style.color = '#fbbf24';
-        starsSpan.style.fontSize = '14px';
-        starsSpan.textContent = '★'.repeat(fullStars) + (hasHalfStar ? '½' : '') + '☆'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0));
-        ratingDiv.appendChild(starsSpan);
-        if (product.reviewCount) {
-          const reviewSpan = document.createElement('span');
-          reviewSpan.style.fontSize = '12px';
-          reviewSpan.style.color = '#6b7280';
-          reviewSpan.textContent = `(${product.reviewCount})`;
-          ratingDiv.appendChild(reviewSpan);
-        }
-        detailsDiv.appendChild(ratingDiv);
+      imageDiv.style.backgroundSize = 'cover';
+      imageDiv.style.backgroundPosition = 'center';
+      imageDiv.style.backgroundColor = '#f8f9fa';
+      
+      // Gradient overlay for better text readability
+      const overlayDiv = document.createElement('div');
+      overlayDiv.style.position = 'absolute';
+      overlayDiv.style.bottom = '0';
+      overlayDiv.style.left = '0';
+      overlayDiv.style.right = '0';
+      overlayDiv.style.height = '50%';
+      overlayDiv.style.background = 'linear-gradient(to top, rgba(0,0,0,0.3), transparent)';
+      overlayDiv.style.pointerEvents = 'none';
+      imageDiv.appendChild(overlayDiv);
+
+      // Badges container (top-left)
+      const badgesContainer = document.createElement('div');
+      badgesContainer.style.position = 'absolute';
+      badgesContainer.style.top = '10px';
+      badgesContainer.style.left = '10px';
+      badgesContainer.style.display = 'flex';
+      badgesContainer.style.flexDirection = 'column';
+      badgesContainer.style.gap = '6px';
+      badgesContainer.style.zIndex = '2';
+
+      // Discount Badge
+      if (product.badge || product.discountPercent) {
+        const discountBadge = document.createElement('div');
+        discountBadge.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+        discountBadge.style.color = 'white';
+        discountBadge.style.padding = '6px 12px';
+        discountBadge.style.borderRadius = '8px';
+        discountBadge.style.fontSize = '12px';
+        discountBadge.style.fontWeight = '700';
+        discountBadge.style.boxShadow = '0 2px 8px rgba(239, 68, 68, 0.4)';
+        discountBadge.style.letterSpacing = '0.5px';
+        discountBadge.textContent = product.badge || `${product.discountPercent}% OFF`;
+        badgesContainer.appendChild(discountBadge);
       }
-      const priceRow = document.createElement('div');
-      priceRow.style.display = 'flex';
-      priceRow.style.justifyContent = 'space-between';
-      priceRow.style.alignItems = 'center';
-      priceRow.style.marginBottom = '12px';
-      const priceContainer = document.createElement('div');
-      priceContainer.style.display = 'flex';
-      priceContainer.style.flexDirection = 'column';
-      priceContainer.style.gap = '2px';
-      if (product.compareAtPrice && parseFloat(product.compareAtPrice) > parseFloat(product.price)) {
-        const originalPriceSpan = document.createElement('span');
-        originalPriceSpan.style.fontSize = '13px';
-        originalPriceSpan.style.color = '#9ca3af';
-        originalPriceSpan.style.textDecoration = 'line-through';
-        originalPriceSpan.textContent = `$${parseFloat(product.compareAtPrice).toFixed(2)}`;
-        priceContainer.appendChild(originalPriceSpan);
+
+      // Low Stock Badge
+      if (product.isLowStock && product.inventory) {
+        const stockBadge = document.createElement('div');
+        stockBadge.style.background = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)';
+        stockBadge.style.color = 'white';
+        stockBadge.style.padding = '5px 10px';
+        stockBadge.style.borderRadius = '8px';
+        stockBadge.style.fontSize = '11px';
+        stockBadge.style.fontWeight = '600';
+        stockBadge.style.boxShadow = '0 2px 6px rgba(245, 158, 11, 0.3)';
+        stockBadge.textContent = `⚡ Only ${product.inventory} left!`;
+        badgesContainer.appendChild(stockBadge);
       }
-      const priceDiv = document.createElement('div');
-      priceDiv.style.fontSize = '24px';
-      priceDiv.style.fontWeight = '700';
-      priceDiv.style.color = product.compareAtPrice ? '#ef4444' : widgetSettings.primaryColor;
-      priceDiv.textContent = product.priceFormatted || `$${parseFloat(product.price || '0').toFixed(2)}`;
-      priceContainer.appendChild(priceDiv);
-      priceRow.appendChild(priceContainer);
-      if (product.category) {
-        const categoryDiv = document.createElement('div');
-        categoryDiv.style.background = '#f3f4f6';
-        categoryDiv.style.color = '#6b7280';
-        categoryDiv.style.padding = '2px 8px';
-        categoryDiv.style.borderRadius = '8px';
-        categoryDiv.style.fontSize = '11px';
-        categoryDiv.style.fontWeight = '500';
-        categoryDiv.textContent = product.category; // Safe textContent
-        priceRow.appendChild(categoryDiv);
+
+      if (badgesContainer.children.length > 0) {
+        imageDiv.appendChild(badgesContainer);
       }
-      detailsDiv.appendChild(priceRow);
+
+      // Relevance Score Badge (top-right)
+      if (product.relevanceScore) {
+        const matchBadge = document.createElement('div');
+        matchBadge.style.position = 'absolute';
+        matchBadge.style.top = '10px';
+        matchBadge.style.right = '10px';
+        matchBadge.style.background = 'rgba(0, 0, 0, 0.75)';
+        matchBadge.style.backdropFilter = 'blur(8px)';
+        matchBadge.style.webkitBackdropFilter = 'blur(8px)';
+        matchBadge.style.color = 'white';
+        matchBadge.style.padding = '5px 10px';
+        matchBadge.style.borderRadius = '12px';
+        matchBadge.style.fontSize = '11px';
+        matchBadge.style.fontWeight = '700';
+        matchBadge.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)';
+        matchBadge.style.zIndex = '2';
+        matchBadge.innerHTML = `<span style="color: #10b981;">●</span> ${product.relevanceScore}% match`;
+        imageDiv.appendChild(matchBadge);
+      }
+
+      productCard.appendChild(imageDiv);
+    }
+
+    // Product Details Section
+    const detailsDiv = document.createElement('div');
+    detailsDiv.style.padding = '16px';
+    detailsDiv.style.display = 'flex';
+    detailsDiv.style.flexDirection = 'column';
+    detailsDiv.style.flexGrow = '1';
+    detailsDiv.style.gap = '8px';
+
+    // Product Title
+    const titleH4 = document.createElement('h4');
+    titleH4.style.margin = '0';
+    titleH4.style.fontSize = '16px';
+    titleH4.style.fontWeight = '700';
+    titleH4.style.color = '#111827';
+    titleH4.style.lineHeight = '1.3';
+    titleH4.style.display = '-webkit-box';
+    titleH4.style.webkitLineClamp = '2';
+    titleH4.style.webkitBoxOrient = 'vertical';
+    titleH4.style.overflow = 'hidden';
+    titleH4.style.minHeight = '40px';
+    titleH4.textContent = product.title || 'Untitled Product';
+    detailsDiv.appendChild(titleH4);
+
+    // Rating (if available)
+    if (product.rating || product.reviewCount) {
+      const ratingDiv = document.createElement('div');
+      ratingDiv.style.display = 'flex';
+      ratingDiv.style.alignItems = 'center';
+      ratingDiv.style.gap = '6px';
+
+      const rating = product.rating || 0;
+      const fullStars = Math.floor(rating);
+      const hasHalfStar = rating % 1 >= 0.5;
+
+      const starsSpan = document.createElement('span');
+      starsSpan.style.color = '#fbbf24';
+      starsSpan.style.fontSize = '14px';
+      starsSpan.style.letterSpacing = '1px';
+      starsSpan.textContent = '★'.repeat(fullStars) + (hasHalfStar ? '⯨' : '') + '☆'.repeat(5 - fullStars - (hasHalfStar ? 1 : 0));
+      ratingDiv.appendChild(starsSpan);
+
+      if (product.reviewCount) {
+        const reviewSpan = document.createElement('span');
+        reviewSpan.style.fontSize = '12px';
+        reviewSpan.style.color = '#6b7280';
+        reviewSpan.style.fontWeight = '500';
+        reviewSpan.textContent = `(${product.reviewCount})`;
+        ratingDiv.appendChild(reviewSpan);
+      }
+
+      detailsDiv.appendChild(ratingDiv);
+    }
+
+    // Price Row with Category
+    const priceRow = document.createElement('div');
+    priceRow.style.display = 'flex';
+    priceRow.style.justifyContent = 'space-between';
+    priceRow.style.alignItems = 'flex-start';
+    priceRow.style.gap = '8px';
+    priceRow.style.marginTop = '4px';
+
+    const priceContainer = document.createElement('div');
+    priceContainer.style.display = 'flex';
+    priceContainer.style.flexDirection = 'column';
+    priceContainer.style.gap = '2px';
+
+    // Compare at price (if on sale)
+    if (product.compareAtPrice && parseFloat(product.compareAtPrice) > parseFloat(product.price)) {
+      const originalPriceSpan = document.createElement('span');
+      originalPriceSpan.style.fontSize = '12px';
+      originalPriceSpan.style.color = '#9ca3af';
+      originalPriceSpan.style.textDecoration = 'line-through';
+      originalPriceSpan.style.fontWeight = '500';
+      originalPriceSpan.textContent = `$${parseFloat(product.compareAtPrice).toFixed(2)}`;
+      priceContainer.appendChild(originalPriceSpan);
+    }
+
+    // Current Price
+    const priceDiv = document.createElement('div');
+    priceDiv.style.fontSize = '24px';
+    priceDiv.style.fontWeight = '800';
+    priceDiv.style.letterSpacing = '-0.5px';
+    
+    if (product.compareAtPrice && parseFloat(product.compareAtPrice) > parseFloat(product.price)) {
+      priceDiv.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+      priceDiv.style.webkitBackgroundClip = 'text';
+      priceDiv.style.webkitTextFillColor = 'transparent';
+      priceDiv.style.backgroundClip = 'text';
+    } else {
+      priceDiv.style.color = widgetSettings.primaryColor;
+    }
+    
+    priceDiv.textContent = product.priceFormatted || `$${parseFloat(product.price || '0').toFixed(2)}`;
+    priceContainer.appendChild(priceDiv);
+
+    priceRow.appendChild(priceContainer);
+
+    // Category Badge
+    if (product.category) {
+      const categoryDiv = document.createElement('div');
+      categoryDiv.style.background = 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)';
+      categoryDiv.style.color = '#4b5563';
+      categoryDiv.style.padding = '4px 10px';
+      categoryDiv.style.borderRadius = '8px';
+      categoryDiv.style.fontSize = '11px';
+      categoryDiv.style.fontWeight = '600';
+      categoryDiv.style.whiteSpace = 'nowrap';
+      categoryDiv.style.textTransform = 'uppercase';
+      categoryDiv.style.letterSpacing = '0.5px';
+      categoryDiv.textContent = product.category;
+      priceRow.appendChild(categoryDiv);
+    }
+
+    detailsDiv.appendChild(priceRow);
+
+    // Product Description
+    if (product.description) {
       const descP = document.createElement('p');
-      descP.style.margin = '0 0 12px 0';
-      descP.style.fontSize = '16px';
+      descP.style.margin = '0';
+      descP.style.fontSize = '13px';
       descP.style.color = '#6b7280';
-      descP.style.lineHeight = '1.4';
+      descP.style.lineHeight = '1.5';
       descP.style.display = '-webkit-box';
-      descP.style.webkitLineClamp = '3';
+      descP.style.webkitLineClamp = '2';
       descP.style.webkitBoxOrient = 'vertical';
       descP.style.overflow = 'hidden';
-      descP.textContent = product.description || 'No description available'; // Safe textContent
+      descP.textContent = product.description || 'No description available';
       detailsDiv.appendChild(descP);
-      if (product.urgencyMessage) {
-        const urgencyDiv = document.createElement('div');
-        urgencyDiv.style.display = 'flex';
-        urgencyDiv.style.alignItems = 'center';
-        urgencyDiv.style.gap = '6px';
-        urgencyDiv.style.background = '#fef3c7';
-        urgencyDiv.style.color = '#92400e';
-        urgencyDiv.style.padding = '8px 12px';
-        urgencyDiv.style.borderRadius = '8px';
-        urgencyDiv.style.fontSize = '12px';
-        urgencyDiv.style.fontWeight = '600';
-        urgencyDiv.style.marginBottom = '12px';
-        urgencyDiv.style.border = '1px solid #fcd34d';
-        const iconSpan = document.createElement('span');
-        iconSpan.textContent = '⚡';
-        iconSpan.style.fontSize = '14px';
-        urgencyDiv.appendChild(iconSpan);
-        const textSpan = document.createElement('span');
-        textSpan.textContent = product.urgencyMessage;
-        urgencyDiv.appendChild(textSpan);
-        detailsDiv.appendChild(urgencyDiv);
-      }
-      if (product.tags && product.tags.length > 0) {
-        const tagsDiv = document.createElement('div');
-        tagsDiv.style.marginBottom = '12px';
-        product.tags.slice(0, 3).forEach(tag => {
-          const tagSpan = document.createElement('span');
-          tagSpan.style.display = 'inline-block';
-          tagSpan.style.background = '#e5e7eb';
-          tagSpan.style.color = '#374151';
-          tagSpan.style.padding = '2px 6px';
-          tagSpan.style.borderRadius = '6px';
-          tagSpan.style.fontSize = '10px';
-          tagSpan.style.marginRight = '4px';
-          tagSpan.style.marginBottom = '4px';
-          tagSpan.textContent = tag; // Safe textContent
-          tagsDiv.appendChild(tagSpan);
-        });
-        detailsDiv.appendChild(tagsDiv);
-      }
-      const actionButton = document.createElement('div');
-      actionButton.style.background = widgetSettings.primaryColor;
-      actionButton.style.color = 'white';
-      actionButton.style.textAlign = 'center';
-      actionButton.style.padding = '10px';
-      actionButton.style.borderRadius = '8px';
-      actionButton.style.fontSize = '17px';
-      actionButton.style.fontWeight = '600';
-      actionButton.style.marginTop = 'auto';
-      actionButton.textContent = 'View Product →';
-      detailsDiv.appendChild(actionButton);
-      productCard.appendChild(detailsDiv);
-      productCard.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        trackAnalytics(analyticsEvents.PRODUCT_CLICKED, {
-          productTitle: product.title,
-          productHandle: product.handle,
-          productPrice: product.price,
-          relevanceScore: product.relevanceScore
-        });
-        const productUrl = product.fullUrl || `/products/${product.handle}`;
-        const safeUrl = sanitizeUrl(productUrl);
-        if (safeUrl) {
-          window.open(safeUrl, '_blank', 'noopener,noreferrer');
-        }
-        this.style.transform = 'scale(0.98)';
-        setTimeout(() => {
-          this.style.transform = 'scale(1)';
-        }, 150);
-      });
-      productCard.addEventListener('mouseenter', function() {
-        this.style.borderColor = widgetSettings.primaryColor;
-        this.style.transform = 'translateY(-4px)';
-        this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
-      });
-      productCard.addEventListener('mouseleave', function() {
-        this.style.borderColor = '#e5e7eb';
-        this.style.transform = 'translateY(0)';
-        this.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-      });
-      gridContent.appendChild(productCard);
-    });
-    productsContainer.appendChild(gridContent);
-    messagesContainer.appendChild(productsContainer);
-    if (recommendations.length > 2) {
-      const browseMoreDiv = document.createElement('div');
-      browseMoreDiv.className = 'ai-message assistant-message';
-      browseMoreDiv.style.marginTop = '8px';
-      browseMoreDiv.style.textAlign = 'center';
-      const browseButton = document.createElement('button');
-      browseButton.style.background = 'transparent';
-      browseButton.style.border = `2px solid ${widgetSettings.primaryColor}`;
-      browseButton.style.color = widgetSettings.primaryColor;
-      browseButton.style.padding = '10px 20px';
-      browseButton.style.borderRadius = '25px';
-      browseButton.style.fontSize = '17px';
-      browseButton.style.fontWeight = '600';
-      browseButton.style.cursor = 'pointer';
-      browseButton.style.transition = 'all 0.2s ease';
-      browseButton.textContent = 'Browse All Products';
-      browseButton.addEventListener('click', function() {
-        const safeUrl = sanitizeUrl('/collections/all');
-        if (safeUrl) {
-          window.open(safeUrl, '_blank', 'noopener,noreferrer');
-        }
-      });
-      browseButton.addEventListener('mouseenter', function() {
-        this.style.backgroundColor = widgetSettings.primaryColor;
-        this.style.color = 'white';
-      });
-      browseButton.addEventListener('mouseleave', function() {
-        this.style.backgroundColor = 'transparent';
-        this.style.color = widgetSettings.primaryColor;
-      });
-      browseMoreDiv.appendChild(browseButton);
-      messagesContainer.appendChild(browseMoreDiv);
     }
-    scrollToBottom();
+
+    // Urgency Message
+    if (product.urgencyMessage) {
+      const urgencyDiv = document.createElement('div');
+      urgencyDiv.style.display = 'flex';
+      urgencyDiv.style.alignItems = 'center';
+      urgencyDiv.style.gap = '8px';
+      urgencyDiv.style.background = 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)';
+      urgencyDiv.style.color = '#92400e';
+      urgencyDiv.style.padding = '8px 12px';
+      urgencyDiv.style.borderRadius = '10px';
+      urgencyDiv.style.fontSize = '12px';
+      urgencyDiv.style.fontWeight = '700';
+      urgencyDiv.style.border = '1.5px solid #fbbf24';
+      urgencyDiv.style.boxShadow = '0 2px 6px rgba(251, 191, 36, 0.2)';
+
+      const iconSpan = document.createElement('span');
+      iconSpan.textContent = '⚡';
+      iconSpan.style.fontSize = '16px';
+      urgencyDiv.appendChild(iconSpan);
+
+      const textSpan = document.createElement('span');
+      textSpan.textContent = product.urgencyMessage;
+      urgencyDiv.appendChild(textSpan);
+
+      detailsDiv.appendChild(urgencyDiv);
+    }
+
+    // Product Tags
+    if (product.tags && product.tags.length > 0) {
+      const tagsDiv = document.createElement('div');
+      tagsDiv.style.display = 'flex';
+      tagsDiv.style.flexWrap = 'wrap';
+      tagsDiv.style.gap = '4px';
+      tagsDiv.style.marginTop = '4px';
+
+      product.tags.slice(0, 3).forEach(tag => {
+        const tagSpan = document.createElement('span');
+        tagSpan.style.display = 'inline-block';
+        tagSpan.style.background = '#f3f4f6';
+        tagSpan.style.color = '#4b5563';
+        tagSpan.style.padding = '3px 8px';
+        tagSpan.style.borderRadius = '6px';
+        tagSpan.style.fontSize = '10px';
+        tagSpan.style.fontWeight = '600';
+        tagSpan.style.textTransform = 'uppercase';
+        tagSpan.style.letterSpacing = '0.3px';
+        tagSpan.textContent = tag;
+        tagsDiv.appendChild(tagSpan);
+      });
+
+      detailsDiv.appendChild(tagsDiv);
+    }
+
+    // View Product Button
+    const actionButton = document.createElement('button');
+    actionButton.style.background = `linear-gradient(135deg, ${widgetSettings.primaryColor} 0%, ${adjustColor(widgetSettings.primaryColor, -15)} 100%)`;
+    actionButton.style.color = 'white';
+    actionButton.style.border = 'none';
+    actionButton.style.textAlign = 'center';
+    actionButton.style.padding = '12px 16px';
+    actionButton.style.borderRadius = '10px';
+    actionButton.style.fontSize = '15px';
+    actionButton.style.fontWeight = '700';
+    actionButton.style.marginTop = 'auto';
+    actionButton.style.cursor = 'pointer';
+    actionButton.style.transition = 'all 0.2s ease';
+    actionButton.style.boxShadow = `0 4px 12px rgba(${hexToRgb(widgetSettings.primaryColor).r}, ${hexToRgb(widgetSettings.primaryColor).g}, ${hexToRgb(widgetSettings.primaryColor).b}, 0.3)`;
+    actionButton.style.display = 'flex';
+    actionButton.style.alignItems = 'center';
+    actionButton.style.justifyContent = 'center';
+    actionButton.style.gap = '8px';
+    actionButton.innerHTML = `<span>View Details</span><span style="font-size: 18px;">→</span>`;
+
+    actionButton.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateY(-2px)';
+      this.style.boxShadow = `0 6px 20px rgba(${hexToRgb(widgetSettings.primaryColor).r}, ${hexToRgb(widgetSettings.primaryColor).g}, ${hexToRgb(widgetSettings.primaryColor).b}, 0.4)`;
+    });
+
+    actionButton.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateY(0)';
+      this.style.boxShadow = `0 4px 12px rgba(${hexToRgb(widgetSettings.primaryColor).r}, ${hexToRgb(widgetSettings.primaryColor).g}, ${hexToRgb(widgetSettings.primaryColor).b}, 0.3)`;
+    });
+
+    detailsDiv.appendChild(actionButton);
+    productCard.appendChild(detailsDiv);
+
+    // Click Handler for Entire Card
+    productCard.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      trackAnalytics(analyticsEvents.PRODUCT_CLICKED, {
+        productTitle: product.title,
+        productHandle: product.handle,
+        productPrice: product.price,
+        relevanceScore: product.relevanceScore,
+        position: index + 1
+      });
+
+      const productUrl = product.fullUrl || `/products/${product.handle}`;
+      const safeUrl = sanitizeUrl(productUrl);
+      if (safeUrl) {
+        window.open(safeUrl, '_blank', 'noopener,noreferrer');
+      }
+
+      // Click feedback
+      this.style.transform = 'scale(0.98)';
+      setTimeout(() => {
+        this.style.transform = 'scale(1)';
+      }, 150);
+    });
+
+    // Hover Effects
+    productCard.addEventListener('mouseenter', function() {
+      this.style.borderColor = widgetSettings.primaryColor;
+      this.style.transform = 'translateY(-6px)';
+      this.style.boxShadow = `0 12px 28px rgba(0, 0, 0, 0.15), 0 0 0 2px ${widgetSettings.primaryColor}20`;
+    });
+
+    productCard.addEventListener('mouseleave', function() {
+      this.style.borderColor = '#e5e7eb';
+      this.style.transform = 'translateY(0)';
+      this.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.08)';
+    });
+
+    gridContent.appendChild(productCard);
+  });
+
+  productsContainer.appendChild(gridContent);
+  messagesContainer.appendChild(productsContainer);
+
+  // Browse All Products Button (if more than 2 products)
+  if (recommendations.length > 2) {
+    const browseMoreDiv = document.createElement('div');
+    browseMoreDiv.className = 'ai-message assistant-message';
+    browseMoreDiv.style.marginTop = '12px';
+    browseMoreDiv.style.textAlign = 'center';
+    browseMoreDiv.style.backgroundColor = 'transparent';
+    browseMoreDiv.style.border = 'none';
+    browseMoreDiv.style.boxShadow = 'none';
+    browseMoreDiv.style.padding = '0';
+
+    const browseButton = document.createElement('button');
+    browseButton.style.background = 'white';
+    browseButton.style.border = `2px solid ${widgetSettings.primaryColor}`;
+    browseButton.style.color = widgetSettings.primaryColor;
+    browseButton.style.padding = '12px 24px';
+    browseButton.style.borderRadius = '30px';
+    browseButton.style.fontSize = '15px';
+    browseButton.style.fontWeight = '700';
+    browseButton.style.cursor = 'pointer';
+    browseButton.style.transition = 'all 0.3s ease';
+    browseButton.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+    browseButton.style.display = 'inline-flex';
+    browseButton.style.alignItems = 'center';
+    browseButton.style.gap = '8px';
+    browseButton.innerHTML = `<span>Browse All Products</span><span style="font-size: 18px;">🛍️</span>`;
+
+    browseButton.addEventListener('click', function() {
+      const safeUrl = sanitizeUrl('/collections/all');
+      if (safeUrl) {
+        window.open(safeUrl, '_blank', 'noopener,noreferrer');
+      }
+    });
+
+    browseButton.addEventListener('mouseenter', function() {
+      this.style.backgroundColor = widgetSettings.primaryColor;
+      this.style.color = 'white';
+      this.style.transform = 'translateY(-2px)';
+      this.style.boxShadow = `0 4px 12px rgba(${hexToRgb(widgetSettings.primaryColor).r}, ${hexToRgb(widgetSettings.primaryColor).g}, ${hexToRgb(widgetSettings.primaryColor).b}, 0.3)`;
+    });
+
+    browseButton.addEventListener('mouseleave', function() {
+      this.style.backgroundColor = 'white';
+      this.style.color = widgetSettings.primaryColor;
+      this.style.transform = 'translateY(0)';
+      this.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+    });
+
+    browseMoreDiv.appendChild(browseButton);
+    messagesContainer.appendChild(browseMoreDiv);
   }
+
+  scrollToBottom();
+}
+
+// Helper function to convert hex to RGB (add this if not already present)
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : { r: 59, g: 130, b: 246 }; // Default blue if parsing fails
+}
+
+// Helper function to adjust color brightness (add this if not already present)
+function adjustColor(color, percent) {
+  const num = parseInt(color.replace('#', ''), 16);
+  const amt = Math.round(2.55 * percent);
+  const R = Math.min(255, Math.max(0, (num >> 16) + amt));
+  const G = Math.min(255, Math.max(0, (num >> 8 & 0x00FF) + amt));
+  const B = Math.min(255, Math.max(0, (num & 0x0000FF) + amt));
+  return '#' + (0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1);
+}
   function showLoading(show) {
     const messagesContainer = document.getElementById('ai-chat-messages');
     let loadingDiv = document.getElementById('ai-loading');
