@@ -30,11 +30,13 @@ import {
 import { authenticate } from "../shopify.server";
 import { n8nService } from "../services/n8n.service";
 
+// ✅ FIXED: Added productRecommendations back to Message interface
 interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  productRecommendations?: ProductInfo[];  // ✅ This was missing!
 }
 
 interface ProductInfo {
@@ -45,7 +47,6 @@ interface ProductInfo {
   image?: string;
   description?: string;
 }
-
 
 type Intent = 
   | { type: "PRODUCT_SEARCH"; query: string }
@@ -86,11 +87,10 @@ const quickActions = [
 ];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  return json({}); // no initial data needed
+  return json({});
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
-  // ✅ Auth is handled automatically by Shopify App Bridge in embedded mode
   const { admin } = await authenticate.admin(request);
   const formData = await request.formData();
   const userMessage = formData.get("message");
@@ -114,7 +114,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       } else if (intent.query === "new") {
         variables.query = "created_at:>now-30d";
       }
-      // else: fetch all active products
 
       console.log("📦 Fetching products with variables:", variables);
 
@@ -186,7 +185,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       context: { previousMessages: [] }
     });
 
-    const fallbackMessage = String(n8nResponse.message || "Désolé, je n’ai pas compris.");
+    const fallbackMessage = String(n8nResponse.message || "Désolé, je n'ai pas compris.");
     console.log("🤖 AI response (non-product):", fallbackMessage);
 
     return json({ 
@@ -208,13 +207,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function SalesAssistantAdvanced() {
-  useLoaderData<typeof loader>(); // ✅ no destructuring → no unused var
+  useLoaderData<typeof loader>();
   const fetcher = useFetcher<typeof action>();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
       role: "assistant",
-      content: "👋 Bonjour ! Je suis votre assistant commercial IA. Comment puis-je vous aider aujourd’hui ?",
+      content: "👋 Bonjour ! Je suis votre assistant commercial IA. Comment puis-je vous aider aujourd'hui ?",
       timestamp: new Date(),
     },
   ]);
@@ -230,16 +229,21 @@ export default function SalesAssistantAdvanced() {
     }
   }, [messages]);
 
+  // ✅ FIXED: Now attaches products to the message object
   useEffect(() => {
     if (fetcher.data && 'response' in fetcher.data) {
+      const products = Array.isArray(fetcher.data.recommendations) ? fetcher.data.recommendations : [];
+      
       const newMessage: Message = {
         id: Date.now().toString(),
         role: "assistant",
-        content: String(fetcher.data.response || "Une erreur est survenue."), // ✅ always string
+        content: String(fetcher.data.response || "Une erreur est survenue."),
         timestamp: new Date(),
+        productRecommendations: products  // ✅ Products attached to message!
       };
+      
       setMessages(prev => [...prev, newMessage]);
-      setRecommendations(Array.isArray(fetcher.data.recommendations) ? fetcher.data.recommendations : []);
+      setRecommendations(products); // Also update sidebar
       setShowQuickActions(false);
     }
   }, [fetcher.data]);
@@ -268,7 +272,7 @@ export default function SalesAssistantAdvanced() {
       {
         id: "1",
         role: "assistant",
-        content: "👋 Bonjour ! Je suis votre assistant commercial IA. Comment puis-je vous aider aujourd’hui ?",
+        content: "👋 Bonjour ! Je suis votre assistant commercial IA. Comment puis-je vous aider aujourd'hui ?",
         timestamp: new Date(),
       },
     ]);
@@ -285,7 +289,6 @@ export default function SalesAssistantAdvanced() {
       <TitleBar title="Assistant Commercial IA" />
       <Layout>
         <Layout.Section variant="oneThird">
-          {/* ... Stats & Recommendations Cards — unchanged from your original ... */}
           <BlockStack gap="400">
             <Card>
               <BlockStack gap="300">
@@ -398,6 +401,40 @@ export default function SalesAssistantAdvanced() {
                       <BlockStack gap="100" align={message.role === "user" ? "end" : "start"}>
                         <div style={{ maxWidth: "80%", padding: "14px 18px", borderRadius: message.role === "user" ? "20px 20px 4px 20px" : "20px 20px 20px 4px", background: message.role === "user" ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" : "#ffffff", color: message.role === "user" ? "white" : "black", boxShadow: "0 2px 8px rgba(0,0,0,0.08)", border: message.role === "assistant" ? "1px solid #e1e3e5" : "none" }}>
                           <Text variant="bodyMd" as="p">{message.content}</Text>
+                          
+                          {/* ✅ FIXED: Now renders products inside chat messages! */}
+                          {message.productRecommendations && message.productRecommendations.length > 0 && (
+                            <div style={{ marginTop: '12px' }}>
+                              <BlockStack gap="200">
+                                {message.productRecommendations.map((product) => (
+                                  <Card key={product.id} padding="300">
+                                    <InlineStack gap="300" align="start" wrap={false}>
+                                      {product.image ? (
+                                        <img 
+                                          src={product.image} 
+                                          alt={product.title}
+                                          style={{ width: "80px", height: "80px", objectFit: "cover", borderRadius: "8px", flexShrink: 0 }}
+                                        />
+                                      ) : (
+                                        <div style={{ width: "80px", height: "80px", backgroundColor: "#f6f6f7", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                          <Icon source={ProductIcon} tone="base" />
+                                        </div>
+                                      )}
+                                      <BlockStack gap="200">
+                                        <Text variant="headingSm" fontWeight="semibold">{product.title}</Text>
+                                        <Badge tone="success">${parseFloat(product.price).toFixed(2)}</Badge>
+                                        {product.description && (
+                                          <Text variant="bodySm" tone="subdued">
+                                            {product.description.substring(0, 100)}...
+                                          </Text>
+                                        )}
+                                      </BlockStack>
+                                    </InlineStack>
+                                  </Card>
+                                ))}
+                              </BlockStack>
+                            </div>
+                          )}
                         </div>
                         <Text variant="bodySm" as="p" tone="subdued">{formatTime(message.timestamp)}</Text>
                       </BlockStack>
@@ -437,7 +474,6 @@ export default function SalesAssistantAdvanced() {
               </BlockStack>
             </div>
 
-            {/* ✅ FIXED: Use <form> for proper submission & Enter handling */}
             <form onSubmit={handleSubmit} ref={formRef} style={{ padding: '20px', borderTop: '1px solid #e1e3e5', backgroundColor: '#ffffff' }}>
               <InlineStack gap="200" blockAlign="end">
                 <div style={{ flex: 1 }}>

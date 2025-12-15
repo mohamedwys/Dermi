@@ -20,6 +20,56 @@ const DEFAULT_SETTINGS = {
   primaryColor: "#e620e6",
 };
 
+// ✅ ADDED: Intent detection system (same as chatbot)
+type Intent = 
+  | { type: "PRODUCT_SEARCH"; query: string }
+  | { type: "GENERAL_CHAT" };
+
+function detectIntent(message: string): Intent {
+  const lower = message.toLowerCase().trim();
+
+  // French keywords
+  if (
+    /(?:montre|affiche|voir|recommande|t-shirt|tshirt|chaussure|vêtement|produit|collection|best[-\s]?seller|meilleur|nouveau)/.test(lower)
+  ) {
+    if (/(t[-\s]?shirt)/.test(lower)) return { type: "PRODUCT_SEARCH", query: "t-shirt" };
+    if (/chaussure|shoe|basket/.test(lower)) return { type: "PRODUCT_SEARCH", query: "shoe" };
+    if (/best[-\s]?seller|bestsell|meilleur/.test(lower)) return { type: "PRODUCT_SEARCH", query: "bestseller" };
+    if (/nouveau|new/.test(lower)) return { type: "PRODUCT_SEARCH", query: "new" };
+    return { type: "PRODUCT_SEARCH", query: "product" };
+  }
+
+  // English keywords
+  if (
+    /(show|see|display|recommend|suggest|best[-\s]?seller|on sale|product|item)/.test(lower)
+  ) {
+    if (/t[-\s]?shirt/.test(lower)) return { type: "PRODUCT_SEARCH", query: "t-shirt" };
+    if (/shoe|sneaker|boot/.test(lower)) return { type: "PRODUCT_SEARCH", query: "shoe" };
+    if (/best[-\s]?seller/.test(lower)) return { type: "PRODUCT_SEARCH", query: "bestseller" };
+    if (/new|latest/.test(lower)) return { type: "PRODUCT_SEARCH", query: "new" };
+    return { type: "PRODUCT_SEARCH", query: "product" };
+  }
+
+  return { type: "GENERAL_CHAT" };
+}
+
+// ✅ ADDED: Sentiment analysis helper
+function analyzeSentiment(message: string): string {
+  const lower = message.toLowerCase();
+  
+  // Positive indicators
+  if (/(love|great|amazing|excellent|perfect|awesome|thank|thanks|happy|good)/.test(lower)) {
+    return "positive";
+  }
+  
+  // Negative indicators
+  if (/(hate|bad|terrible|awful|disappointed|angry|problem|issue|wrong)/.test(lower)) {
+    return "negative";
+  }
+  
+  return "neutral";
+}
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   // ✅ SECURITY FIX: Apply rate limiting
   // Generous limit for widget settings retrieval: 300 requests per minute
@@ -104,18 +154,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const origin = request.headers.get('origin');
 
   // TEMPORARY: Allow app proxy requests (they may not have origin or have shopify origin)
-  // TODO: Properly validate app proxy requests after debugging
   if (origin && !isOriginAllowed(origin)) {
     routeLogger.warn({ origin }, 'Origin not in whitelist - allowing anyway for app proxy compatibility');
-    // Temporarily allow instead of blocking
-    // logCorsViolation(origin, '/api/widget-settings');
-    // return json(
-    //   { error: "Unauthorized origin" },
-    //   {
-    //     status: 403,
-    //     headers: { 'Content-Type': 'application/json' }
-    //   }
-    // );
   }
 
   // ✅ SECURITY FIX: Apply rate limiting
@@ -128,6 +168,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   if (rateLimitResponse) {
     return rateLimitResponse;
   }
+
+  const startTime = Date.now();
 
   try {
     // Extract shop domain from request headers
@@ -148,30 +190,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           )
         }
       );
-    }
-
-    // Try to get admin access for shop data (only on local development)
-    let admin = null;
-
-    if (process.env.VERCEL !== '1') {
-      try {
-        // Local development with Prisma storage
-        const session = await sessionStorage.findSessionsByShop(shopDomain);
-        if (session.length > 0) {
-          routeLogger.debug({ shop: shopDomain }, 'Found existing session');
-          const { admin: sessionAdmin } = await authenticate.admin(request);
-          admin = sessionAdmin;
-        } else {
-          routeLogger.debug({ shop: shopDomain }, 'No session found, using unauthenticated approach');
-          const { admin: unauthenticatedAdmin } = await unauthenticated.admin(shopDomain);
-          admin = unauthenticatedAdmin;
-        }
-      } catch (error) {
-        routeLogger.debug({ shop: shopDomain }, 'Authentication failed');
-        admin = null;
-      }
-    } else {
-      routeLogger.debug('Running on Vercel - skipping admin authentication');
     }
     
     // Parse the request body
@@ -218,47 +236,73 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     routeLogger.debug({ messageLength: finalMessage.length }, 'Processing chat message');
 
-    // Get products for context (skip on Vercel due to MemorySessionStorage limitations)
-    let products = [];
-      try {
-        // Use unauthenticated admin (uses offline token, works in production)
-        const { admin: shopAdmin } = await unauthenticated.admin(shopDomain);
-        
-        const response = await shopAdmin.graphql(`
-          #graphql
-          query getProducts($first: Int!) {
-            products(first: $first, query: "status:active") {
-              edges {
-                node {
-                  id
-                  title
-                  handle
-                  description
-                  featuredImage { url }
-                  variants(first: 1) {
-                    edges { node { price } }
-                  }
+    // ✅ IMPROVED: Detect intent and sentiment
+    const intent = detectIntent(finalMessage);
+    const sentiment = analyzeSentiment(finalMessage);
+    
+    routeLogger.debug({ intent: intent.type, sentiment }, 'Intent and sentiment detected');
+
+    // ✅ IMPROVED: Fetch more products (50 instead of 20)
+    let products: any[] = [];
+    
+    try {
+      // Use unauthenticated admin (uses offline token, works in production)
+      const { admin: shopAdmin } = await unauthenticated.admin(shopDomain);
+      
+      // ✅ IMPROVED: Build GraphQL query based on intent
+      const variables: { first: number; query?: string } = { first: 50 };
+      
+      if (intent.type === "PRODUCT_SEARCH") {
+        if (intent.query === "bestseller") {
+          variables.query = "tag:bestseller";
+        } else if (intent.query === "t-shirt") {
+          variables.query = "product_type:t-shirt";
+        } else if (intent.query === "shoe") {
+          variables.query = "product_type:shoe";
+        } else if (intent.query === "new") {
+          variables.query = "created_at:>now-30d";
+        } else {
+          variables.query = "status:active";
+        }
+      } else {
+        variables.query = "status:active";
+      }
+      
+      const response = await shopAdmin.graphql(`
+        #graphql
+        query getProducts($first: Int!, $query: String) {
+          products(first: $first, query: $query) {
+            edges {
+              node {
+                id
+                title
+                handle
+                description
+                featuredImage { url }
+                variants(first: 1) {
+                  edges { node { price } }
                 }
               }
             }
           }
-        `, { variables: { first: 20 } });
+        }
+      `, { variables });
 
-        const responseData = (await response.json()) as any;
-        products = responseData?.data?.products?.edges?.map((edge: any) => ({
-          id: edge.node.id,
-          title: edge.node.title,
-          handle: edge.node.handle,
-          description: edge.node.description || '',
-          image: edge.node.featuredImage?.url,
-          price: edge.node.variants.edges[0]?.node.price || '0.00'
-        })) || [];
+      const responseData = (await response.json()) as any;
+      products = responseData?.data?.products?.edges?.map((edge: any) => ({
+        id: edge.node.id,
+        title: edge.node.title,
+        handle: edge.node.handle,
+        description: edge.node.description || '',
+        image: edge.node.featuredImage?.url,
+        price: edge.node.variants.edges[0]?.node.price || '0.00'
+      })) || [];
 
-        routeLogger.info({ count: products.length, shop: shopDomain }, '✅ Fetched products via App Proxy');
-      } catch (error) {
-        routeLogger.warn({ error: (error as Error).message }, '❌ Failed to fetch products');
-        products = [];
-      }
+      routeLogger.info({ count: products.length, shop: shopDomain }, '✅ Fetched products');
+    } catch (error) {
+      routeLogger.warn({ error: (error as Error).message }, '❌ Failed to fetch products');
+      products = [];
+    }
 
     // Enhanced context for better AI responses
     const enhancedContext = {
@@ -266,8 +310,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       customerId: context.customerId || undefined,
       customerEmail: (context.customerEmail as string) || undefined,
       previousMessages: context.previousMessages || undefined,
-      sentiment: context.sentiment || undefined,
-      intent: context.intent || undefined,
+      sentiment: sentiment,
+      intent: intent.type,
       shopDomain: shopDomain,
       timestamp: new Date().toISOString(),
       userAgent: request.headers.get('user-agent') || undefined,
@@ -289,9 +333,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       settings = null;
     }
     
-
-    
-    // Use custom webhook URL only if it's a valid URL (not just "https://")
+    // Use custom webhook URL only if it's a valid URL
     const customWebhookUrl = (settings as any)?.webhookUrl;
     const isValidCustomUrl = customWebhookUrl &&
                             typeof customWebhookUrl === 'string' &&
@@ -303,31 +345,122 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                             customWebhookUrl.length > 8;
 
     const webhookUrl = isValidCustomUrl ? customWebhookUrl : process.env.N8N_WEBHOOK_URL;
-    routeLogger.debug({
-      hasWebhookUrl: !!webhookUrl,
-      isCustom: isValidCustomUrl
-    }, 'Processing with N8N service');
+    
+    let n8nResponse;
+    let recommendations = [];
 
-    // Create N8N service instance with custom webhook URL if provided
-    const customN8NService = new N8NService(webhookUrl);
+    // ✅ IMPROVED: Handle product search intent directly OR use N8N
+    if (intent.type === "PRODUCT_SEARCH" && products.length > 0) {
+      // Direct product recommendation (fallback if N8N fails)
+      const messages: Record<string, string> = {
+        "t-shirt": "👕 Here are our available t-shirts:",
+        "shoe": "👟 Here are our shoes:",
+        "bestseller": "⭐ Discover our bestsellers:",
+        "new": "✨ Check out our new arrivals:",
+        "product": "📦 Here are some products you might like:"
+      };
 
-    // Process message through N8N service
-    const n8nResponse = await customN8NService.processUserMessage({
-      userMessage: finalMessage,
-      products,
-      context: enhancedContext
-    });
+      const responseText = messages[intent.query] || messages["product"];
+      
+      // Limit to 8 products for display
+      recommendations = products.slice(0, 8);
+      
+      // Try N8N first, but have fallback ready
+      try {
+        const customN8NService = new N8NService(webhookUrl);
+        n8nResponse = await customN8NService.processUserMessage({
+          userMessage: finalMessage,
+          products,
+          context: enhancedContext
+        });
+        
+        // Use N8N recommendations if available, otherwise use our fallback
+        if (n8nResponse.recommendations && n8nResponse.recommendations.length > 0) {
+          recommendations = n8nResponse.recommendations;
+          routeLogger.info({ count: recommendations.length }, 'Using N8N recommendations');
+        } else {
+          routeLogger.info({ count: recommendations.length }, 'Using fallback recommendations');
+        }
+      } catch (error) {
+        routeLogger.warn({ error: (error as Error).message }, 'N8N failed, using fallback');
+        // Use fallback response
+        n8nResponse = {
+          message: responseText,
+          recommendations: recommendations,
+          confidence: 0.8,
+          messageType: "product_recommendation"
+        };
+      }
+    } else {
+      // General chat - use N8N
+      try {
+        const customN8NService = new N8NService(webhookUrl);
+        n8nResponse = await customN8NService.processUserMessage({
+          userMessage: finalMessage,
+          products,
+          context: enhancedContext
+        });
+        recommendations = n8nResponse.recommendations || [];
+      } catch (error) {
+        routeLogger.error({ error: (error as Error).message }, 'N8N service failed');
+        // Fallback response
+        n8nResponse = {
+          message: "I'm here to help! You can ask me about products, pricing, shipping, or any questions about our store.",
+          recommendations: [],
+          confidence: 0.5,
+          messageType: "general"
+        };
+      }
+    }
+
+    const responseTime = Date.now() - startTime;
 
     routeLogger.info({
-      hasRecommendations: !!n8nResponse.recommendations?.length,
-      confidence: n8nResponse.confidence
-    }, 'N8N response received');
+      hasRecommendations: recommendations.length > 0,
+      recommendationCount: recommendations.length,
+      confidence: n8nResponse.confidence,
+      responseTime
+    }, 'Sending response');
 
+    // ✅ IMPROVED: Enhanced response with all fields
     return json({
+      // Main response (backward compatible)
       response: n8nResponse.message,
-      recommendations: n8nResponse.recommendations || [],
+      message: n8nResponse.message,
+
+      // Rich response fields
+      messageType: n8nResponse.messageType || (intent.type === "PRODUCT_SEARCH" ? "product_recommendation" : "general"),
+      recommendations: recommendations,
+      quickReplies: n8nResponse.quickReplies || [],
+      suggestedActions: n8nResponse.suggestedActions || [],
+
+      // Metadata
       confidence: n8nResponse.confidence || 0.7,
-      timestamp: new Date().toISOString()
+      sentiment: sentiment,
+      requiresHumanEscalation: n8nResponse.requiresHumanEscalation || false,
+
+      // Session info
+      timestamp: new Date().toISOString(),
+      sessionId: context.sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+
+      // Analytics
+      analytics: {
+        intentDetected: intent.type,
+        subIntent: intent.type === "PRODUCT_SEARCH" ? intent.query : undefined,
+        sentiment: sentiment,
+        confidence: n8nResponse.confidence || 0.7,
+        productsShown: recommendations.length,
+        responseTime: responseTime,
+      },
+
+      // Legacy metadata (for backward compatibility)
+      metadata: {
+        intent: intent.type,
+        sentiment: sentiment,
+        responseTime: responseTime,
+      },
+
+      success: true,
     }, {
       headers: mergeSecurityHeaders(
         getSecureCorsHeaders(request),
@@ -337,9 +470,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   } catch (error) {
     logError(error, "Chat API Error");
+    
+    const responseTime = Date.now() - startTime;
+    
     return json({
       error: "Internal server error",
-      message: "Sorry, I'm having trouble processing your request right now. Please try again later."
+      message: "Sorry, I'm having trouble processing your request right now. Please try again later.",
+      recommendations: [],
+      confidence: 0,
+      success: false,
+      analytics: {
+        responseTime: responseTime,
+        error: true
+      }
     }, {
       status: 500,
       headers: mergeSecurityHeaders(
@@ -348,4 +491,4 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       )
     });
   }
-}; 
+};
