@@ -141,8 +141,10 @@
 }
 {% endschema %}
 
+<!-- 1. Render container -->
 <div id="ai-sales-assistant-container"></div>
 
+<!-- 2. Expose settings -->
 <script>
   window.aiSalesAssistantSettings = {
     enabled: {{ block.settings.enabled | json }},
@@ -168,3 +170,7 @@
     currency: '{{ shop.currency }}'
   };
 </script>
+
+<!-- 3. LOAD JS & CSS FROM THEME APP EXTENSION ASSETS -->
+<script src="{{ 'ai-sales-assistant.js' | asset_url }}" defer></script>
+<link rel="stylesheet" href="{{ 'ai-sales-assistant.css' | asset_url }}">

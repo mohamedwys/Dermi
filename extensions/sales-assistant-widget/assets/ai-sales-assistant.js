@@ -1283,26 +1283,29 @@ function createWidget() {
 // Initialize
 // ======================
 
-function init() {
+// FINAL SAFE INIT — waits for container to appear
+function safeInit(retries = 20) {
   if (!window.aiSalesAssistantSettings?.enabled) {
-    console.log('AI Sales Assistant: disabled or settings not found');
+    console.log('AI Sales Assistant: disabled');
     return;
   }
-  widgetSettings = window.aiSalesAssistantSettings;
-  loadConversationHistory();
-  loadMessageQueue();
-  createWidget();
-}
 
-// Safe init with retry for Theme Editor
-function safeInit(retries = 10) {
-  if (document.getElementById('ai-sales-assistant-container')) {
-    init();
+  const container = document.getElementById('ai-sales-assistant-container');
+  if (container) {
+    // Proceed only if container exists
+    widgetSettings = window.aiSalesAssistantSettings;
+    loadConversationHistory();
+    loadMessageQueue();
+    createWidget();
   } else if (retries > 0) {
+    // Retry if not found yet (common in Theme Editor)
     setTimeout(() => safeInit(retries - 1), 200);
+  } else {
+    console.warn('AI Sales Assistant: container not found after retries');
   }
 }
 
+// Start initialization
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => safeInit());
 } else {
