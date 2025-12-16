@@ -256,13 +256,12 @@ async function sendMessageToServer(message) {
       currency: widgetSettings.currency
     };
 
-    // ✅ CRITICAL FIX: Use correct chat API endpoint
-    const url = `https://shopibot.vercel.app/apps/sales-assistant-api`;
+    // ✅ CORRECT - Public API endpoint
+    const url = `https://shopibot.vercel.app/api/widget-settings?shop=${encodeURIComponent(widgetSettings.shopDomain)}`;
     const response = await fetchWithRetry(url, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'X-Shopify-Shop-Domain': widgetSettings.shopDomain
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ userMessage: message, products: [], context: contextData })
     });
