@@ -500,6 +500,7 @@ Respond with just the category name.`,
       productClicked?: string;
       responseTime?: number;
       confidence?: number;
+      workflowType?: 'default' | 'custom';
     }
   ): Promise<void> {
     try {
@@ -527,6 +528,7 @@ Respond with just the category name.`,
           topIntents: '{}',
           topProducts: '{}',
           sentimentBreakdown: '{}',
+          workflowUsage: '{}',
         },
       });
 
@@ -563,7 +565,18 @@ Respond with just the category name.`,
         });
       }
 
-      this.logger.debug({ shop }, 'Updated analytics');
+      // Update workflow usage tracking
+      if (data.workflowType) {
+        const workflowUsage = JSON.parse(analytics.workflowUsage);
+        workflowUsage[data.workflowType] = (workflowUsage[data.workflowType] || 0) + 1;
+
+        await db.chatAnalytics.update({
+          where: { id: analytics.id },
+          data: { workflowUsage: JSON.stringify(workflowUsage) },
+        });
+      }
+
+      this.logger.debug({ shop, workflowType: data.workflowType }, 'Updated analytics');
     } catch (error) {
       logError(error, 'Error updating analytics');
     }

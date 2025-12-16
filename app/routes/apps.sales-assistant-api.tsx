@@ -230,13 +230,38 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       where: { shop: shopDomain },
     });
 
-    // Process message through N8N service (or fallback with AI enhancements)
     // Add language instruction to context for AI
     const languageInstruction = enhancedContext.locale && enhancedContext.locale !== 'en'
       ? `IMPORTANT: Respond in the user's language (${enhancedContext.locale}). Detect the language from their message and use the same language in your response.`
       : '';
 
-    const n8nResponse = await n8nService.processUserMessage({
+    // ✅ FIX: Determine which workflow to use based on settings
+    let serviceToUse;
+
+    // Check if a valid custom webhook URL is configured
+    const customWebhookUrl = widgetSettings?.webhookUrl;
+    const isValidCustomUrl = customWebhookUrl &&
+                            typeof customWebhookUrl === 'string' &&
+                            customWebhookUrl.trim() !== '' &&
+                            customWebhookUrl !== 'https://' &&
+                            customWebhookUrl !== 'null' &&
+                            customWebhookUrl !== 'undefined' &&
+                            customWebhookUrl.startsWith('https://') &&
+                            customWebhookUrl.length > 8;
+
+    if (isValidCustomUrl) {
+      // CUSTOM WORKFLOW: User has configured their own N8N webhook
+      // Create a new N8NService instance with the custom webhook URL
+      const { N8NService } = await import('../services/n8n.service');
+      serviceToUse = new N8NService(customWebhookUrl);
+    } else {
+      // DEFAULT WORKFLOW: Use the pre-configured developer workflow
+      // This will use the default n8nService which falls back to enhanced local processing
+      serviceToUse = n8nService;
+    }
+
+    // Process message through the appropriate workflow
+    const n8nResponse = await serviceToUse.processUserMessage({
       userMessage: finalMessage,
       products,
       context: {
@@ -275,12 +300,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       );
     }
 
-    // Update analytics
+    // Update analytics (including workflow usage tracking)
     await personalizationService.updateAnalytics(shopDomain, {
       intent,
       sentiment,
       responseTime,
       confidence: n8nResponse.confidence,
+      workflowType: isValidCustomUrl ? 'custom' : 'default',
     });
 
     return json(

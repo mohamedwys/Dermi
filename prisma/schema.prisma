@@ -126,6 +126,7 @@ model ChatAnalytics {
   topIntents          String   @default("{}") // JSON: intent -> count
   topProducts         String   @default("{}") // JSON: productId -> clicks
   sentimentBreakdown  String   @default("{}") // JSON: sentiment -> count
+  workflowUsage       String   @default("{}") // JSON: workflow type (default/custom) -> count
   conversionsTracked  Int      @default(0)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt

@@ -49,11 +49,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   try {
     // Fetch all analytics data
-    const [overview, intents, sentiments, topProducts, trends, engagement, activeUsers] =
+    const [overview, intents, sentiments, workflowUsage, topProducts, trends, engagement, activeUsers] =
       await Promise.all([
         analyticsService.getOverview(session.shop, period),
         analyticsService.getIntentDistribution(session.shop, period),
         analyticsService.getSentimentBreakdown(session.shop, period),
+        analyticsService.getWorkflowUsage(session.shop, period),
         analyticsService.getTopProducts(session.shop, period, 10),
         analyticsService.getDailyTrends(session.shop, period),
         analyticsService.getUserEngagement(session.shop, period),
@@ -64,6 +65,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       overview,
       intents,
       sentiments,
+      workflowUsage,
       topProducts,
       trends,
       engagement,
@@ -87,6 +89,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       },
       intents: [],
       sentiments: [],
+      workflowUsage: [],
       topProducts: [],
       trends: [],
       engagement: {
@@ -434,6 +437,49 @@ export default function AnalyticsPage() {
             ) : (
               <Text variant="bodyMd" as="p" tone="subdued">
                 {t("analytics.noSentimentData")}
+              </Text>
+            )}
+          </BlockStack>
+        </Card>
+
+        {/* Workflow Usage */}
+        <Card>
+          <BlockStack gap="400">
+            <Text variant="headingMd" as="h2">
+              Workflow Usage
+            </Text>
+
+            {data.workflowUsage && data.workflowUsage.length > 0 ? (
+              <InlineGrid columns={2} gap="400">
+                {data.workflowUsage.map((workflow: any, index: number) => (
+                  <Card key={index}>
+                    <BlockStack gap="300">
+                      <InlineStack align="space-between">
+                        <Text variant="headingMd" as="h3">
+                          {workflow.workflow} Workflow
+                        </Text>
+                        <div
+                          style={{
+                            width: "12px",
+                            height: "12px",
+                            borderRadius: "50%",
+                            backgroundColor: workflow.workflow === 'Default' ? "#5C6AC4" : "#47C1BF",
+                          }}
+                        />
+                      </InlineStack>
+                      <Text variant="heading2xl" as="h4">
+                        {workflow.percentage}%
+                      </Text>
+                      <Text variant="bodySm" as="p" tone="subdued">
+                        {formatNumber(workflow.count)} messages
+                      </Text>
+                    </BlockStack>
+                  </Card>
+                ))}
+              </InlineGrid>
+            ) : (
+              <Text variant="bodyMd" as="p" tone="subdued">
+                No workflow data available for this period
               </Text>
             )}
           </BlockStack>

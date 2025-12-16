@@ -224,6 +224,49 @@ export class AnalyticsService {
   }
 
   /**
+   * Get workflow usage breakdown (default vs custom)
+   */
+  async getWorkflowUsage(shop: string, period: AnalyticsPeriod): Promise<{ workflow: string; count: number; percentage: number }[]> {
+    try {
+      const data = await db.chatAnalytics.findMany({
+        where: {
+          shop,
+          date: {
+            gte: period.startDate,
+            lte: period.endDate,
+          },
+        },
+      });
+
+      // Aggregate workflow usage
+      const workflowCounts: Record<string, number> = {};
+      let totalWorkflows = 0;
+
+      data.forEach((record: any) => {
+        const workflows = JSON.parse(record.workflowUsage || '{}');
+        Object.entries(workflows).forEach(([workflow, count]) => {
+          workflowCounts[workflow] = (workflowCounts[workflow] || 0) + (count as number);
+          totalWorkflows += count as number;
+        });
+      });
+
+      // Convert to array with percentages
+      const breakdown = Object.entries(workflowCounts)
+        .map(([workflow, count]) => ({
+          workflow: workflow.charAt(0).toUpperCase() + workflow.slice(1),
+          count,
+          percentage: totalWorkflows > 0 ? Math.round((count / totalWorkflows) * 100 * 10) / 10 : 0,
+        }))
+        .sort((a, b) => b.count - a.count);
+
+      return breakdown;
+    } catch (error: any) {
+      logError(error, 'Error getting workflow usage');
+      return [];
+    }
+  }
+
+  /**
    * Get top clicked products
    */
   async getTopProducts(shop: string, period: AnalyticsPeriod, limit: number = 10): Promise<TopProduct[]> {
