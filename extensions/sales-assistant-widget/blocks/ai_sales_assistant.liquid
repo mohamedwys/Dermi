@@ -144,28 +144,29 @@
 <!-- 1. Render container -->
 <div id="ai-sales-assistant-container"></div>
 
-<!-- 2. Expose settings -->
+<!-- 2. Expose settings with fallback defaults -->
 <script>
   window.aiSalesAssistantSettings = {
-    enabled: {{ settings.enabled | json }},
-    position: {{ settings.position | json }},
-    buttonText: {{ settings.button_text | json }},
-    chatTitle: {{ settings.chat_title | json }},
-    statusText: {{ settings.status_text | json }},
-    closeButtonLabel: {{ settings.close_button_label | json }},
-    welcomeMessage: {{ settings.welcome_message | json }},
-    inputPlaceholder: {{ settings.input_placeholder | json }},
-    primaryColor: {{ settings.primary_color | json }},
-    sectionDiscoveryLabel: {{ settings.section_discovery_label | json }},
-    bestSellersText: {{ settings.best_sellers_text | json }},
-    newArrivalsText: {{ settings.new_arrivals_text | json }},
-    onSaleText: {{ settings.on_sale_text | json }},
-    recommendationsText: {{ settings.recommendations_text | json }},
-    sectionSupportLabel: {{ settings.section_support_label | json }},
-    shippingText: {{ settings.shipping_text | json }},
-    returnsText: {{ settings.returns_text | json }},
-    trackOrderText: {{ settings.track_order_text | json }},
-    helpText: {{ settings.help_text | json }},
+    // Use block settings if available, otherwise use defaults
+    enabled: {{ settings.enabled | default: true | json }},
+    position: {{ settings.position | default: "bottom-right" | json }},
+    buttonText: {{ settings.button_text | default: "Ask AI Assistant" | json }},
+    chatTitle: {{ settings.chat_title | default: "AI Sales Assistant" | json }},
+    statusText: {{ settings.status_text | default: "Online" | json }},
+    closeButtonLabel: {{ settings.close_button_label | default: "Close" | json }},
+    welcomeMessage: {{ settings.welcome_message | default: "Hello! I'm your AI sales assistant. How can I help you today?" | json }},
+    inputPlaceholder: {{ settings.input_placeholder | default: "Ask me anything about our products..." | json }},
+    primaryColor: {{ settings.primary_color | default: "#ee5cee" | json }},
+    sectionDiscoveryLabel: {{ settings.section_discovery_label | default: "Product Discovery" | json }},
+    bestSellersText: {{ settings.best_sellers_text | default: "Best Sellers" | json }},
+    newArrivalsText: {{ settings.new_arrivals_text | default: "New Arrivals" | json }},
+    onSaleText: {{ settings.on_sale_text | default: "On Sale" | json }},
+    recommendationsText: {{ settings.recommendations_text | default: "For You" | json }},
+    sectionSupportLabel: {{ settings.section_support_label | default: "Customer Support" | json }},
+    shippingText: {{ settings.shipping_text | default: "Shipping Info" | json }},
+    returnsText: {{ settings.returns_text | default: "Returns" | json }},
+    trackOrderText: {{ settings.track_order_text | default: "Track Order" | json }},
+    helpText: {{ settings.help_text | default: "Help & FAQ" | json }},
     shopDomain: {{ shop.permanent_domain | json }},
     currency: {{ shop.currency | json }}
   };
