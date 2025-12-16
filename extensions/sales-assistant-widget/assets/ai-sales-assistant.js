@@ -256,11 +256,14 @@ async function sendMessageToServer(message) {
       currency: widgetSettings.currency
     };
 
-    // 🔧 Fixed: removed extra space in URL
-    const url = `https://shopibot.vercel.app/api/widget-settings?shop=${encodeURIComponent(widgetSettings.shopDomain)}`;
+    // ✅ CRITICAL FIX: Use correct chat API endpoint
+    const url = `https://shopibot.vercel.app/apps/sales-assistant-api`;
     const response = await fetchWithRetry(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Shopify-Shop-Domain': widgetSettings.shopDomain
+      },
       body: JSON.stringify({ userMessage: message, products: [], context: contextData })
     });
 
