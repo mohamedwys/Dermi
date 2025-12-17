@@ -250,8 +250,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const variables: { first: number; query?: string } = { first: 50 };
 
     try {
+      console.log('🔍 STEP 1: Getting admin context for shop:', shopDomain);
       // Use unauthenticated admin (uses offline token, works in production)
       const { admin: shopAdmin } = await unauthenticated.admin(shopDomain);
+      console.log('✅ STEP 2: Admin context obtained successfully');
 
       // ✅ IMPROVED: Build GraphQL query based on intent
       if (intent.type === "PRODUCT_SEARCH") {
@@ -271,6 +273,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         variables.query = "status:active";
       }
 
+      console.log('🔍 STEP 3: Building GraphQL query with:', {
+        intentType: intent.type,
+        intentQuery: intent.query,
+        graphqlQuery: variables.query,
+        message: finalMessage
+      });
+
       routeLogger.info({
         intentType: intent.type,
         intentQuery: intent.query,
@@ -278,6 +287,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         message: finalMessage
       }, '🔍 Query being sent to GraphQL');
 
+      console.log('🔍 STEP 4: Sending GraphQL query...');
       const response = await shopAdmin.graphql(`
         #graphql
         query getProducts($first: Int!, $query: String) {
@@ -298,10 +308,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         }
       `, { variables });
 
+      console.log('✅ STEP 5: GraphQL response received, parsing...');
       const responseData = (await response.json()) as any;
+      console.log('🔍 STEP 6: Response data:', JSON.stringify(responseData).substring(0, 500));
 
       // ✅ CHECK FOR GRAPHQL ERRORS
       if (responseData.errors) {
+        console.error('❌ STEP 7: GraphQL returned errors:', responseData.errors);
         routeLogger.error({
           graphqlErrors: responseData.errors,
           query: variables.query
@@ -309,6 +322,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         productsFetchFailed = true;
         products = [];
       } else {
+        console.log('✅ STEP 8: No GraphQL errors, mapping products...');
+        console.log('🔍 Edges count:', responseData?.data?.products?.edges?.length || 0);
         products = responseData?.data?.products?.edges?.map((edge: any) => ({
           id: edge.node.id,
           title: edge.node.title,
@@ -318,9 +333,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           price: edge.node.variants.edges[0]?.node.price || '0.00'
         })) || [];
 
+        console.log('✅ STEP 9: Products mapped successfully. Count:', products.length);
         routeLogger.info({ count: products.length, shop: shopDomain, query: variables.query }, '✅ Fetched products');
       }
     } catch (error) {
+      console.error('❌ EXCEPTION in product fetch:', {
+        error: (error as Error).message,
+        stack: (error as Error).stack
+      });
       routeLogger.error({
         error: (error as Error).message,
         stack: (error as Error).stack,
