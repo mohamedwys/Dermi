@@ -250,22 +250,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       // Use unauthenticated admin (uses offline token, works in production)
       const { admin: shopAdmin } = await unauthenticated.admin(shopDomain);
 
-      // ✅ IMPROVED: Build GraphQL query based on intent with proper sorting
-      const variables: { first: number; query?: string; sortKey?: string; reverse?: boolean } = { first: 50 };
+      // ✅ IMPROVED: Build GraphQL query based on intent
+      const variables: { first: number; query?: string } = { first: 50 };
 
       if (intent.type === "PRODUCT_SEARCH") {
         if (intent.query === "bestseller") {
           variables.query = "tag:bestseller";
-          variables.sortKey = "BEST_SELLING";
         } else if (intent.query === "t-shirt") {
           variables.query = "product_type:t-shirt";
         } else if (intent.query === "shoe") {
           variables.query = "product_type:shoe";
         } else if (intent.query === "new") {
-          // ✅ FIX: Use sortKey instead of invalid date query
+          // ✅ FIX: Fetch all active products (will show newest or use tag:new if available)
           variables.query = "status:active";
-          variables.sortKey = "CREATED_AT";
-          variables.reverse = true; // newest first
         } else {
           variables.query = "status:active";
         }
@@ -275,8 +272,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
       const response = await shopAdmin.graphql(`
         #graphql
-        query getProducts($first: Int!, $query: String, $sortKey: ProductSortKeys, $reverse: Boolean) {
-          products(first: $first, query: $query, sortKey: $sortKey, reverse: $reverse) {
+        query getProducts($first: Int!, $query: String) {
+          products(first: $first, query: $query, sortKey: CREATED_AT, reverse: true) {
             edges {
               node {
                 id
