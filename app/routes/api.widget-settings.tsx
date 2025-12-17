@@ -30,7 +30,7 @@ function detectIntent(message: string): Intent {
 
   // French keywords
   if (
-    /(?:montre|affiche|voir|recommande|t-shirt|tshirt|chaussure|vêtement|produit|collection|best[-\s]?seller|meilleur|nouveau)/.test(lower)
+    /(?:montre|affiche|voir|recommande|parcour|browse|t-shirt|tshirt|chaussure|vêtement|produit|collection|best[-\s]?seller|meilleur|nouveau|tous les produits|catégorie)/.test(lower)
   ) {
     if (/(t[-\s]?shirt)/.test(lower)) return { type: "PRODUCT_SEARCH", query: "t-shirt" };
     if (/chaussure|shoe|basket/.test(lower)) return { type: "PRODUCT_SEARCH", query: "shoe" };
@@ -41,7 +41,7 @@ function detectIntent(message: string): Intent {
 
   // English keywords
   if (
-    /(show|see|display|recommend|suggest|best[-\s]?seller|on sale|product|item)/.test(lower)
+    /(show|see|display|recommend|suggest|browse|view|best[-\s]?seller|on sale|product|item|all products|categor)/.test(lower)
   ) {
     if (/t[-\s]?shirt/.test(lower)) return { type: "PRODUCT_SEARCH", query: "t-shirt" };
     if (/shoe|sneaker|boot/.test(lower)) return { type: "PRODUCT_SEARCH", query: "shoe" };
@@ -401,15 +401,32 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           context: enhancedContext
         });
         recommendations = n8nResponse.recommendations || [];
+
+        // ✅ CRITICAL FIX: If N8N doesn't return products but we have products available, show them
+        if ((!recommendations || recommendations.length === 0) && products.length > 0) {
+          recommendations = products.slice(0, 6);
+          routeLogger.info({ count: recommendations.length }, 'Added products to N8N response');
+        }
       } catch (error) {
         routeLogger.error({ error: (error as Error).message }, 'N8N service failed');
-        // Fallback response
-        n8nResponse = {
-          message: "I'm here to help! You can ask me about products, pricing, shipping, or any questions about our store.",
-          recommendations: [],
-          confidence: 0.5,
-          messageType: "general"
-        };
+
+        // ✅ CRITICAL FIX: Fallback response with products if available
+        if (products.length > 0) {
+          n8nResponse = {
+            message: "Here are some products you might be interested in:",
+            recommendations: products.slice(0, 6),
+            confidence: 0.7,
+            messageType: "product_recommendation"
+          };
+          recommendations = products.slice(0, 6);
+        } else {
+          n8nResponse = {
+            message: "I'm here to help! You can ask me about products, pricing, shipping, or any questions about our store.",
+            recommendations: [],
+            confidence: 0.5,
+            messageType: "general"
+          };
+        }
       }
     }
 
