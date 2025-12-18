@@ -677,28 +677,19 @@ function displayProductRecommendations(recommendations) {
   productsContainer.style.border = 'none';
   productsContainer.style.boxShadow = 'none';
   productsContainer.style.padding = '0';
+  productsContainer.style.display = 'block';
+  productsContainer.style.marginLeft = '0';
+  productsContainer.style.marginRight = '0';
   const gridContent = document.createElement('div');
   gridContent.className = 'products-grid';
-  gridContent.style.display = 'flex';
-  gridContent.style.overflowX = 'auto';
-  gridContent.style.overflowY = 'hidden';
+  gridContent.style.display = 'grid';
+  gridContent.style.gridTemplateColumns = 'repeat(2, 1fr)';
   gridContent.style.gap = '12px';
-  gridContent.style.padding = '12px 8px';
-  gridContent.style.scrollSnapType = 'x mandatory';
-  gridContent.style.webkitOverflowScrolling = 'touch';
-  gridContent.style.scrollbarWidth = 'thin';
-  gridContent.style.scrollbarColor = `${widgetSettings.primaryColor} #f3f4f6`;
-  if (recommendations.length > 1) {
-    const scrollHint = document.createElement('div');
-    scrollHint.style.textAlign = 'center';
-    scrollHint.style.fontSize = '12px';
-    scrollHint.style.color = '#6b7280';
-    scrollHint.style.marginBottom = '8px';
-    scrollHint.style.fontWeight = '500';
-    scrollHint.innerHTML = '👈 Swipe to see more 👉';
-    scrollHint.style.animation = 'fadeOut 3s ease forwards';
-    productsContainer.appendChild(scrollHint);
-  }
+  gridContent.style.padding = '0';
+  gridContent.style.width = '100%';
+  gridContent.style.boxSizing = 'border-box';
+  gridContent.style.overflowX = 'hidden';
+  gridContent.style.overflowY = 'visible';
   recommendations.forEach((product, index) => {
     const productCard = document.createElement('div');
     productCard.className = 'product-card clickable-product';
@@ -710,10 +701,9 @@ function displayProductRecommendations(recommendations) {
     productCard.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
     productCard.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.08)';
     productCard.style.position = 'relative';
-    productCard.style.minWidth = '180px';
-    productCard.style.maxWidth = '180px';
-    productCard.style.flexShrink = '0';
-    productCard.style.scrollSnapAlign = 'start';
+    productCard.style.width = '100%';
+    productCard.style.minWidth = 'unset';
+    productCard.style.maxWidth = 'unset';
     productCard.style.display = 'flex';
     productCard.style.flexDirection = 'column';
     productCard.style.height = 'auto';
@@ -721,7 +711,7 @@ function displayProductRecommendations(recommendations) {
       const imageDiv = document.createElement('div');
       imageDiv.className = 'product-image';
       imageDiv.style.width = '100%';
-      imageDiv.style.height = '120px';
+      imageDiv.style.height = '140px';
       imageDiv.style.position = 'relative';
       imageDiv.style.overflow = 'hidden';
       const sanitizedImageUrl = sanitizeUrl(product.image);
