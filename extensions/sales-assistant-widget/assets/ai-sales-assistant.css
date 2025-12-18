@@ -396,20 +396,19 @@
   width: 100%;
 }
 .ai-chat-messages {
-  padding: 20px 24px !important; /* Increased horizontal padding */
-  overflow-y: auto !important; /* Show scrollbar when content overflows */
+  padding: 16px !important; /* Reduced padding for more width */
+  overflow-y: auto !important;
   overflow-x: hidden !important;
   display: flex !important;
   flex-direction: column !important;
-  align-items: center !important; /* Center content horizontally */
+  align-items: stretch !important; /* Stretch to full width */
   justify-content: flex-start !important;
-  gap: 0 !important; /* Remove gap to use margin instead for better control */
+  gap: 0 !important;
   scroll-behavior: smooth;
-  height: 100% !important; /* Take full available height */
-  width: 100% !important; /* Full width */
+  height: 100% !important;
+  width: 100% !important;
   box-sizing: border-box !important;
   background: white;
-  text-align: center !important; /* Force center alignment for all text */
 }
 .ai-chat-messages::-webkit-scrollbar {
   width: 6px;
@@ -434,21 +433,17 @@
 #ai-chat-messages .ai-message,
 .ai-chat-messages .ai-message,
 .ai-chat-messages-container .ai-message {
-  max-width: 90% !important;
-  width: fit-content;
-  overflow: visible !important; /* Allow content to show fully */
+  max-width: 100% !important; /* FULL WIDTH */
+  width: 100% !important; /* FULL WIDTH */
+  margin: 0 0 16px 0 !important;
   display: block !important;
   box-sizing: border-box !important;
-  margin-bottom: 16px !important; /* Increased spacing for better visibility */
-  margin-top: 0 !important; /* Reset any top margins */
-  margin-left: auto !important;
-  margin-right: auto !important;
-  align-self: center !important; /* CENTER all messages by default */
 }
 .ai-welcome-message {
   max-width: 100% !important;
   width: 100% !important;
-  align-self: center !important; /* Center the welcome message */
+  margin: 0 !important;
+  padding: 0 !important;
 }
 #ai-chat-messages .ai-message:last-child,
 .ai-chat-messages .ai-message:last-child,
@@ -460,10 +455,15 @@
   margin-top: 0 !important;
 }
 .ai-message.user-message {
-  align-self: flex-end !important; /* Keep user messages on right */
+  max-width: 85% !important; /* User messages stay smaller */
+  width: fit-content !important;
+  margin-left: auto !important;
+  margin-right: 0 !important;
 }
-.ai-message.assistant-message {
-  align-self: center !important; /* CENTER assistant messages */
+.ai-message.assistant-message:not(.products-grid-container):not(.ai-welcome-message) {
+  max-width: 90% !important;
+  width: fit-content !important;
+  margin: 0 auto 16px auto !important;
 }
 .ai-message.product-recommendation {
   margin-top: 0 !important; /* Use consistent margin pattern */
@@ -757,35 +757,26 @@
 }
 .ai-message.products-grid-container,
 .products-grid-container {
-  max-width: 100% !important;
   width: 100% !important;
-  align-self: center !important; /* CENTER products container */
-  padding: 0 12px !important; /* Container padding instead */
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 0 16px 0 !important;
   box-sizing: border-box !important;
-  display: flex !important;
-  justify-content: center !important;
 }
 .ai-message.assistant-message.products-grid-container {
-  max-width: 100% !important;
   width: 100% !important;
-  align-self: center !important; /* CENTER products container */
-  padding: 0 12px !important;
+  max-width: 100% !important;
+  padding: 0 !important;
+  margin: 0 0 16px 0 !important;
   box-sizing: border-box !important;
-  display: flex !important;
-  justify-content: center !important;
 }
 .products-grid {
-  display: flex !important;
-  overflow-x: auto !important;
-  overflow-y: hidden !important;
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
   gap: 12px !important;
   width: 100% !important;
-  padding: 12px 0 !important; /* Remove horizontal padding */
-  margin: 0 auto !important; /* Center the grid */
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  justify-content: center; /* Center when few items */
+  padding: 0 !important;
+  margin: 0 !important;
   box-sizing: border-box !important;
 }
 .products-grid::-webkit-scrollbar {
@@ -814,10 +805,9 @@
   flex-direction: column;
   height: 100%;
   cursor: pointer;
-  min-width: 180px !important;
-  max-width: 180px !important;
-  flex-shrink: 0 !important;
-  scroll-snap-align: start;
+  width: 100% !important;
+  min-width: unset !important;
+  max-width: unset !important;
 }
 .product-card:hover {
   transform: translateY(-4px);
@@ -956,17 +946,14 @@
   max-width: none !important;
 }
 .ai-welcome-screen {
-  padding: 20px !important; /* Symmetric padding */
+  padding: 0 !important; /* Remove padding */
   display: flex !important;
   flex-direction: column !important;
   gap: 18px;
   animation: fadeIn 0.4s ease;
-  align-items: center !important; /* Center welcome content */
-  justify-content: center !important;
   width: 100% !important;
-  max-width: 100% !important; /* Full width */
-  margin: 0 !important; /* No extra margins */
-  text-align: center !important; /* Center all text */
+  max-width: 100% !important;
+  margin: 0 !important;
   box-sizing: border-box !important;
 }
 @keyframes fadeIn {
@@ -977,6 +964,7 @@
   text-align: center;
   margin-bottom: 0;
   width: 100%;
+  padding: 0 !important;
 }
 .welcome-title {
   font-size: var(--font-size-md);
@@ -991,7 +979,7 @@
   width: 100% !important;
   display: flex !important;
   flex-direction: column !important;
-  align-items: center !important;
+  padding: 0 !important;
 }
 .section-label {
   font-size: 12px;
@@ -1011,11 +999,11 @@
 .quick-actions-grid {
   display: grid !important;
   grid-template-columns: repeat(2, 1fr) !important;
-  gap: 8px;
+  gap: 8px !important;
   width: 100% !important;
   max-width: 100% !important;
-  margin: 0 auto !important;
-  justify-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 .quick-action-btn {
   background: var(--color-bg-primary);
@@ -1177,14 +1165,14 @@
     height: 56px !important;
   }
   .products-grid {
-    display: flex !important;
-    overflow-x: auto !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 10px !important;
-    padding-bottom: 12px !important;
   }
   .product-card {
-    min-width: 160px !important;
-    max-width: 160px !important;
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: unset !important;
     flex-direction: column !important;
     height: auto !important;
   }
@@ -1236,13 +1224,14 @@
     max-height: 580px;
   }
   .products-grid {
-    display: flex !important;
-    overflow-x: auto !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 12px !important;
   }
   .product-card {
-    min-width: 170px !important;
-    max-width: 170px !important;
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: unset !important;
   }
   .product-image {
     height: 110px;
