@@ -396,7 +396,7 @@
   width: 100%;
 }
 .ai-chat-messages {
-  padding: 20px !important; /* Symmetric padding on all sides */
+  padding: 20px 24px !important; /* Increased horizontal padding */
   overflow-y: auto !important; /* Show scrollbar when content overflows */
   overflow-x: hidden !important;
   display: flex !important;
@@ -434,13 +434,15 @@
 #ai-chat-messages .ai-message,
 .ai-chat-messages .ai-message,
 .ai-chat-messages-container .ai-message {
-  max-width: 85% !important;
+  max-width: 90% !important;
   width: fit-content;
   overflow: visible !important; /* Allow content to show fully */
   display: block !important;
   box-sizing: border-box !important;
   margin-bottom: 16px !important; /* Increased spacing for better visibility */
   margin-top: 0 !important; /* Reset any top margins */
+  margin-left: auto !important;
+  margin-right: auto !important;
   align-self: center !important; /* CENTER all messages by default */
 }
 .ai-welcome-message {
@@ -758,11 +760,19 @@
   max-width: 100% !important;
   width: 100% !important;
   align-self: center !important; /* CENTER products container */
+  padding: 0 12px !important; /* Container padding instead */
+  box-sizing: border-box !important;
+  display: flex !important;
+  justify-content: center !important;
 }
 .ai-message.assistant-message.products-grid-container {
   max-width: 100% !important;
   width: 100% !important;
   align-self: center !important; /* CENTER products container */
+  padding: 0 12px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  justify-content: center !important;
 }
 .products-grid {
   display: flex !important;
@@ -770,11 +780,12 @@
   overflow-y: hidden !important;
   gap: 12px !important;
   width: 100% !important;
-  padding: 12px !important; /* Symmetric padding */
+  padding: 12px 0 !important; /* Remove horizontal padding */
+  margin: 0 auto !important; /* Center the grid */
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
-  justify-content: flex-start; /* Align products to left for scrolling (necessary for scroll) */
+  justify-content: center; /* Center when few items */
   box-sizing: border-box !important;
 }
 .products-grid::-webkit-scrollbar {
