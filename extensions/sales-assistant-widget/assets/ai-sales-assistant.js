@@ -233,23 +233,82 @@ function scrollToBottom() {
 
 function showLoading(show) {
   let loadingDiv = document.getElementById('ai-loading');
+
   if (show) {
     if (loadingDiv) loadingDiv.remove();
+
     loadingDiv = document.createElement('div');
     loadingDiv.id = 'ai-loading';
-    loadingDiv.className = 'ai-message assistant-message skeleton-message';
+    loadingDiv.className = 'ai-message assistant-message';
+    loadingDiv.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      border: 1px solid #f3f4f6;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 16px;
+      max-width: 85%;
+      align-self: center;
+    `;
+
+    // Create modern loading animation
+    const loaderContainer = document.createElement('div');
+    loaderContainer.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    `;
+
+    // Animated spinner
+    const spinner = document.createElement('div');
+    spinner.style.cssText = `
+      width: 24px;
+      height: 24px;
+      border: 3px solid ${widgetSettings.primaryColor}33;
+      border-top-color: ${widgetSettings.primaryColor};
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    `;
+
+    // Animated dots
+    const dotsContainer = document.createElement('div');
+    dotsContainer.style.cssText = `
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    `;
+
     for (let i = 0; i < 3; i++) {
-      const line = document.createElement('div');
-      line.className = 'skeleton skeleton-line';
-      line.style.width = i === 2 ? '60%' : '100%';
-      loadingDiv.appendChild(line);
+      const dot = document.createElement('div');
+      dot.style.cssText = `
+        width: 8px;
+        height: 8px;
+        background: ${widgetSettings.primaryColor};
+        border-radius: 50%;
+        animation: bounce 1.4s ease-in-out ${i * 0.16}s infinite;
+      `;
+      dotsContainer.appendChild(dot);
     }
-    const allMessages = elements.messagesContainer.querySelectorAll('.ai-message:not(.ai-welcome-message)');
-    if (allMessages.length > 0) {
-      allMessages[allMessages.length - 1].insertAdjacentElement('afterend', loadingDiv);
-    } else {
-      elements.messagesContainer.appendChild(loadingDiv);
-    }
+
+    // Loading text
+    const loadingText = document.createElement('span');
+    loadingText.textContent = 'Thinking';
+    loadingText.style.cssText = `
+      color: #6b7280;
+      font-size: 14px;
+      font-weight: 500;
+    `;
+
+    loaderContainer.appendChild(spinner);
+    loaderContainer.appendChild(dotsContainer);
+    loaderContainer.appendChild(loadingText);
+    loadingDiv.appendChild(loaderContainer);
+
+    // Add to messages
+    elements.messagesContainer.appendChild(loadingDiv);
     scrollToBottom();
   } else if (loadingDiv) {
     loadingDiv.style.opacity = '0';
@@ -682,14 +741,27 @@ function displayProductRecommendations(recommendations) {
   productsContainer.style.marginRight = '0';
   const gridContent = document.createElement('div');
   gridContent.className = 'products-grid';
-  gridContent.style.display = 'grid';
-  gridContent.style.gridTemplateColumns = 'repeat(2, 1fr)';
+  gridContent.style.display = 'flex';
+  gridContent.style.overflowX = 'auto';
+  gridContent.style.overflowY = 'hidden';
   gridContent.style.gap = '12px';
-  gridContent.style.padding = '0';
+  gridContent.style.padding = '12px 0';
+  gridContent.style.scrollSnapType = 'x mandatory';
+  gridContent.style.webkitOverflowScrolling = 'touch';
+  gridContent.style.scrollbarWidth = 'thin';
+  gridContent.style.scrollbarColor = `${widgetSettings.primaryColor} #f3f4f6`;
   gridContent.style.width = '100%';
   gridContent.style.boxSizing = 'border-box';
-  gridContent.style.overflowX = 'hidden';
-  gridContent.style.overflowY = 'visible';
+  if (recommendations.length > 1) {
+    const scrollHint = document.createElement('div');
+    scrollHint.style.textAlign = 'center';
+    scrollHint.style.fontSize = '12px';
+    scrollHint.style.color = '#6b7280';
+    scrollHint.style.marginBottom = '8px';
+    scrollHint.style.fontWeight = '500';
+    scrollHint.innerHTML = '👈 Swipe to see more 👉';
+    productsContainer.appendChild(scrollHint);
+  }
   recommendations.forEach((product, index) => {
     const productCard = document.createElement('div');
     productCard.className = 'product-card clickable-product';
@@ -701,9 +773,10 @@ function displayProductRecommendations(recommendations) {
     productCard.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
     productCard.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.08)';
     productCard.style.position = 'relative';
-    productCard.style.width = '100%';
-    productCard.style.minWidth = 'unset';
-    productCard.style.maxWidth = 'unset';
+    productCard.style.minWidth = '200px';
+    productCard.style.maxWidth = '200px';
+    productCard.style.flexShrink = '0';
+    productCard.style.scrollSnapAlign = 'start';
     productCard.style.display = 'flex';
     productCard.style.flexDirection = 'column';
     productCard.style.height = 'auto';
