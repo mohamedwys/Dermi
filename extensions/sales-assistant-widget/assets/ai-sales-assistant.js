@@ -262,45 +262,24 @@ function showLoading(show) {
       gap: 12px;
     `;
 
-    // Animated spinner
+    // Animated spinner - using CSS class
     const spinner = document.createElement('div');
-    spinner.style.cssText = `
-      width: 24px;
-      height: 24px;
-      border: 3px solid ${widgetSettings.primaryColor}33;
-      border-top-color: ${widgetSettings.primaryColor};
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    `;
+    spinner.className = 'ai-loading-spinner';
 
-    // Animated dots
+    // Animated dots - using CSS class
     const dotsContainer = document.createElement('div');
-    dotsContainer.style.cssText = `
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    `;
+    dotsContainer.className = 'ai-loading-dots-container';
 
     for (let i = 0; i < 3; i++) {
       const dot = document.createElement('div');
-      dot.style.cssText = `
-        width: 8px;
-        height: 8px;
-        background: ${widgetSettings.primaryColor};
-        border-radius: 50%;
-        animation: bounce 1.4s ease-in-out ${i * 0.16}s infinite;
-      `;
+      dot.className = 'ai-loading-dot';
       dotsContainer.appendChild(dot);
     }
 
-    // Loading text
+    // Loading text - using CSS class
     const loadingText = document.createElement('span');
+    loadingText.className = 'ai-loading-text';
     loadingText.textContent = 'Thinking';
-    loadingText.style.cssText = `
-      color: #6b7280;
-      font-size: 14px;
-      font-weight: 500;
-    `;
 
     loaderContainer.appendChild(spinner);
     loaderContainer.appendChild(dotsContainer);
