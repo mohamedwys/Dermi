@@ -1,7 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { authenticate, unauthenticated, sessionStorage } from "../shopify.server";
-import { N8NService } from "../services/n8n.service";
 import { prisma as db } from "../db.server";
 import { getSecureCorsHeaders, createCorsPreflightResponse, isOriginAllowed, logCorsViolation } from "../lib/cors.server";
 import { rateLimit, RateLimitPresets } from "../lib/rate-limit.server";
@@ -513,124 +512,90 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     };
 
     // ========================================
+    // GET WEBHOOK URL (for all intents)
+    // ========================================
+
+    // Get webhook URL from widget settings
+    let settings = null;
+    try {
+      settings = await db.widgetSettings.findUnique({
+        where: { shop: shopDomain },
+      });
+      routeLogger.debug({
+        shop: shopDomain,
+        hasCustomWebhook: !!(settings as any)?.webhookUrl
+      }, 'Retrieved widget settings');
+    } catch (error) {
+      routeLogger.debug('Could not fetch settings from database');
+      settings = null;
+    }
+
+    // Use custom webhook URL only if it's a valid URL
+    const customWebhookUrl = (settings as any)?.webhookUrl;
+    const isValidCustomUrl = customWebhookUrl &&
+                            typeof customWebhookUrl === 'string' &&
+                            customWebhookUrl.trim() !== '' &&
+                            customWebhookUrl !== 'https://' &&
+                            customWebhookUrl !== 'null' &&
+                            customWebhookUrl !== 'undefined' &&
+                            customWebhookUrl.startsWith('https://') &&
+                            customWebhookUrl.length > 8;
+
+    const webhookUrl = isValidCustomUrl ? customWebhookUrl : process.env.N8N_WEBHOOK_URL;
+
+    // ========================================
     // SUPPORT INTENT HANDLERS (NO PRODUCTS)
     // ========================================
 
     let n8nResponse;
     let recommendations = [];
 
-    // Handle support intents with text-only responses
+    // ✅ AI-POWERED: Send support intents to N8N for shop-specific AI responses
     if (isSupportIntent) {
-      const lang = enhancedContext.locale?.toLowerCase().split('-')[0] || 'en';
+      routeLogger.info({ intent: intent.type }, '✅ Sending support query to N8N - NO PRODUCTS');
 
-      if (intent.type === "SHIPPING_INFO") {
-        const shippingMessages: Record<string, string> = {
-          en: "📦 **Shipping Information**\n\n✅ **Free Shipping** on orders over $50\n🚚 **Standard Delivery**: 3-5 business days\n⚡ **Express Delivery**: 1-2 business days\n🌍 We ship worldwide!\n\n*Shipping costs are calculated at checkout based on your location.*",
-          fr: "📦 **Informations de Livraison**\n\n✅ **Livraison Gratuite** sur les commandes de plus de 50€\n🚚 **Livraison Standard**: 3-5 jours ouvrables\n⚡ **Livraison Express**: 1-2 jours ouvrables\n🌍 Nous livrons dans le monde entier!\n\n*Les frais de port sont calculés lors du paiement selon votre localisation.*",
-          es: "📦 **Información de Envío**\n\n✅ **Envío Gratis** en pedidos superiores a $50\n🚚 **Entrega Estándar**: 3-5 días hábiles\n⚡ **Entrega Express**: 1-2 días hábiles\n🌍 ¡Enviamos a todo el mundo!\n\n*Los costos de envío se calculan al finalizar la compra según su ubicación.*",
-          de: "📦 **Versandinformationen**\n\n✅ **Kostenloser Versand** bei Bestellungen über 50€\n🚚 **Standardlieferung**: 3-5 Werktage\n⚡ **Express-Lieferung**: 1-2 Werktage\n🌍 Wir versenden weltweit!\n\n*Die Versandkosten werden beim Checkout basierend auf Ihrem Standort berechnet.*"
-        };
-        const quickReplies = lang === 'fr'
-          ? ["Suivre ma commande", "Politique de retour", "Parcourir les produits"]
-          : ["Track my order", "Return policy", "Browse products"];
+      try {
+        // Import N8NService dynamically to avoid top-level import issues
+        const { N8NService } = await import("../services/n8n.service.server");
+        const customN8NService = new N8NService(webhookUrl);
 
+        // Send to N8N with intent context so AI knows it's a support query
+        n8nResponse = await customN8NService.processUserMessage({
+          userMessage: finalMessage,
+          products: [], // NO PRODUCTS for support queries
+          context: {
+            ...enhancedContext,
+            intentType: "customer_support",
+            supportCategory: intent.type // SHIPPING_INFO, RETURNS, TRACK_ORDER, or HELP_FAQ
+          }
+        });
+
+        // Ensure no products are returned for support queries
+        recommendations = [];
+
+        routeLogger.info({
+          intent: intent.type,
+          hasProducts: false,
+          aiResponseLength: n8nResponse?.message?.length || 0
+        }, '✅ Support intent handled by AI - NO PRODUCTS');
+
+      } catch (error) {
+        routeLogger.error({ error: String(error), intent: intent.type }, '❌ N8N support handler error - using fallback');
+
+        // Fallback: Simple helpful message
         n8nResponse = {
-          message: shippingMessages[lang] || shippingMessages['en'],
-          recommendations: [], // NO PRODUCTS
-          quickReplies: quickReplies,
-          confidence: 1.0,
-          messageType: "support"
-        };
-      } else if (intent.type === "RETURNS") {
-        const returnMessages: Record<string, string> = {
-          en: "↩️ **Return Policy**\n\n✅ **30-Day Money-Back Guarantee**\n📦 **Free Returns** on all orders\n💳 Full refund or exchange available\n\n**Return Requirements:**\n• Items must be unused and in original packaging\n• Tags must be attached\n• Return within 30 days of delivery\n\nContact our support team to initiate a return!",
-          fr: "↩️ **Politique de Retour**\n\n✅ **Garantie de remboursement de 30 jours**\n📦 **Retours Gratuits** sur toutes les commandes\n💳 Remboursement complet ou échange disponible\n\n**Conditions de retour:**\n• Les articles doivent être neufs et dans leur emballage d'origine\n• Les étiquettes doivent être attachées\n• Retour dans les 30 jours suivant la livraison\n\nContactez notre équipe d'assistance pour initier un retour!",
-          es: "↩️ **Política de Devoluciones**\n\n✅ **Garantía de devolución de 30 días**\n📦 **Devoluciones Gratis** en todos los pedidos\n💳 Reembolso completo o cambio disponible\n\n**Requisitos de devolución:**\n• Los artículos deben estar sin usar y en su empaque original\n• Las etiquetas deben estar adjuntas\n• Devolver dentro de los 30 días de la entrega\n\n¡Contacte a nuestro equipo de soporte para iniciar una devolución!",
-          de: "↩️ **Rückgaberichtlinie**\n\n✅ **30-Tage-Geld-zurück-Garantie**\n📦 **Kostenlose Rücksendungen** bei allen Bestellungen\n💳 Vollständige Rückerstattung oder Umtausch verfügbar\n\n**Rückgabebedingungen:**\n• Artikel müssen unbenutzt und in Originalverpackung sein\n• Etiketten müssen angebracht sein\n• Rücksendung innerhalb von 30 Tagen nach Lieferung\n\nKontaktieren Sie unser Support-Team, um eine Rücksendung einzuleiten!"
-        };
-        const quickReplies = lang === 'fr'
-          ? ["Comment retourner?", "Suivre commande", "Parcourir produits"]
-          : ["How to return?", "Track order", "Browse products"];
-
-        n8nResponse = {
-          message: returnMessages[lang] || returnMessages['en'],
-          recommendations: [], // NO PRODUCTS
-          quickReplies: quickReplies,
-          confidence: 1.0,
-          messageType: "support"
-        };
-      } else if (intent.type === "TRACK_ORDER") {
-        const trackMessages: Record<string, string> = {
-          en: "🔍 **Track Your Order**\n\n**To track your order:**\n\n1. Check your email for the shipping confirmation\n2. Click the tracking link in the email\n3. Or enter your order number on our website\n\n**Need Help?**\nIf you haven't received a tracking number within 2 business days, please contact our support team with your order number.",
-          fr: "🔍 **Suivre Votre Commande**\n\n**Pour suivre votre commande:**\n\n1. Vérifiez votre email pour la confirmation d'expédition\n2. Cliquez sur le lien de suivi dans l'email\n3. Ou entrez votre numéro de commande sur notre site web\n\n**Besoin d'aide?**\nSi vous n'avez pas reçu de numéro de suivi dans les 2 jours ouvrables, veuillez contacter notre équipe d'assistance avec votre numéro de commande.",
-          es: "🔍 **Rastrear Su Pedido**\n\n**Para rastrear su pedido:**\n\n1. Revise su correo electrónico para la confirmación de envío\n2. Haga clic en el enlace de seguimiento en el correo electrónico\n3. O ingrese su número de pedido en nuestro sitio web\n\n**¿Necesita ayuda?**\nSi no ha recibido un número de seguimiento dentro de 2 días hábiles, comuníquese con nuestro equipo de soporte con su número de pedido.",
-          de: "🔍 **Verfolgen Sie Ihre Bestellung**\n\n**So verfolgen Sie Ihre Bestellung:**\n\n1. Überprüfen Sie Ihre E-Mail auf die Versandbestätigung\n2. Klicken Sie auf den Tracking-Link in der E-Mail\n3. Oder geben Sie Ihre Bestellnummer auf unserer Website ein\n\n**Brauchen Sie Hilfe?**\nWenn Sie innerhalb von 2 Werktagen keine Tracking-Nummer erhalten haben, wenden Sie sich bitte mit Ihrer Bestellnummer an unser Support-Team."
-        };
-        const quickReplies = lang === 'fr'
-          ? ["Informations de livraison", "Politique de retour", "Aide"]
-          : ["Shipping info", "Return policy", "Help"];
-
-        n8nResponse = {
-          message: trackMessages[lang] || trackMessages['en'],
-          recommendations: [], // NO PRODUCTS
-          quickReplies: quickReplies,
-          confidence: 1.0,
-          messageType: "support"
-        };
-      } else if (intent.type === "HELP_FAQ") {
-        const helpMessages: Record<string, string> = {
-          en: "💬 **How Can We Help?**\n\n**Quick Links:**\n\n📦 **Shipping** - Delivery times and costs\n↩️ **Returns** - Our return policy\n🔍 **Track Order** - Find your package\n💳 **Payment** - Accepted payment methods\n🛡️ **Security** - Safe & secure checkout\n\n**Still have questions?**\nFeel free to ask me anything about our products, policies, or services. I'm here to help!",
-          fr: "💬 **Comment Pouvons-Nous Vous Aider?**\n\n**Liens Rapides:**\n\n📦 **Livraison** - Délais et coûts de livraison\n↩️ **Retours** - Notre politique de retour\n🔍 **Suivre Commande** - Trouvez votre colis\n💳 **Paiement** - Modes de paiement acceptés\n🛡️ **Sécurité** - Paiement sûr et sécurisé\n\n**Vous avez encore des questions?**\nN'hésitez pas à me poser toute question sur nos produits, politiques ou services. Je suis là pour vous aider!",
-          es: "💬 **¿Cómo Podemos Ayudar?**\n\n**Enlaces Rápidos:**\n\n📦 **Envío** - Tiempos y costos de entrega\n↩️ **Devoluciones** - Nuestra política de devoluciones\n🔍 **Rastrear Pedido** - Encuentre su paquete\n💳 **Pago** - Métodos de pago aceptados\n🛡️ **Seguridad** - Pago seguro y protegido\n\n**¿Todavía tiene preguntas?**\nNo dude en preguntarme cualquier cosa sobre nuestros productos, políticas o servicios. ¡Estoy aquí para ayudar!",
-          de: "💬 **Wie Können Wir Helfen?**\n\n**Schnelllinks:**\n\n📦 **Versand** - Lieferzeiten und -kosten\n↩️ **Rücksendungen** - Unsere Rückgaberichtlinie\n🔍 **Bestellung Verfolgen** - Finden Sie Ihr Paket\n💳 **Zahlung** - Akzeptierte Zahlungsmethoden\n🛡️ **Sicherheit** - Sichere Kaufabwicklung\n\n**Haben Sie noch Fragen?**\nFragen Sie mich gerne zu unseren Produkten, Richtlinien oder Dienstleistungen. Ich bin hier, um zu helfen!"
-        };
-        const quickReplies = lang === 'fr'
-          ? ["Informations de livraison", "Politique de retour", "Parcourir produits"]
-          : ["Shipping info", "Return policy", "Browse products"];
-
-        n8nResponse = {
-          message: helpMessages[lang] || helpMessages['en'],
-          recommendations: [], // NO PRODUCTS
-          quickReplies: quickReplies,
-          confidence: 1.0,
+          message: "I'm here to help! Please ask me your question and I'll do my best to assist you. 😊",
+          recommendations: [],
+          quickReplies: ["Shipping info", "Return policy", "Track order", "Browse products"],
+          confidence: 0.5,
           messageType: "support"
         };
       }
-
-      routeLogger.info({ intent: intent.type, hasProducts: false }, '✅ Support intent handled - NO PRODUCTS');
     }
     // ========================================
     // PRODUCT INTENT HANDLERS
     // ========================================
     else {
-      // Get webhook URL from widget settings
-      let settings = null;
-      try {
-        settings = await db.widgetSettings.findUnique({
-          where: { shop: shopDomain },
-        });
-        routeLogger.debug({
-          shop: shopDomain,
-          hasCustomWebhook: !!(settings as any)?.webhookUrl
-        }, 'Retrieved widget settings');
-      } catch (error) {
-        routeLogger.debug('Could not fetch settings from database');
-        settings = null;
-      }
-
-      // Use custom webhook URL only if it's a valid URL
-      const customWebhookUrl = (settings as any)?.webhookUrl;
-      const isValidCustomUrl = customWebhookUrl &&
-                              typeof customWebhookUrl === 'string' &&
-                              customWebhookUrl.trim() !== '' &&
-                              customWebhookUrl !== 'https://' &&
-                              customWebhookUrl !== 'null' &&
-                              customWebhookUrl !== 'undefined' &&
-                              customWebhookUrl.startsWith('https://') &&
-                              customWebhookUrl.length > 8;
-
-      const webhookUrl = isValidCustomUrl ? customWebhookUrl : process.env.N8N_WEBHOOK_URL;
-
       // ✅ CRITICAL FIX: Handle shop session/authentication failure for ALL product intents
       const isProductIntent = ["BESTSELLERS", "NEW_ARRIVALS", "ON_SALE", "RECOMMENDATIONS", "PRODUCT_SEARCH"].includes(intent.type);
 
@@ -720,6 +685,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
         // Try N8N first, but have fallback ready
         try {
+          const { N8NService } = await import("../services/n8n.service.server");
           const customN8NService = new N8NService(webhookUrl);
           n8nResponse = await customN8NService.processUserMessage({
             userMessage: finalMessage,
@@ -778,6 +744,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       } else {
         // General chat - use N8N
         try {
+          const { N8NService } = await import("../services/n8n.service.server");
           const customN8NService = new N8NService(webhookUrl);
           n8nResponse = await customN8NService.processUserMessage({
             userMessage: finalMessage,
