@@ -1,7 +1,6 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { authenticate, unauthenticated, sessionStorage } from "../shopify.server";
-import { N8NService } from "../services/n8n.service";
 import { prisma as db } from "../db.server";
 import { getSecureCorsHeaders, createCorsPreflightResponse, isOriginAllowed, logCorsViolation } from "../lib/cors.server";
 import { rateLimit, RateLimitPresets } from "../lib/rate-limit.server";
@@ -708,8 +707,15 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     };
 
     // ========================================
+<<<<<<< HEAD
     // GET WEBHOOK URL (needed for both support and product intents)
     // ========================================
+=======
+    // GET WEBHOOK URL (for all intents)
+    // ========================================
+
+    // Get webhook URL from widget settings
+>>>>>>> origin/claude/fix-buttons-ai-support-GxqIv
     let settings = null;
     try {
       settings = await db.widgetSettings.findUnique({
@@ -744,6 +750,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     let n8nResponse;
     let recommendations = [];
 
+<<<<<<< HEAD
     // ✅ AI-POWERED: Handle support intents with dynamic, shop-specific responses
     if (isSupportIntent) {
       // Use AI to generate shop-specific support responses
@@ -757,6 +764,49 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       );
 
       routeLogger.info({ intent: intent.type, hasProducts: false }, '✅ Support intent handled with AI - NO PRODUCTS');
+=======
+    // ✅ AI-POWERED: Send support intents to N8N for shop-specific AI responses
+    if (isSupportIntent) {
+      routeLogger.info({ intent: intent.type }, '✅ Sending support query to N8N - NO PRODUCTS');
+
+      try {
+        // Import N8NService dynamically to avoid top-level import issues
+        const { N8NService } = await import("../services/n8n.service.server");
+        const customN8NService = new N8NService(webhookUrl);
+
+        // Send to N8N with intent context so AI knows it's a support query
+        n8nResponse = await customN8NService.processUserMessage({
+          userMessage: finalMessage,
+          products: [], // NO PRODUCTS for support queries
+          context: {
+            ...enhancedContext,
+            intentType: "customer_support",
+            supportCategory: intent.type // SHIPPING_INFO, RETURNS, TRACK_ORDER, or HELP_FAQ
+          }
+        });
+
+        // Ensure no products are returned for support queries
+        recommendations = [];
+
+        routeLogger.info({
+          intent: intent.type,
+          hasProducts: false,
+          aiResponseLength: n8nResponse?.message?.length || 0
+        }, '✅ Support intent handled by AI - NO PRODUCTS');
+
+      } catch (error) {
+        routeLogger.error({ error: String(error), intent: intent.type }, '❌ N8N support handler error - using fallback');
+
+        // Fallback: Simple helpful message
+        n8nResponse = {
+          message: "I'm here to help! Please ask me your question and I'll do my best to assist you. 😊",
+          recommendations: [],
+          quickReplies: ["Shipping info", "Return policy", "Track order", "Browse products"],
+          confidence: 0.5,
+          messageType: "support"
+        };
+      }
+>>>>>>> origin/claude/fix-buttons-ai-support-GxqIv
     }
     // ========================================
     // PRODUCT INTENT HANDLERS
@@ -851,6 +901,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
         // Try N8N first, but have fallback ready
         try {
+          const { N8NService } = await import("../services/n8n.service.server");
           const customN8NService = new N8NService(webhookUrl);
           n8nResponse = await customN8NService.processUserMessage({
             userMessage: finalMessage,
@@ -909,6 +960,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       } else {
         // General chat - use N8N
         try {
+          const { N8NService } = await import("../services/n8n.service.server");
           const customN8NService = new N8NService(webhookUrl);
           n8nResponse = await customN8NService.processUserMessage({
             userMessage: finalMessage,
