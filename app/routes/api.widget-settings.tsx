@@ -20,33 +20,89 @@ const DEFAULT_SETTINGS = {
   primaryColor: "#e620e6",
 };
 
-// ✅ ADDED: Intent detection system (same as chatbot)
-type Intent = 
+// ✅ COMPREHENSIVE Intent detection system for Quick Action Buttons
+type Intent =
+  // Product Discovery Intents
+  | { type: "BESTSELLERS" }
+  | { type: "NEW_ARRIVALS" }
+  | { type: "ON_SALE" }
+  | { type: "RECOMMENDATIONS" }
+  // Customer Support Intents (NO PRODUCTS)
+  | { type: "SHIPPING_INFO" }
+  | { type: "RETURNS" }
+  | { type: "TRACK_ORDER" }
+  | { type: "HELP_FAQ" }
+  // Fallback Intents
   | { type: "PRODUCT_SEARCH"; query: string }
   | { type: "GENERAL_CHAT" };
 
 function detectIntent(message: string): Intent {
   const lower = message.toLowerCase().trim();
 
-  // French keywords
-  if (
-    /(?:montre|affiche|voir|recommande|parcour|browse|t-shirt|tshirt|chaussure|vêtement|produit|collection|best[-\s]?seller|meilleur|nouveau|tous les produits|catégorie)/.test(lower)
-  ) {
-    if (/(t[-\s]?shirt)/.test(lower)) return { type: "PRODUCT_SEARCH", query: "t-shirt" };
-    if (/chaussure|shoe|basket/.test(lower)) return { type: "PRODUCT_SEARCH", query: "shoe" };
-    if (/best[-\s]?seller|bestsell|meilleur/.test(lower)) return { type: "PRODUCT_SEARCH", query: "bestseller" };
-    if (/nouveau|new/.test(lower)) return { type: "PRODUCT_SEARCH", query: "new" };
-    return { type: "PRODUCT_SEARCH", query: "product" };
+  // ========================================
+  // CUSTOMER SUPPORT INTENTS (NO PRODUCTS)
+  // ========================================
+
+  // Shipping Info: "Tell me about shipping and delivery"
+  if (/(shipping|delivery|livraison|expédition|délai.*livraison|frais.*port)/i.test(lower)) {
+    return { type: "SHIPPING_INFO" };
   }
 
-  // English keywords
-  if (
-    /(show|see|display|recommend|suggest|browse|view|best[-\s]?seller|on sale|product|item|all products|categor)/.test(lower)
-  ) {
-    if (/t[-\s]?shirt/.test(lower)) return { type: "PRODUCT_SEARCH", query: "t-shirt" };
-    if (/shoe|sneaker|boot/.test(lower)) return { type: "PRODUCT_SEARCH", query: "shoe" };
-    if (/best[-\s]?seller/.test(lower)) return { type: "PRODUCT_SEARCH", query: "bestseller" };
-    if (/new|latest/.test(lower)) return { type: "PRODUCT_SEARCH", query: "new" };
+  // Returns: "What is your return policy?"
+  if (/(return|refund|exchange|retour|remboursement|échange|politique.*retour)/i.test(lower)) {
+    return { type: "RETURNS" };
+  }
+
+  // Track Order: "How can I track my order?"
+  if (/(track|tracking|where.*is.*my.*order|order.*status|suivre.*commande|suivi.*colis)/i.test(lower)) {
+    return { type: "TRACK_ORDER" };
+  }
+
+  // Help/FAQ: "I need help with something"
+  if (/(help|faq|question|support|assistance|aide|besoin.*aide|customer.*service|service.*client)/i.test(lower)) {
+    return { type: "HELP_FAQ" };
+  }
+
+  // ========================================
+  // PRODUCT DISCOVERY INTENTS
+  // ========================================
+
+  // Best Sellers: "What are your best-selling products?"
+  if (/(best[-\s]?selling|best[-\s]?seller|top[-\s]?seller|most[-\s]?popular|meilleur.*vente|plus.*vendus)/i.test(lower)) {
+    return { type: "BESTSELLERS" };
+  }
+
+  // New Arrivals: "Show me new arrivals"
+  if (/(new[-\s]?arrival|latest|recent|just[-\s]?added|nouveauté|nouveau.*produit|dernier.*ajout)/i.test(lower)) {
+    return { type: "NEW_ARRIVALS" };
+  }
+
+  // On Sale: "What products are on sale?"
+  if (/(on[-\s]?sale|discount|promo|deal|solde|réduction|promotion|rabais)/i.test(lower)) {
+    return { type: "ON_SALE" };
+  }
+
+  // Recommendations: "Show me recommendations for me"
+  if (/(recommendation|recommend.*for.*me|suggest.*for.*me|for[-\s]?you|personnalisé|recommandation)/i.test(lower)) {
+    return { type: "RECOMMENDATIONS" };
+  }
+
+  // ========================================
+  // FALLBACK: Generic Product Search
+  // ========================================
+
+  // T-shirts
+  if (/(t[-\s]?shirt)/i.test(lower)) {
+    return { type: "PRODUCT_SEARCH", query: "t-shirt" };
+  }
+
+  // Shoes
+  if (/(shoe|chaussure|sneaker|boot|basket)/i.test(lower)) {
+    return { type: "PRODUCT_SEARCH", query: "shoe" };
+  }
+
+  // General product queries
+  if (/(show|see|display|browse|view|product|item|all.*product|categor|montre|affiche|voir|parcour|vêtement|produit|collection)/i.test(lower)) {
     return { type: "PRODUCT_SEARCH", query: "product" };
   }
 
@@ -239,130 +295,207 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // ✅ IMPROVED: Detect intent and sentiment
     const intent = detectIntent(finalMessage);
     const sentiment = analyzeSentiment(finalMessage);
-    
+
     routeLogger.debug({ intent: intent.type, sentiment }, 'Intent and sentiment detected');
 
-    // ✅ IMPROVED: Fetch more products (50 instead of 20)
+    // ========================================
+    // HANDLE SUPPORT INTENTS (NO PRODUCTS)
+    // ========================================
+
+    // Support intents return text-only responses and don't need to fetch products
+    const isSupportIntent = ["SHIPPING_INFO", "RETURNS", "TRACK_ORDER", "HELP_FAQ"].includes(intent.type);
+
+    // ✅ IMPROVED: Fetch more products (50 instead of 20) - ONLY for product intents
     let products: any[] = [];
     let productsFetchFailed = false;
     let sessionError = false;
 
     // Declare variables outside try block for error logging
-    const variables: { first: number; query?: string } = { first: 50 };
+    const variables: { first: number; query?: string; sortKey?: string; reverse?: boolean } = { first: 50 };
 
-    try {
-      console.log('🔍 STEP 1: Getting admin context for shop:', shopDomain);
-      // Use unauthenticated admin (uses offline token, works in production)
-      const { admin: shopAdmin } = await unauthenticated.admin(shopDomain);
-      console.log('✅ STEP 2: Admin context obtained successfully');
+    // Only fetch products for product-related intents
+    if (!isSupportIntent) {
+      try {
+        console.log('🔍 STEP 1: Getting admin context for shop:', shopDomain);
+        // Use unauthenticated admin (uses offline token, works in production)
+        const { admin: shopAdmin } = await unauthenticated.admin(shopDomain);
+        console.log('✅ STEP 2: Admin context obtained successfully');
 
-      // ✅ IMPROVED: Build GraphQL query based on intent
-      if (intent.type === "PRODUCT_SEARCH") {
-        if (intent.query === "bestseller") {
-          variables.query = "tag:bestseller";
-        } else if (intent.query === "t-shirt") {
-          variables.query = "product_type:t-shirt";
-        } else if (intent.query === "shoe") {
-          variables.query = "product_type:shoe";
-        } else if (intent.query === "new") {
-          // ✅ FIX: Fetch all active products (will show newest or use tag:new if available)
-          variables.query = "status:active";
-        } else {
-          variables.query = "status:active";
-        }
-      } else {
-        variables.query = "status:active";
-      }
-
-      console.log('🔍 STEP 3: Building GraphQL query with:', {
-        intentType: intent.type,
-        intentQuery: intent.query,
-        graphqlQuery: variables.query,
-        message: finalMessage
-      });
-
-      routeLogger.info({
-        intentType: intent.type,
-        intentQuery: intent.query,
-        graphqlQuery: variables.query,
-        message: finalMessage
-      }, '🔍 Query being sent to GraphQL');
-
-      console.log('🔍 STEP 4: Sending GraphQL query...');
-      const response = await shopAdmin.graphql(`
-        #graphql
-        query getProducts($first: Int!, $query: String) {
-          products(first: $first, query: $query) {
-            edges {
-              node {
-                id
-                title
-                handle
-                description
-                featuredImage { url }
-                variants(first: 1) {
-                  edges { node { price } }
+        // ✅ CRITICAL FIX: Build GraphQL query based on SPECIFIC intent
+        let graphqlQuery = `
+          #graphql
+          query getProducts($first: Int!, $query: String) {
+            products(first: $first, query: $query) {
+              edges {
+                node {
+                  id
+                  title
+                  handle
+                  description
+                  featuredImage { url }
+                  variants(first: 1) {
+                    edges { node { price } }
+                  }
                 }
               }
             }
           }
+        `;
+
+        // Build query based on intent type
+        if (intent.type === "BESTSELLERS") {
+          // Best Sellers: Use GraphQL sortKey
+          graphqlQuery = `
+            #graphql
+            query getBestsellers($first: Int!) {
+              products(first: $first, sortKey: BEST_SELLING) {
+                edges {
+                  node {
+                    id
+                    title
+                    handle
+                    description
+                    featuredImage { url }
+                    variants(first: 1) {
+                      edges { node { price } }
+                    }
+                  }
+                }
+              }
+            }
+          `;
+          delete variables.query; // Remove query parameter for sortKey queries
+        } else if (intent.type === "NEW_ARRIVALS") {
+          // New Arrivals: Sort by creation date, newest first
+          graphqlQuery = `
+            #graphql
+            query getNewArrivals($first: Int!) {
+              products(first: $first, sortKey: CREATED_AT, reverse: true) {
+                edges {
+                  node {
+                    id
+                    title
+                    handle
+                    description
+                    featuredImage { url }
+                    variants(first: 1) {
+                      edges { node { price } }
+                    }
+                  }
+                }
+              }
+            }
+          `;
+          delete variables.query;
+        } else if (intent.type === "ON_SALE") {
+          // On Sale: Products with sale/discount tags
+          variables.query = "tag:sale OR tag:discount OR tag:promo";
+        } else if (intent.type === "RECOMMENDATIONS") {
+          // Recommendations: Use RELEVANCE or show featured products
+          graphqlQuery = `
+            #graphql
+            query getRecommendations($first: Int!) {
+              products(first: $first, sortKey: RELEVANCE) {
+                edges {
+                  node {
+                    id
+                    title
+                    handle
+                    description
+                    featuredImage { url }
+                    variants(first: 1) {
+                      edges { node { price } }
+                    }
+                  }
+                }
+              }
+            }
+          `;
+          delete variables.query;
+        } else if (intent.type === "PRODUCT_SEARCH") {
+          // Generic product search
+          if (intent.query === "t-shirt") {
+            variables.query = "product_type:t-shirt";
+          } else if (intent.query === "shoe") {
+            variables.query = "product_type:shoe";
+          } else {
+            variables.query = "status:active";
+          }
+        } else {
+          // Default: active products
+          variables.query = "status:active";
         }
-      `, { variables });
 
-      console.log('✅ STEP 5: GraphQL response received, parsing...');
-      const responseData = (await response.json()) as any;
-      console.log('🔍 STEP 6: Response data:', JSON.stringify(responseData).substring(0, 500));
+        console.log('🔍 STEP 3: Building GraphQL query with:', {
+          intentType: intent.type,
+          graphqlQuery: variables.query || 'sortKey-based query',
+          message: finalMessage
+        });
 
-      // ✅ CHECK FOR GRAPHQL ERRORS
-      if (responseData.errors) {
-        console.error('❌ STEP 7: GraphQL returned errors:', responseData.errors);
-        routeLogger.error({
-          graphqlErrors: responseData.errors,
-          query: variables.query
-        }, '❌ GraphQL query returned errors');
+        routeLogger.info({
+          intentType: intent.type,
+          graphqlQuery: variables.query || 'sortKey-based query',
+          message: finalMessage
+        }, '🔍 Query being sent to GraphQL');
+
+        console.log('🔍 STEP 4: Sending GraphQL query...');
+        const response = await shopAdmin.graphql(graphqlQuery, { variables });
+
+        console.log('✅ STEP 5: GraphQL response received, parsing...');
+        const responseData = (await response.json()) as any;
+        console.log('🔍 STEP 6: Response data:', JSON.stringify(responseData).substring(0, 500));
+
+        // ✅ CHECK FOR GRAPHQL ERRORS
+        if (responseData.errors) {
+          console.error('❌ STEP 7: GraphQL returned errors:', responseData.errors);
+          routeLogger.error({
+            graphqlErrors: responseData.errors,
+            query: variables.query
+          }, '❌ GraphQL query returned errors');
+          productsFetchFailed = true;
+          products = [];
+        } else {
+          console.log('✅ STEP 8: No GraphQL errors, mapping products...');
+          console.log('🔍 Edges count:', responseData?.data?.products?.edges?.length || 0);
+          products = responseData?.data?.products?.edges?.map((edge: any) => ({
+            id: edge.node.id,
+            title: edge.node.title,
+            handle: edge.node.handle,
+            description: edge.node.description || '',
+            image: edge.node.featuredImage?.url,
+            price: edge.node.variants.edges[0]?.node.price || '0.00'
+          })) || [];
+
+          console.log('✅ STEP 9: Products mapped successfully. Count:', products.length);
+          routeLogger.info({ count: products.length, shop: shopDomain, intent: intent.type }, '✅ Fetched products');
+        }
+      } catch (error) {
+        const errorMessage = (error as Error).message;
+        console.error('❌ EXCEPTION in product fetch:', {
+          error: errorMessage,
+          stack: (error as Error).stack
+        });
+
+        // ✅ CRITICAL FIX: Detect session errors
+        if (errorMessage.includes('Could not find a session') ||
+            errorMessage.includes('session') ||
+            errorMessage.includes('offline access token')) {
+          sessionError = true;
+          routeLogger.error({
+            error: errorMessage,
+            shop: shopDomain
+          }, '❌ SESSION ERROR: Shop needs to reinstall app or session expired');
+        } else {
+          routeLogger.error({
+            error: errorMessage,
+            stack: (error as Error).stack,
+            query: variables.query
+          }, '❌ Failed to fetch products - exception thrown');
+        }
+
         productsFetchFailed = true;
         products = [];
-      } else {
-        console.log('✅ STEP 8: No GraphQL errors, mapping products...');
-        console.log('🔍 Edges count:', responseData?.data?.products?.edges?.length || 0);
-        products = responseData?.data?.products?.edges?.map((edge: any) => ({
-          id: edge.node.id,
-          title: edge.node.title,
-          handle: edge.node.handle,
-          description: edge.node.description || '',
-          image: edge.node.featuredImage?.url,
-          price: edge.node.variants.edges[0]?.node.price || '0.00'
-        })) || [];
-
-        console.log('✅ STEP 9: Products mapped successfully. Count:', products.length);
-        routeLogger.info({ count: products.length, shop: shopDomain, query: variables.query }, '✅ Fetched products');
       }
-    } catch (error) {
-      const errorMessage = (error as Error).message;
-      console.error('❌ EXCEPTION in product fetch:', {
-        error: errorMessage,
-        stack: (error as Error).stack
-      });
-
-      // ✅ CRITICAL FIX: Detect session errors
-      if (errorMessage.includes('Could not find a session') ||
-          errorMessage.includes('session') ||
-          errorMessage.includes('offline access token')) {
-        sessionError = true;
-        routeLogger.error({
-          error: errorMessage,
-          shop: shopDomain
-        }, '❌ SESSION ERROR: Shop needs to reinstall app or session expired');
-      } else {
-        routeLogger.error({
-          error: errorMessage,
-          stack: (error as Error).stack,
-          query: variables.query
-        }, '❌ Failed to fetch products - exception thrown');
-      }
-
-      productsFetchFailed = true;
-      products = [];
     }
 
     // Enhanced context for better AI responses
@@ -379,223 +512,334 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       referer: request.headers.get('referer') || undefined,
     };
 
-    // Get webhook URL from widget settings
-    let settings = null;
-    try {
-      settings = await db.widgetSettings.findUnique({
-        where: { shop: shopDomain },
-      });
-      routeLogger.debug({
-        shop: shopDomain,
-        hasCustomWebhook: !!(settings as any)?.webhookUrl
-      }, 'Retrieved widget settings');
-    } catch (error) {
-      routeLogger.debug('Could not fetch settings from database');
-      settings = null;
-    }
-    
-    // Use custom webhook URL only if it's a valid URL
-    const customWebhookUrl = (settings as any)?.webhookUrl;
-    const isValidCustomUrl = customWebhookUrl &&
-                            typeof customWebhookUrl === 'string' &&
-                            customWebhookUrl.trim() !== '' &&
-                            customWebhookUrl !== 'https://' &&
-                            customWebhookUrl !== 'null' &&
-                            customWebhookUrl !== 'undefined' &&
-                            customWebhookUrl.startsWith('https://') &&
-                            customWebhookUrl.length > 8;
+    // ========================================
+    // SUPPORT INTENT HANDLERS (NO PRODUCTS)
+    // ========================================
 
-    const webhookUrl = isValidCustomUrl ? customWebhookUrl : process.env.N8N_WEBHOOK_URL;
-    
     let n8nResponse;
     let recommendations = [];
 
-    // ✅ CRITICAL FIX: Handle shop session/authentication failure
-    if (productsFetchFailed && intent.type === "PRODUCT_SEARCH") {
-      // Shop session not available - provide helpful message
+    // Handle support intents with text-only responses
+    if (isSupportIntent) {
       const lang = enhancedContext.locale?.toLowerCase().split('-')[0] || 'en';
 
-      // Different messages for session errors vs other errors
-      let errorMessage: string;
-      let quickReplies: string[];
-
-      if (sessionError) {
-        // ✅ SESSION ERROR: Specific message about app reinstallation
-        const sessionErrorMessages: Record<string, string> = {
-          fr: "⚠️ La connexion avec votre boutique a expiré. L'administrateur doit réinstaller l'application pour que je puisse accéder aux produits. En attendant, je peux répondre à vos questions générales sur la boutique.",
-          en: "⚠️ The connection to the shop has expired. The shop administrator needs to reinstall the app so I can access the product catalog. In the meantime, I can help answer general questions about the store.",
-          es: "⚠️ La conexión con la tienda ha caducado. El administrador de la tienda necesita reinstalar la aplicación para que pueda acceder al catálogo de productos. Mientras tanto, puedo ayudar a responder preguntas generales sobre la tienda.",
-          de: "⚠️ Die Verbindung zum Shop ist abgelaufen. Der Shop-Administrator muss die App neu installieren, damit ich auf den Produktkatalog zugreifen kann. In der Zwischenzeit kann ich allgemeine Fragen zum Shop beantworten.",
-          pt: "⚠️ A conexão com a loja expirou. O administrador da loja precisa reinstalar o aplicativo para que eu possa acessar o catálogo de produtos. Enquanto isso, posso ajudar a responder perguntas gerais sobre a loja.",
-          it: "⚠️ La connessione al negozio è scaduta. L'amministratore del negozio deve reinstallare l'app in modo che io possa accedere al catalogo prodotti. Nel frattempo, posso aiutare a rispondere a domande generali sul negozio."
+      if (intent.type === "SHIPPING_INFO") {
+        const shippingMessages: Record<string, string> = {
+          en: "📦 **Shipping Information**\n\n✅ **Free Shipping** on orders over $50\n🚚 **Standard Delivery**: 3-5 business days\n⚡ **Express Delivery**: 1-2 business days\n🌍 We ship worldwide!\n\n*Shipping costs are calculated at checkout based on your location.*",
+          fr: "📦 **Informations de Livraison**\n\n✅ **Livraison Gratuite** sur les commandes de plus de 50€\n🚚 **Livraison Standard**: 3-5 jours ouvrables\n⚡ **Livraison Express**: 1-2 jours ouvrables\n🌍 Nous livrons dans le monde entier!\n\n*Les frais de port sont calculés lors du paiement selon votre localisation.*",
+          es: "📦 **Información de Envío**\n\n✅ **Envío Gratis** en pedidos superiores a $50\n🚚 **Entrega Estándar**: 3-5 días hábiles\n⚡ **Entrega Express**: 1-2 días hábiles\n🌍 ¡Enviamos a todo el mundo!\n\n*Los costos de envío se calculan al finalizar la compra según su ubicación.*",
+          de: "📦 **Versandinformationen**\n\n✅ **Kostenloser Versand** bei Bestellungen über 50€\n🚚 **Standardlieferung**: 3-5 Werktage\n⚡ **Express-Lieferung**: 1-2 Werktage\n🌍 Wir versenden weltweit!\n\n*Die Versandkosten werden beim Checkout basierend auf Ihrem Standort berechnet.*"
         };
-        errorMessage = sessionErrorMessages[lang] || sessionErrorMessages['en'];
-        quickReplies = lang === 'fr'
-          ? ["Aide générale", "Informations boutique"]
-          : ["General help", "Store information"];
+        const quickReplies = lang === 'fr'
+          ? ["Suivre ma commande", "Politique de retour", "Parcourir les produits"]
+          : ["Track my order", "Return policy", "Browse products"];
 
-        routeLogger.error({ shop: shopDomain }, '❌ SESSION ERROR: Shop needs to reinstall app');
-      } else {
-        // ✅ GENERAL ERROR: Other product fetch errors
-        const generalErrorMessages: Record<string, string> = {
-          fr: "Je ne peux pas accéder aux produits actuellement. Un problème temporaire est survenu. Veuillez réessayer dans quelques instants.",
-          en: "I'm unable to access the product catalog right now due to a temporary issue. Please try again in a few moments.",
-          es: "No puedo acceder al catálogo de productos en este momento debido a un problema temporal. Inténtelo de nuevo en unos momentos.",
-          de: "Ich kann derzeit aufgrund eines vorübergehenden Problems nicht auf den Produktkatalog zugreifen. Bitte versuchen Sie es in ein paar Augenblicken erneut.",
-          pt: "Não consigo acessar o catálogo de produtos no momento devido a um problema temporário. Tente novamente em alguns instantes.",
-          it: "Non riesco ad accedere al catalogo prodotti in questo momento a causa di un problema temporaneo. Riprova tra qualche istante."
+        n8nResponse = {
+          message: shippingMessages[lang] || shippingMessages['en'],
+          recommendations: [], // NO PRODUCTS
+          quickReplies: quickReplies,
+          confidence: 1.0,
+          messageType: "support"
         };
-        errorMessage = generalErrorMessages[lang] || generalErrorMessages['en'];
-        quickReplies = lang === 'fr'
-          ? ["Réessayer", "Aide"]
-          : ["Try again", "Help"];
+      } else if (intent.type === "RETURNS") {
+        const returnMessages: Record<string, string> = {
+          en: "↩️ **Return Policy**\n\n✅ **30-Day Money-Back Guarantee**\n📦 **Free Returns** on all orders\n💳 Full refund or exchange available\n\n**Return Requirements:**\n• Items must be unused and in original packaging\n• Tags must be attached\n• Return within 30 days of delivery\n\nContact our support team to initiate a return!",
+          fr: "↩️ **Politique de Retour**\n\n✅ **Garantie de remboursement de 30 jours**\n📦 **Retours Gratuits** sur toutes les commandes\n💳 Remboursement complet ou échange disponible\n\n**Conditions de retour:**\n• Les articles doivent être neufs et dans leur emballage d'origine\n• Les étiquettes doivent être attachées\n• Retour dans les 30 jours suivant la livraison\n\nContactez notre équipe d'assistance pour initier un retour!",
+          es: "↩️ **Política de Devoluciones**\n\n✅ **Garantía de devolución de 30 días**\n📦 **Devoluciones Gratis** en todos los pedidos\n💳 Reembolso completo o cambio disponible\n\n**Requisitos de devolución:**\n• Los artículos deben estar sin usar y en su empaque original\n• Las etiquetas deben estar adjuntas\n• Devolver dentro de los 30 días de la entrega\n\n¡Contacte a nuestro equipo de soporte para iniciar una devolución!",
+          de: "↩️ **Rückgaberichtlinie**\n\n✅ **30-Tage-Geld-zurück-Garantie**\n📦 **Kostenlose Rücksendungen** bei allen Bestellungen\n💳 Vollständige Rückerstattung oder Umtausch verfügbar\n\n**Rückgabebedingungen:**\n• Artikel müssen unbenutzt und in Originalverpackung sein\n• Etiketten müssen angebracht sein\n• Rücksendung innerhalb von 30 Tagen nach Lieferung\n\nKontaktieren Sie unser Support-Team, um eine Rücksendung einzuleiten!"
+        };
+        const quickReplies = lang === 'fr'
+          ? ["Comment retourner?", "Suivre commande", "Parcourir produits"]
+          : ["How to return?", "Track order", "Browse products"];
 
-        routeLogger.error({ shop: shopDomain }, '❌ Product fetch failed');
+        n8nResponse = {
+          message: returnMessages[lang] || returnMessages['en'],
+          recommendations: [], // NO PRODUCTS
+          quickReplies: quickReplies,
+          confidence: 1.0,
+          messageType: "support"
+        };
+      } else if (intent.type === "TRACK_ORDER") {
+        const trackMessages: Record<string, string> = {
+          en: "🔍 **Track Your Order**\n\n**To track your order:**\n\n1. Check your email for the shipping confirmation\n2. Click the tracking link in the email\n3. Or enter your order number on our website\n\n**Need Help?**\nIf you haven't received a tracking number within 2 business days, please contact our support team with your order number.",
+          fr: "🔍 **Suivre Votre Commande**\n\n**Pour suivre votre commande:**\n\n1. Vérifiez votre email pour la confirmation d'expédition\n2. Cliquez sur le lien de suivi dans l'email\n3. Ou entrez votre numéro de commande sur notre site web\n\n**Besoin d'aide?**\nSi vous n'avez pas reçu de numéro de suivi dans les 2 jours ouvrables, veuillez contacter notre équipe d'assistance avec votre numéro de commande.",
+          es: "🔍 **Rastrear Su Pedido**\n\n**Para rastrear su pedido:**\n\n1. Revise su correo electrónico para la confirmación de envío\n2. Haga clic en el enlace de seguimiento en el correo electrónico\n3. O ingrese su número de pedido en nuestro sitio web\n\n**¿Necesita ayuda?**\nSi no ha recibido un número de seguimiento dentro de 2 días hábiles, comuníquese con nuestro equipo de soporte con su número de pedido.",
+          de: "🔍 **Verfolgen Sie Ihre Bestellung**\n\n**So verfolgen Sie Ihre Bestellung:**\n\n1. Überprüfen Sie Ihre E-Mail auf die Versandbestätigung\n2. Klicken Sie auf den Tracking-Link in der E-Mail\n3. Oder geben Sie Ihre Bestellnummer auf unserer Website ein\n\n**Brauchen Sie Hilfe?**\nWenn Sie innerhalb von 2 Werktagen keine Tracking-Nummer erhalten haben, wenden Sie sich bitte mit Ihrer Bestellnummer an unser Support-Team."
+        };
+        const quickReplies = lang === 'fr'
+          ? ["Informations de livraison", "Politique de retour", "Aide"]
+          : ["Shipping info", "Return policy", "Help"];
+
+        n8nResponse = {
+          message: trackMessages[lang] || trackMessages['en'],
+          recommendations: [], // NO PRODUCTS
+          quickReplies: quickReplies,
+          confidence: 1.0,
+          messageType: "support"
+        };
+      } else if (intent.type === "HELP_FAQ") {
+        const helpMessages: Record<string, string> = {
+          en: "💬 **How Can We Help?**\n\n**Quick Links:**\n\n📦 **Shipping** - Delivery times and costs\n↩️ **Returns** - Our return policy\n🔍 **Track Order** - Find your package\n💳 **Payment** - Accepted payment methods\n🛡️ **Security** - Safe & secure checkout\n\n**Still have questions?**\nFeel free to ask me anything about our products, policies, or services. I'm here to help!",
+          fr: "💬 **Comment Pouvons-Nous Vous Aider?**\n\n**Liens Rapides:**\n\n📦 **Livraison** - Délais et coûts de livraison\n↩️ **Retours** - Notre politique de retour\n🔍 **Suivre Commande** - Trouvez votre colis\n💳 **Paiement** - Modes de paiement acceptés\n🛡️ **Sécurité** - Paiement sûr et sécurisé\n\n**Vous avez encore des questions?**\nN'hésitez pas à me poser toute question sur nos produits, politiques ou services. Je suis là pour vous aider!",
+          es: "💬 **¿Cómo Podemos Ayudar?**\n\n**Enlaces Rápidos:**\n\n📦 **Envío** - Tiempos y costos de entrega\n↩️ **Devoluciones** - Nuestra política de devoluciones\n🔍 **Rastrear Pedido** - Encuentre su paquete\n💳 **Pago** - Métodos de pago aceptados\n🛡️ **Seguridad** - Pago seguro y protegido\n\n**¿Todavía tiene preguntas?**\nNo dude en preguntarme cualquier cosa sobre nuestros productos, políticas o servicios. ¡Estoy aquí para ayudar!",
+          de: "💬 **Wie Können Wir Helfen?**\n\n**Schnelllinks:**\n\n📦 **Versand** - Lieferzeiten und -kosten\n↩️ **Rücksendungen** - Unsere Rückgaberichtlinie\n🔍 **Bestellung Verfolgen** - Finden Sie Ihr Paket\n💳 **Zahlung** - Akzeptierte Zahlungsmethoden\n🛡️ **Sicherheit** - Sichere Kaufabwicklung\n\n**Haben Sie noch Fragen?**\nFragen Sie mich gerne zu unseren Produkten, Richtlinien oder Dienstleistungen. Ich bin hier, um zu helfen!"
+        };
+        const quickReplies = lang === 'fr'
+          ? ["Informations de livraison", "Politique de retour", "Parcourir produits"]
+          : ["Shipping info", "Return policy", "Browse products"];
+
+        n8nResponse = {
+          message: helpMessages[lang] || helpMessages['en'],
+          recommendations: [], // NO PRODUCTS
+          quickReplies: quickReplies,
+          confidence: 1.0,
+          messageType: "support"
+        };
       }
 
-      n8nResponse = {
-        message: errorMessage,
-        recommendations: [],
-        confidence: 0.3,
-        messageType: "error",
-        quickReplies: quickReplies
-      };
+      routeLogger.info({ intent: intent.type, hasProducts: false }, '✅ Support intent handled - NO PRODUCTS');
     }
-    // ✅ IMPROVED: Handle product search intent directly OR use N8N
-    else if (intent.type === "PRODUCT_SEARCH" && products.length > 0) {
-      // Direct product recommendation (fallback if N8N fails)
-      const messages: Record<string, string> = {
-        "t-shirt": "👕 Here are our available t-shirts:",
-        "shoe": "👟 Here are our shoes:",
-        "bestseller": "⭐ Discover our bestsellers:",
-        "new": "✨ Check out our new arrivals:",
-        "product": "📦 Here are some products you might like:"
-      };
-
-      const responseText = messages[intent.query] || messages["product"];
-
-      // Limit to 8 products for display
-      recommendations = products.slice(0, 8);
-
-      // Try N8N first, but have fallback ready
+    // ========================================
+    // PRODUCT INTENT HANDLERS
+    // ========================================
+    else {
+      // Get webhook URL from widget settings
+      let settings = null;
       try {
-        const customN8NService = new N8NService(webhookUrl);
-        n8nResponse = await customN8NService.processUserMessage({
-          userMessage: finalMessage,
-          products,
-          context: enhancedContext
+        settings = await db.widgetSettings.findUnique({
+          where: { shop: shopDomain },
         });
+        routeLogger.debug({
+          shop: shopDomain,
+          hasCustomWebhook: !!(settings as any)?.webhookUrl
+        }, 'Retrieved widget settings');
+      } catch (error) {
+        routeLogger.debug('Could not fetch settings from database');
+        settings = null;
+      }
 
-        // ✅ CRITICAL FIX: Detect when AI incorrectly says it has no products
-        // Check if the response message indicates "no products" but we actually have products
-        const noProductPatterns = [
-          /n'ai pas.*détails.*produits/i,  // "n'ai pas de détails sur les produits"
-          /pas.*informations.*produits/i,  // "pas d'informations sur les produits"
-          /no.*details.*products/i,         // "no details on products"
-          /don't have.*details/i,           // "don't have details"
-          /can't.*access.*products/i,       // "can't access products"
-          /unable.*access.*catalog/i,       // "unable to access catalog"
-          /malheureusement/i,               // "unfortunately" (often precedes error messages)
-        ];
+      // Use custom webhook URL only if it's a valid URL
+      const customWebhookUrl = (settings as any)?.webhookUrl;
+      const isValidCustomUrl = customWebhookUrl &&
+                              typeof customWebhookUrl === 'string' &&
+                              customWebhookUrl.trim() !== '' &&
+                              customWebhookUrl !== 'https://' &&
+                              customWebhookUrl !== 'null' &&
+                              customWebhookUrl !== 'undefined' &&
+                              customWebhookUrl.startsWith('https://') &&
+                              customWebhookUrl.length > 8;
 
-        const messageIndicatesNoProducts = noProductPatterns.some(pattern =>
-          pattern.test(n8nResponse.message)
-        );
+      const webhookUrl = isValidCustomUrl ? customWebhookUrl : process.env.N8N_WEBHOOK_URL;
 
-        // If AI says "no products" but we have products, override the response
-        if (messageIndicatesNoProducts && products.length > 0) {
-          routeLogger.warn(
-            { aiMessage: n8nResponse.message.substring(0, 100) },
-            '⚠️ AI incorrectly said no products available - overriding with actual products'
+      // ✅ CRITICAL FIX: Handle shop session/authentication failure for ALL product intents
+      const isProductIntent = ["BESTSELLERS", "NEW_ARRIVALS", "ON_SALE", "RECOMMENDATIONS", "PRODUCT_SEARCH"].includes(intent.type);
+
+      if (productsFetchFailed && isProductIntent) {
+        // Shop session not available - provide helpful message
+        const lang = enhancedContext.locale?.toLowerCase().split('-')[0] || 'en';
+
+        // Different messages for session errors vs other errors
+        let errorMessage: string;
+        let quickReplies: string[];
+
+        if (sessionError) {
+          // ✅ SESSION ERROR: Specific message about app reinstallation
+          const sessionErrorMessages: Record<string, string> = {
+            fr: "⚠️ La connexion avec votre boutique a expiré. L'administrateur doit réinstaller l'application pour que je puisse accéder aux produits. En attendant, je peux répondre à vos questions générales sur la boutique.",
+            en: "⚠️ The connection to the shop has expired. The shop administrator needs to reinstall the app so I can access the product catalog. In the meantime, I can help answer general questions about the store.",
+            es: "⚠️ La conexión con la tienda ha caducado. El administrador de la tienda necesita reinstalar la aplicación para que pueda acceder al catálogo de productos. Mientras tanto, puedo ayudar a responder preguntas generales sobre la tienda.",
+            de: "⚠️ Die Verbindung zum Shop ist abgelaufen. Der Shop-Administrator muss die App neu installieren, damit ich auf den Produktkatalog zugreifen kann. In der Zwischenzeit kann ich allgemeine Fragen zum Shop beantworten.",
+            pt: "⚠️ A conexão com a loja expirou. O administrador da loja precisa reinstalar o aplicativo para que eu possa acessar o catálogo de produtos. Enquanto isso, posso ajudar a responder perguntas gerais sobre a loja.",
+            it: "⚠️ La connessione al negozio è scaduta. L'amministratore del negozio deve reinstallare l'app in modo che io possa accedere al catalogo prodotti. Nel frattempo, posso aiutare a rispondere a domande generali sul negozio."
+          };
+          errorMessage = sessionErrorMessages[lang] || sessionErrorMessages['en'];
+          quickReplies = lang === 'fr'
+            ? ["Aide générale", "Informations boutique"]
+            : ["General help", "Store information"];
+
+          routeLogger.error({ shop: shopDomain }, '❌ SESSION ERROR: Shop needs to reinstall app');
+        } else {
+          // ✅ GENERAL ERROR: Other product fetch errors
+          const generalErrorMessages: Record<string, string> = {
+            fr: "Je ne peux pas accéder aux produits actuellement. Un problème temporaire est survenu. Veuillez réessayer dans quelques instants.",
+            en: "I'm unable to access the product catalog right now due to a temporary issue. Please try again in a few moments.",
+            es: "No puedo acceder al catálogo de productos en este momento debido a un problema temporal. Inténtelo de nuevo en unos momentos.",
+            de: "Ich kann derzeit aufgrund eines vorübergehenden Problems nicht auf den Produktkatalog zugreifen. Bitte versuchen Sie es in ein paar Augenblicken erneut.",
+            pt: "Não consigo acessar o catálogo de produtos no momento devido a um problema temporário. Tente novamente em alguns instantes.",
+            it: "Non riesco ad accedere al catalogo prodotti in questo momento a causa di un problema temporaneo. Riprova tra qualche istante."
+          };
+          errorMessage = generalErrorMessages[lang] || generalErrorMessages['en'];
+          quickReplies = lang === 'fr'
+            ? ["Réessayer", "Aide"]
+            : ["Try again", "Help"];
+
+          routeLogger.error({ shop: shopDomain }, '❌ Product fetch failed');
+        }
+
+        n8nResponse = {
+          message: errorMessage,
+          recommendations: [],
+          confidence: 0.3,
+          messageType: "error",
+          quickReplies: quickReplies
+        };
+      }
+      // ✅ IMPROVED: Handle ALL product intents with appropriate messages
+      else if (isProductIntent && products.length > 0) {
+        // Direct product recommendation with intent-specific messages
+        let responseText = "";
+        let quickReplies: string[] = [];
+
+        if (intent.type === "BESTSELLERS") {
+          responseText = "🏆 Our Best Sellers - These are our customers' favorites!";
+          quickReplies = ["Show new arrivals", "What's on sale?", "Recommendations for me"];
+        } else if (intent.type === "NEW_ARRIVALS") {
+          responseText = "✨ New Arrivals - Check out our latest products!";
+          quickReplies = ["Show bestsellers", "What's on sale?", "Browse all products"];
+        } else if (intent.type === "ON_SALE") {
+          responseText = "🔥 On Sale - Great deals you don't want to miss!";
+          quickReplies = ["Show bestsellers", "New arrivals", "Browse all products"];
+        } else if (intent.type === "RECOMMENDATIONS") {
+          responseText = "💎 Recommended For You - Handpicked just for you!";
+          quickReplies = ["Show bestsellers", "What's on sale?", "New arrivals"];
+        } else if (intent.type === "PRODUCT_SEARCH") {
+          const messages: Record<string, string> = {
+            "t-shirt": "👕 Here are our available t-shirts:",
+            "shoe": "👟 Here are our shoes:",
+            "product": "📦 Here are some products you might like:"
+          };
+          responseText = messages[(intent as any).query] || messages["product"];
+          quickReplies = ["Show bestsellers", "What's on sale?", "New arrivals"];
+        } else {
+          responseText = "📦 Here are some products you might like:";
+          quickReplies = ["Show bestsellers", "What's on sale?", "New arrivals"];
+        }
+
+        // Limit to 8 products for display
+        recommendations = products.slice(0, 8);
+
+        // Try N8N first, but have fallback ready
+        try {
+          const customN8NService = new N8NService(webhookUrl);
+          n8nResponse = await customN8NService.processUserMessage({
+            userMessage: finalMessage,
+            products,
+            context: enhancedContext
+          });
+
+          // ✅ CRITICAL FIX: Detect when AI incorrectly says it has no products
+          // Check if the response message indicates "no products" but we actually have products
+          const noProductPatterns = [
+            /n'ai pas.*détails.*produits/i,  // "n'ai pas de détails sur les produits"
+            /pas.*informations.*produits/i,  // "pas d'informations sur les produits"
+            /no.*details.*products/i,         // "no details on products"
+            /don't have.*details/i,           // "don't have details"
+            /can't.*access.*products/i,       // "can't access products"
+            /unable.*access.*catalog/i,       // "unable to access catalog"
+            /malheureusement/i,               // "unfortunately" (often precedes error messages)
+          ];
+
+          const messageIndicatesNoProducts = noProductPatterns.some(pattern =>
+            pattern.test(n8nResponse.message)
           );
+
+          // If AI says "no products" but we have products, override the response
+          if (messageIndicatesNoProducts && products.length > 0) {
+            routeLogger.warn(
+              { aiMessage: n8nResponse.message.substring(0, 100) },
+              '⚠️ AI incorrectly said no products available - overriding with actual products'
+            );
+            n8nResponse = {
+              message: responseText,
+              recommendations: recommendations,
+              quickReplies: quickReplies,
+              confidence: 0.8,
+              messageType: "product_recommendation"
+            };
+          }
+          // Use N8N recommendations if available, otherwise use our fallback
+          else if (n8nResponse.recommendations && n8nResponse.recommendations.length > 0) {
+            recommendations = n8nResponse.recommendations;
+            routeLogger.info({ count: recommendations.length }, 'Using N8N recommendations');
+          } else {
+            routeLogger.info({ count: recommendations.length }, 'Using fallback recommendations');
+          }
+        } catch (error) {
+          routeLogger.warn({ error: (error as Error).message }, 'N8N failed, using fallback');
+          // Use fallback response
           n8nResponse = {
             message: responseText,
             recommendations: recommendations,
+            quickReplies: quickReplies,
             confidence: 0.8,
             messageType: "product_recommendation"
           };
         }
-        // Use N8N recommendations if available, otherwise use our fallback
-        else if (n8nResponse.recommendations && n8nResponse.recommendations.length > 0) {
-          recommendations = n8nResponse.recommendations;
-          routeLogger.info({ count: recommendations.length }, 'Using N8N recommendations');
-        } else {
-          routeLogger.info({ count: recommendations.length }, 'Using fallback recommendations');
-        }
-      } catch (error) {
-        routeLogger.warn({ error: (error as Error).message }, 'N8N failed, using fallback');
-        // Use fallback response
-        n8nResponse = {
-          message: responseText,
-          recommendations: recommendations,
-          confidence: 0.8,
-          messageType: "product_recommendation"
-        };
-      }
-    } else {
-      // General chat - use N8N
-      try {
-        const customN8NService = new N8NService(webhookUrl);
-        n8nResponse = await customN8NService.processUserMessage({
-          userMessage: finalMessage,
-          products,
-          context: enhancedContext
-        });
-        recommendations = n8nResponse.recommendations || [];
+      } else {
+        // General chat - use N8N
+        try {
+          const customN8NService = new N8NService(webhookUrl);
+          n8nResponse = await customN8NService.processUserMessage({
+            userMessage: finalMessage,
+            products,
+            context: enhancedContext
+          });
+          recommendations = n8nResponse.recommendations || [];
 
-        // ✅ CRITICAL FIX: Detect when AI incorrectly says it has no products (same as PRODUCT_SEARCH)
-        const noProductPatterns = [
-          /n'ai pas.*détails.*produits/i,  // "n'ai pas de détails sur les produits"
-          /pas.*informations.*produits/i,  // "pas d'informations sur les produits"
-          /no.*details.*products/i,         // "no details on products"
-          /don't have.*details/i,           // "don't have details"
-          /can't.*access.*products/i,       // "can't access products"
-          /unable.*access.*catalog/i,       // "unable to access catalog"
-          /malheureusement/i,               // "unfortunately" (often precedes error messages)
-        ];
+          // ✅ CRITICAL FIX: Detect when AI incorrectly says it has no products (same as PRODUCT_SEARCH)
+          const noProductPatterns = [
+            /n'ai pas.*détails.*produits/i,  // "n'ai pas de détails sur les produits"
+            /pas.*informations.*produits/i,  // "pas d'informations sur les produits"
+            /no.*details.*products/i,         // "no details on products"
+            /don't have.*details/i,           // "don't have details"
+            /can't.*access.*products/i,       // "can't access products"
+            /unable.*access.*catalog/i,       // "unable to access catalog"
+            /malheureusement/i,               // "unfortunately" (often precedes error messages)
+          ];
 
-        const messageIndicatesNoProducts = noProductPatterns.some(pattern =>
-          pattern.test(n8nResponse.message)
-        );
-
-        // If AI says "no products" but we have products, override the response
-        if (messageIndicatesNoProducts && products.length > 0) {
-          routeLogger.warn(
-            { aiMessage: n8nResponse.message.substring(0, 100) },
-            '⚠️ AI incorrectly said no products available in general chat - overriding'
+          const messageIndicatesNoProducts = noProductPatterns.some(pattern =>
+            pattern.test(n8nResponse.message)
           );
-          n8nResponse = {
-            message: "Here are some products you might be interested in:",
-            recommendations: products.slice(0, 6),
-            confidence: 0.7,
-            messageType: "product_recommendation"
-          };
-          recommendations = products.slice(0, 6);
-        }
-        // ✅ If N8N doesn't return products but we have products available, show them
-        else if ((!recommendations || recommendations.length === 0) && products.length > 0) {
-          recommendations = products.slice(0, 6);
-          routeLogger.info({ count: recommendations.length }, 'Added products to N8N response');
-        }
-      } catch (error) {
-        routeLogger.error({ error: (error as Error).message }, 'N8N service failed');
 
-        // ✅ CRITICAL FIX: Fallback response with products if available
-        if (products.length > 0) {
-          n8nResponse = {
-            message: "Here are some products you might be interested in:",
-            recommendations: products.slice(0, 6),
-            confidence: 0.7,
-            messageType: "product_recommendation"
-          };
-          recommendations = products.slice(0, 6);
-        } else {
-          n8nResponse = {
-            message: "I'm here to help! You can ask me about products, pricing, shipping, or any questions about our store.",
-            recommendations: [],
-            confidence: 0.5,
-            messageType: "general"
-          };
+          // If AI says "no products" but we have products, override the response
+          if (messageIndicatesNoProducts && products.length > 0) {
+            routeLogger.warn(
+              { aiMessage: n8nResponse.message.substring(0, 100) },
+              '⚠️ AI incorrectly said no products available in general chat - overriding'
+            );
+            n8nResponse = {
+              message: "Here are some products you might be interested in:",
+              recommendations: products.slice(0, 6),
+              confidence: 0.7,
+              messageType: "product_recommendation"
+            };
+            recommendations = products.slice(0, 6);
+          }
+          // ✅ If N8N doesn't return products but we have products available, show them
+          else if ((!recommendations || recommendations.length === 0) && products.length > 0) {
+            recommendations = products.slice(0, 6);
+            routeLogger.info({ count: recommendations.length }, 'Added products to N8N response');
+          }
+        } catch (error) {
+          routeLogger.error({ error: (error as Error).message }, 'N8N service failed');
+
+          // ✅ CRITICAL FIX: Fallback response with products if available
+          if (products.length > 0) {
+            n8nResponse = {
+              message: "Here are some products you might be interested in:",
+              recommendations: products.slice(0, 6),
+              confidence: 0.7,
+              messageType: "product_recommendation"
+            };
+            recommendations = products.slice(0, 6);
+          } else {
+            n8nResponse = {
+              message: "I'm here to help! You can ask me about products, pricing, shipping, or any questions about our store.",
+              recommendations: [],
+              confidence: 0.5,
+              messageType: "general"
+            };
+          }
         }
       }
     }
@@ -633,11 +877,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       // Analytics
       analytics: {
         intentDetected: intent.type,
-        subIntent: intent.type === "PRODUCT_SEARCH" ? intent.query : undefined,
+        subIntent: intent.type === "PRODUCT_SEARCH" ? (intent as any).query : undefined,
         sentiment: sentiment,
         confidence: n8nResponse.confidence || 0.7,
         productsShown: recommendations.length,
         responseTime: responseTime,
+        isSupportIntent: isSupportIntent,
+        isProductIntent: !isSupportIntent,
       },
 
       // Legacy metadata (for backward compatibility)
