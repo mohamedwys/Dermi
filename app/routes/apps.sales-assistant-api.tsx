@@ -248,10 +248,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                             customWebhookUrl.startsWith('https://') &&
                             customWebhookUrl.length > 8;
 
+    const { N8NService, n8nService } = await import('../services/n8n.service.server');
+
     if (isValidCustomUrl) {
       // CUSTOM WORKFLOW: User has configured their own N8N webhook
       // Create a new N8NService instance with the custom webhook URL
-      const { N8NService } = await import('../services/n8n.service');
       serviceToUse = new N8NService(customWebhookUrl);
     } else {
       // DEFAULT WORKFLOW: Use the pre-configured developer workflow
