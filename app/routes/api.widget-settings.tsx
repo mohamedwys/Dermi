@@ -290,12 +290,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     routeLogger.debug({ messageLength: finalMessage.length }, 'Processing chat message');
+    console.log("========================================");
+    console.log("🔍 DEBUG: User message:", finalMessage);
+    console.log("🔍 DEBUG: Shop:", shopDomain);
 
     // ✅ IMPROVED: Detect intent and sentiment
     const intent = detectIntent(finalMessage);
     const sentiment = analyzeSentiment(finalMessage);
 
     routeLogger.debug({ intent: intent.type, sentiment }, 'Intent and sentiment detected');
+    console.log("🔍 DEBUG: Detected intent:", JSON.stringify(intent));
+    console.log("🔍 DEBUG: Detected sentiment:", sentiment);
 
     // ========================================
     // HANDLE SUPPORT INTENTS (NO PRODUCTS)
@@ -319,6 +324,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         // Use unauthenticated admin (uses offline token, works in production)
         const { admin: shopAdmin } = await unauthenticated.admin(shopDomain);
         console.log('✅ STEP 2: Admin context obtained successfully');
+
+        console.log('🛍️ DEBUG: Product intent detected, fetching from Shopify...');
+        console.log('🔍 DEBUG: Intent type:', intent.type);
 
         // ✅ CRITICAL FIX: Build GraphQL query based on SPECIFIC intent
         let graphqlQuery = `
@@ -456,6 +464,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         } else {
           console.log('✅ STEP 8: No GraphQL errors, mapping products...');
           console.log('🔍 Edges count:', responseData?.data?.products?.edges?.length || 0);
+          console.log('📦 DEBUG: Raw GraphQL response:', JSON.stringify(responseData, null, 2).substring(0, 1000));
           products = responseData?.data?.products?.edges?.map((edge: any) => ({
             id: edge.node.id,
             title: edge.node.title,
@@ -466,6 +475,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           })) || [];
 
           console.log('✅ STEP 9: Products mapped successfully. Count:', products.length);
+          console.log('🎯 DEBUG: First 3 products:', JSON.stringify(products.slice(0, 3), null, 2));
           routeLogger.info({ count: products.length, shop: shopDomain, intent: intent.type }, '✅ Fetched products');
         }
       } catch (error) {
@@ -683,7 +693,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         // Limit to 8 products for display
         recommendations = products.slice(0, 8);
 
+        console.log('🎯 DEBUG: Products available for recommendations:', products.length);
+        console.log('🎯 DEBUG: Recommendations to show:', recommendations.length);
+
         // Try N8N first, but have fallback ready
+        console.log('🤖 DEBUG: Calling N8N service for AI response...');
         try {
           const { N8NService } = await import("../services/n8n.service.server");
           const customN8NService = new N8NService(webhookUrl);
@@ -703,14 +717,34 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             /can't.*access.*products/i,       // "can't access products"
             /unable.*access.*catalog/i,       // "unable to access catalog"
             /malheureusement/i,               // "unfortunately" (often precedes error messages)
+            /rupture de stock/i,              // "out of stock" (French)
+            /sont en rupture/i,               // "are out of stock"
+            /tous.*en rupture/i,              // "all out of stock"
+            /actuellement.*rupture/i,         // "currently out of stock"
+            /out of stock/i,                  // "out of stock" (English)
+            /currently.*out.*stock/i,         // "currently out of stock"
+            /all.*out.*stock/i,               // "all out of stock"
+            /no.*stock/i,                     // "no stock"
+            /pas en stock/i,                  // "not in stock" (French)
+            /non disponible/i,                // "not available" (French)
+            /not available/i,                 // "not available"
+            /unavailable/i,                   // "unavailable"
           ];
+
+          console.log('🤖 DEBUG: Received N8N response:', n8nResponse.message.substring(0, 200));
+          console.log('🤖 DEBUG: N8N recommendations count:', n8nResponse.recommendations?.length || 0);
 
           const messageIndicatesNoProducts = noProductPatterns.some(pattern =>
             pattern.test(n8nResponse.message)
           );
 
+          console.log('🔍 DEBUG: Pattern match - AI says no products?', messageIndicatesNoProducts);
+          console.log('🔍 DEBUG: Actual products available?', products.length > 0);
+
           // If AI says "no products" but we have products, override the response
           if (messageIndicatesNoProducts && products.length > 0) {
+            console.log('⚠️ DEBUG: AI INCORRECTLY SAID NO PRODUCTS - OVERRIDING!');
+            console.log('⚠️ DEBUG: AI message was:', n8nResponse.message);
             routeLogger.warn(
               { aiMessage: n8nResponse.message.substring(0, 100) },
               '⚠️ AI incorrectly said no products available - overriding with actual products'
@@ -726,11 +760,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           // Use N8N recommendations if available, otherwise use our fallback
           else if (n8nResponse.recommendations && n8nResponse.recommendations.length > 0) {
             recommendations = n8nResponse.recommendations;
+            console.log('✅ DEBUG: Using N8N recommendations:', recommendations.length);
             routeLogger.info({ count: recommendations.length }, 'Using N8N recommendations');
           } else {
+            console.log('✅ DEBUG: Using fallback recommendations:', recommendations.length);
             routeLogger.info({ count: recommendations.length }, 'Using fallback recommendations');
           }
         } catch (error) {
+          console.log('❌ DEBUG: N8N service failed:', (error as Error).message);
           routeLogger.warn({ error: (error as Error).message }, 'N8N failed, using fallback');
           // Use fallback response
           n8nResponse = {
@@ -743,6 +780,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         }
       } else {
         // General chat - use N8N
+        console.log('💬 DEBUG: General chat intent - calling N8N...');
         try {
           const { N8NService } = await import("../services/n8n.service.server");
           const customN8NService = new N8NService(webhookUrl);
@@ -752,6 +790,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             context: enhancedContext
           });
           recommendations = n8nResponse.recommendations || [];
+          console.log('💬 DEBUG: N8N response for general chat:', n8nResponse.message.substring(0, 200));
 
           // ✅ CRITICAL FIX: Detect when AI incorrectly says it has no products (same as PRODUCT_SEARCH)
           const noProductPatterns = [
@@ -762,7 +801,22 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             /can't.*access.*products/i,       // "can't access products"
             /unable.*access.*catalog/i,       // "unable to access catalog"
             /malheureusement/i,               // "unfortunately" (often precedes error messages)
+            /rupture de stock/i,              // "out of stock" (French)
+            /sont en rupture/i,               // "are out of stock"
+            /tous.*en rupture/i,              // "all out of stock"
+            /actuellement.*rupture/i,         // "currently out of stock"
+            /out of stock/i,                  // "out of stock" (English)
+            /currently.*out.*stock/i,         // "currently out of stock"
+            /all.*out.*stock/i,               // "all out of stock"
+            /no.*stock/i,                     // "no stock"
+            /pas en stock/i,                  // "not in stock" (French)
+            /non disponible/i,                // "not available" (French)
+            /not available/i,                 // "not available"
+            /unavailable/i,                   // "unavailable"
           ];
+
+          console.log('🔍 DEBUG [General Chat]: Pattern match - AI says no products?', noProductPatterns.some(pattern => pattern.test(n8nResponse.message)));
+          console.log('🔍 DEBUG [General Chat]: Actual products available?', products.length > 0);
 
           const messageIndicatesNoProducts = noProductPatterns.some(pattern =>
             pattern.test(n8nResponse.message)
@@ -770,6 +824,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
           // If AI says "no products" but we have products, override the response
           if (messageIndicatesNoProducts && products.length > 0) {
+            console.log('⚠️ DEBUG [General Chat]: AI INCORRECTLY SAID NO PRODUCTS - OVERRIDING!');
+            console.log('⚠️ DEBUG [General Chat]: AI message was:', n8nResponse.message);
             routeLogger.warn(
               { aiMessage: n8nResponse.message.substring(0, 100) },
               '⚠️ AI incorrectly said no products available in general chat - overriding'
@@ -812,6 +868,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     const responseTime = Date.now() - startTime;
+
+    console.log('📨 DEBUG: Final response being returned:');
+    console.log('  - Message:', n8nResponse.message.substring(0, 100));
+    console.log('  - Recommendations count:', recommendations.length);
+    console.log('  - Confidence:', n8nResponse.confidence);
+    console.log('  - Response time:', responseTime, 'ms');
+    console.log("========================================");
 
     routeLogger.info({
       hasRecommendations: recommendations.length > 0,
