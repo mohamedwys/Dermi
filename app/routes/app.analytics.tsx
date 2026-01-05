@@ -48,6 +48,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const period = AnalyticsService.getPeriodFromPreset(periodPreset);
 
   try {
+    // Enhanced logging for debugging
+    logger.info("Analytics loader started", {
+      shop: session.shop,
+      periodPreset,
+      startDate: period.startDate.toISOString(),
+      endDate: period.endDate.toISOString(),
+      days: period.days,
+    });
+
     // Fetch all analytics data
     const [overview, intents, sentiments, workflowUsage, topProducts, trends, engagement, activeUsers] =
       await Promise.all([
@@ -60,6 +69,19 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         analyticsService.getUserEngagement(session.shop, period),
         analyticsService.getActiveUsers(session.shop, period),
       ]);
+
+    // Log the results for debugging
+    logger.info("Analytics data fetched", {
+      shop: session.shop,
+      totalMessages: overview.totalMessages,
+      totalSessions: overview.totalSessions,
+      engagementSessions: engagement.totalSessions,
+      engagementMessages: engagement.totalMessages,
+      activeUsers,
+      intentsCount: intents.length,
+      sentimentsCount: sentiments.length,
+      trendsCount: trends.length,
+    });
 
     return json({
       overview,

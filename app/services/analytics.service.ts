@@ -397,38 +397,83 @@ export class AnalyticsService {
 
   /**
    * Get user engagement metrics
+   * FIX: Use aggregated ChatAnalytics data for better performance and accuracy
    */
   async getUserEngagement(shop: string, period: AnalyticsPeriod) {
     try {
-      const sessions = await db.chatSession.findMany({
+      // FIX: Use aggregated analytics data instead of raw queries
+      const analyticsData = await db.chatAnalytics.findMany({
         where: {
           shop,
-          createdAt: {
+          date: {
             gte: period.startDate,
             lte: period.endDate,
           },
         },
+      });
+
+      // Enhanced logging
+      this.logger.debug({
+        shop,
+        periodStart: period.startDate.toISOString(),
+        periodEnd: period.endDate.toISOString(),
+        analyticsRecords: analyticsData.length,
+      }, 'Calculating user engagement');
+
+      // Aggregate totals from ChatAnalytics records
+      const totalSessions = analyticsData.reduce((sum, record) => sum + record.totalSessions, 0);
+      const totalMessages = analyticsData.reduce((sum, record) => sum + record.totalMessages, 0);
+      const avgMessagesPerSession = totalSessions > 0 ? totalMessages / totalSessions : 0;
+
+      // FIX: Also query sessions with messages in the period for session duration
+      // This covers sessions created before the period but active during it
+      const sessionsWithMessages = await db.chatSession.findMany({
+        where: {
+          shop,
+          messages: {
+            some: {
+              timestamp: {
+                gte: period.startDate,
+                lte: period.endDate,
+              },
+            },
+          },
+        },
         include: {
-          messages: true,
+          messages: {
+            where: {
+              timestamp: {
+                gte: period.startDate,
+                lte: period.endDate,
+              },
+            },
+            orderBy: {
+              timestamp: 'asc',
+            },
+          },
         },
       });
 
-      const totalSessions = sessions.length;
-      const totalMessages = sessions.reduce((sum: any, s: any) => sum + s.messages.length, 0);
-      const avgMessagesPerSession = totalSessions > 0 ? totalMessages / totalSessions : 0;
-
-      // Calculate session duration (time between first and last message)
-      const sessionDurations = sessions
-        .filter((s: any) => s.messages.length >= 2)
-        .map((s: any) => {
+      // Calculate session duration (time between first and last message in period)
+      const sessionDurations = sessionsWithMessages
+        .filter(s => s.messages.length >= 2)
+        .map(s => {
           const firstMsg = s.messages[0].timestamp;
           const lastMsg = s.messages[s.messages.length - 1].timestamp;
           return (lastMsg.getTime() - firstMsg.getTime()) / 1000; // in seconds
         });
 
       const avgSessionDuration = sessionDurations.length > 0
-        ? sessionDurations.reduce((sum: any, d: any) => sum + d, 0) / sessionDurations.length
+        ? sessionDurations.reduce((sum, d) => sum + d, 0) / sessionDurations.length
         : 0;
+
+      this.logger.debug({
+        totalSessions,
+        totalMessages,
+        avgMessagesPerSession,
+        avgSessionDuration,
+        sessionsWithDuration: sessionDurations.length,
+      }, 'User engagement calculated');
 
       return {
         totalSessions,
@@ -449,18 +494,41 @@ export class AnalyticsService {
 
   /**
    * Get active users count
+   * FIX: Count users who had chat activity during the period
    */
   async getActiveUsers(shop: string, period: AnalyticsPeriod) {
     try {
-      const uniqueUsers = await db.userProfile.count({
+      // FIX: Count distinct users who had messages during the period
+      // This is more accurate than relying on updatedAt
+      const activeUserProfiles = await db.userProfile.findMany({
         where: {
           shop,
-          updatedAt: {
-            gte: period.startDate,
-            lte: period.endDate,
+          chatSessions: {
+            some: {
+              messages: {
+                some: {
+                  timestamp: {
+                    gte: period.startDate,
+                    lte: period.endDate,
+                  },
+                },
+              },
+            },
           },
         },
+        select: {
+          id: true, // Only select ID for efficiency
+        },
       });
+
+      const uniqueUsers = activeUserProfiles.length;
+
+      this.logger.debug({
+        shop,
+        periodStart: period.startDate.toISOString(),
+        periodEnd: period.endDate.toISOString(),
+        activeUsers: uniqueUsers,
+      }, 'Active users calculated');
 
       return uniqueUsers;
     } catch (error: any) {

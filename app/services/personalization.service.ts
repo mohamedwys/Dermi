@@ -519,15 +519,21 @@ Respond with just the category name.`,
       }, 'Updating analytics');
 
       // Get or create analytics entry for today
+      // FIX: Build update object conditionally to avoid undefined fields
+      const updateData: any = {
+        totalMessages: { increment: 1 },
+      };
+
+      // Only increment sessions if this is a new session
+      if (data.isNewSession) {
+        updateData.totalSessions = { increment: 1 };
+      }
+
       const analytics = await db.chatAnalytics.upsert({
         where: {
           shop_date: { shop, date: today },
         },
-        update: {
-          totalMessages: { increment: 1 },
-          // FIX: Increment sessions when it's a new session
-          totalSessions: data.isNewSession ? { increment: 1 } : undefined,
-        },
+        update: updateData,
         create: {
           shop,
           date: today,
