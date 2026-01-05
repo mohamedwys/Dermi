@@ -378,9 +378,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                   title
                   handle
                   description
+                  totalInventory
+                  tags
                   featuredImage { url }
                   variants(first: 1) {
-                    edges { node { price } }
+                    edges {
+                      node {
+                        price
+                        compareAtPrice
+                      }
+                    }
                   }
                 }
               }
@@ -394,16 +401,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           graphqlQuery = `
             #graphql
             query getBestsellers($first: Int!) {
-              products(first: $first, sortKey: BEST_SELLING) {
+              products(first: $first, sortKey: CREATED_AT, reverse: true) {
                 edges {
                   node {
                     id
                     title
                     handle
                     description
+                    totalInventory
+                    tags
                     featuredImage { url }
                     variants(first: 1) {
-                      edges { node { price } }
+                      edges {
+                        node {
+                          price
+                          compareAtPrice
+                        }
+                      }
                     }
                   }
                 }
@@ -423,9 +437,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                     title
                     handle
                     description
+                    totalInventory
+                    tags
                     featuredImage { url }
                     variants(first: 1) {
-                      edges { node { price } }
+                      edges {
+                        node {
+                          price
+                          compareAtPrice
+                        }
+                      }
                     }
                   }
                 }
@@ -448,9 +469,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
                     title
                     handle
                     description
+                    totalInventory
+                    tags
                     featuredImage { url }
                     variants(first: 1) {
-                      edges { node { price } }
+                      edges {
+                        node {
+                          price
+                          compareAtPrice
+                        }
+                      }
                     }
                   }
                 }
@@ -510,7 +538,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             handle: edge.node.handle,
             description: edge.node.description || '',
             image: edge.node.featuredImage?.url,
-            price: edge.node.variants.edges[0]?.node.price || '0.00'
+            price: edge.node.variants.edges[0]?.node.price || '0.00',
+            compareAtPrice: edge.node.variants.edges[0]?.node.compareAtPrice || null,
+            inventory: edge.node.totalInventory || 0,
+            tags: edge.node.tags || [],
+            rating: null, // Add if you have review apps
+            reviewCount: 0 // Add if you have review apps
           })) || [];
 
           console.log('✅ STEP 9: Products mapped successfully. Count:', products.length);

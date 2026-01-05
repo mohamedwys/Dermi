@@ -9,6 +9,11 @@ export interface Product {
   description?: string;
   price?: string;
   image?: string;
+  compareAtPrice?: string | null;
+  inventory?: number;
+  tags?: string[];
+  rating?: number | null;
+  reviewCount?: number;
 }
 
 export interface EmbeddingResult {

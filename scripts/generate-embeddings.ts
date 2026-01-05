@@ -22,6 +22,11 @@ interface Product {
   description?: string;
   price?: string;
   image?: string;
+  compareAtPrice?: string | null;
+  inventory?: number;
+  tags?: string[];
+  rating?: number | null;
+  reviewCount?: number;
 }
 
 interface GraphQLResponse {
@@ -46,6 +51,8 @@ interface ProductEdge {
     title: string;
     handle: string;
     description: string | null;
+    totalInventory: number;
+    tags: string[];
     featuredImage: {
       url: string;
     } | null;
@@ -53,6 +60,7 @@ interface ProductEdge {
       edges: Array<{
         node: {
           price: string;
+          compareAtPrice: string | null;
         };
       }>;
     };
@@ -77,6 +85,8 @@ async function getAllProducts(admin: any): Promise<Product[]> {
               title
               handle
               description
+              totalInventory
+              tags
               featuredImage {
                 url
               }
@@ -84,6 +94,7 @@ async function getAllProducts(admin: any): Promise<Product[]> {
                 edges {
                   node {
                     price
+                    compareAtPrice
                   }
                 }
               }
@@ -110,6 +121,11 @@ async function getAllProducts(admin: any): Promise<Product[]> {
       description: edge.node.description || '',
       image: edge.node.featuredImage?.url,
       price: edge.node.variants.edges[0]?.node.price || '0.00',
+      compareAtPrice: edge.node.variants.edges[0]?.node.compareAtPrice || null,
+      inventory: edge.node.totalInventory || 0,
+      tags: edge.node.tags || [],
+      rating: null,
+      reviewCount: 0
     }));
 
     allProducts = allProducts.concat(products);
