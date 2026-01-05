@@ -67,6 +67,14 @@ export class AnalyticsService {
         },
       });
 
+      // Enhanced logging for debugging
+      this.logger.debug({
+        shop,
+        periodStart: period.startDate.toISOString(),
+        periodEnd: period.endDate.toISOString(),
+        recordsFound: currentData.length,
+      }, 'Fetching analytics overview');
+
       // Calculate previous period for comparison
       const periodLength = period.endDate.getTime() - period.startDate.getTime();
       const previousStartDate = new Date(period.startDate.getTime() - periodLength);
@@ -92,6 +100,28 @@ export class AnalyticsService {
         ? currentData.reduce((sum: any, d: any) => sum + d.avgConfidence, 0) / currentData.length
         : 0;
 
+      // FIX: Aggregate sentiment breakdown for overview
+      const sentimentCounts: Record<string, number> = {
+        positive: 0,
+        neutral: 0,
+        negative: 0,
+      };
+
+      currentData.forEach((record: any) => {
+        try {
+          const sentiments = JSON.parse(record.sentimentBreakdown || '{}');
+          Object.entries(sentiments).forEach(([sentiment, count]) => {
+            const normalizedSentiment = sentiment.toLowerCase();
+            if (normalizedSentiment in sentimentCounts) {
+              sentimentCounts[normalizedSentiment] += count as number;
+            }
+          });
+        } catch (error) {
+          // Skip malformed sentiment data
+          this.logger.debug('Skipping malformed sentiment data');
+        }
+      });
+
       // Aggregate previous period
       const prevTotalSessions = previousData.reduce((sum: any, d: any) => sum + d.totalSessions, 0);
       const prevTotalMessages = previousData.reduce((sum: any, d: any) => sum + d.totalMessages, 0);
@@ -115,6 +145,11 @@ export class AnalyticsService {
         totalMessages,
         avgResponseTime: Math.round(avgResponseTime),
         avgConfidence: Math.round(avgConfidence * 100) / 100,
+        sentimentBreakdown: {
+          positive: sentimentCounts.positive,
+          neutral: sentimentCounts.neutral,
+          negative: sentimentCounts.negative,
+        },
         periodComparison: {
           sessionsChange: Math.round(sessionsChange * 10) / 10,
           messagesChange: Math.round(messagesChange * 10) / 10,
@@ -128,6 +163,11 @@ export class AnalyticsService {
         totalMessages: 0,
         avgResponseTime: 0,
         avgConfidence: 0,
+        sentimentBreakdown: {
+          positive: 0,
+          neutral: 0,
+          negative: 0,
+        },
         periodComparison: {
           sessionsChange: 0,
           messagesChange: 0,
@@ -157,11 +197,17 @@ export class AnalyticsService {
       let totalIntents = 0;
 
       data.forEach((record: any) => {
-        const intents = JSON.parse(record.topIntents);
-        Object.entries(intents).forEach(([intent, count]) => {
-          intentCounts[intent] = (intentCounts[intent] || 0) + (count as number);
-          totalIntents += count as number;
-        });
+        try {
+          // FIX: Add fallback for empty/null values
+          const intents = JSON.parse(record.topIntents || '{}');
+          Object.entries(intents).forEach(([intent, count]) => {
+            intentCounts[intent] = (intentCounts[intent] || 0) + (count as number);
+            totalIntents += count as number;
+          });
+        } catch (error) {
+          // Skip malformed intent data
+          this.logger.debug('Skipping malformed intent data');
+        }
       });
 
       // Convert to array and calculate percentages
@@ -200,11 +246,17 @@ export class AnalyticsService {
       let totalSentiments = 0;
 
       data.forEach((record: any) => {
-        const sentiments = JSON.parse(record.sentimentBreakdown);
-        Object.entries(sentiments).forEach(([sentiment, count]) => {
-          sentimentCounts[sentiment] = (sentimentCounts[sentiment] || 0) + (count as number);
-          totalSentiments += count as number;
-        });
+        try {
+          // FIX: Add fallback for empty/null values
+          const sentiments = JSON.parse(record.sentimentBreakdown || '{}');
+          Object.entries(sentiments).forEach(([sentiment, count]) => {
+            sentimentCounts[sentiment] = (sentimentCounts[sentiment] || 0) + (count as number);
+            totalSentiments += count as number;
+          });
+        } catch (error) {
+          // Skip malformed sentiment data
+          this.logger.debug('Skipping malformed sentiment data');
+        }
       });
 
       // Convert to array with percentages
@@ -285,10 +337,16 @@ export class AnalyticsService {
       const productClicks: Record<string, number> = {};
 
       data.forEach((record: any) => {
-        const products = JSON.parse(record.topProducts);
-        Object.entries(products).forEach(([productId, clicks]) => {
-          productClicks[productId] = (productClicks[productId] || 0) + (clicks as number);
-        });
+        try {
+          // FIX: Add fallback for empty/null values
+          const products = JSON.parse(record.topProducts || '{}');
+          Object.entries(products).forEach(([productId, clicks]) => {
+            productClicks[productId] = (productClicks[productId] || 0) + (clicks as number);
+          });
+        } catch (error) {
+          // Skip malformed product data
+          this.logger.debug('Skipping malformed product data');
+        }
       });
 
       // Convert to array and sort

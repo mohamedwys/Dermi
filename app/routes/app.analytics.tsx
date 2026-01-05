@@ -85,6 +85,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         totalMessages: 0,
         avgResponseTime: 0,
         avgConfidence: 0,
+        sentimentBreakdown: {
+          positive: 0,
+          neutral: 0,
+          negative: 0,
+        },
         periodComparison: { sessionsChange: 0, messagesChange: 0, confidenceChange: 0 },
       },
       intents: [],

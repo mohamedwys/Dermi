@@ -508,6 +508,16 @@ Respond with just the category name.`,
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
+      // Enhanced logging for debugging
+      this.logger.debug({
+        shop,
+        date: today.toISOString().split('T')[0],
+        isNewSession: data.isNewSession,
+        intent: data.intent,
+        sentiment: data.sentiment,
+        workflowType: data.workflowType,
+      }, 'Updating analytics');
+
       // Get or create analytics entry for today
       const analytics = await db.chatAnalytics.upsert({
         where: {
@@ -602,9 +612,18 @@ Respond with just the category name.`,
         }
       }
 
-      this.logger.debug({ shop, workflowType: data.workflowType, isNewSession: data.isNewSession }, 'Updated analytics');
+      this.logger.debug({
+        shop,
+        workflowType: data.workflowType,
+        isNewSession: data.isNewSession,
+        totalMessages: analytics.totalMessages,
+        totalSessions: analytics.totalSessions,
+      }, 'Analytics updated successfully');
     } catch (error) {
-      logError(error, 'Error updating analytics');
+      logError(error, 'Error updating analytics', {
+        shop,
+        date: new Date().toISOString().split('T')[0],
+      });
     }
   }
 
