@@ -7,6 +7,7 @@ import { rateLimit, RateLimitPresets } from "../lib/rate-limit.server";
 import { chatRequestSchema, validateData, validationErrorResponse } from "../lib/validation.server";
 import { getAPISecurityHeaders, mergeSecurityHeaders } from "../lib/security-headers.server";
 import { logError, createLogger } from "../lib/logger.server";
+import { personalizationService } from "../services/personalization.service";
 
 // Default settings (same as in settings page)
 const DEFAULT_SETTINGS = {
@@ -1045,6 +1046,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         }
       });
 
+      // FIX: Track if this is a new session for analytics
+      let isNewSession = false;
+
       if (!chatSession) {
         chatSession = await db.chatSession.create({
           data: {
@@ -1058,6 +1062,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             lastMessageAt: new Date()
           }
         });
+        isNewSession = true; // FIX: Track new session creation
         routeLogger.debug({ sessionId }, 'Created new ChatSession');
       } else {
         // Update existing session
@@ -1117,6 +1122,22 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         chatSessionId: chatSession.id,
         userProfileId: userProfile.id
       }, '✅ Saved chat data to database');
+
+      // FIX: Update ChatAnalytics aggregated data for dashboard
+      await personalizationService.updateAnalytics(shopDomain, {
+        intent: intent.type,
+        sentiment: sentiment,
+        responseTime: responseTime,
+        confidence: n8nResponse.confidence || 0.7,
+        workflowType: 'default', // Widget always uses default workflow
+        isNewSession: isNewSession,
+      });
+
+      routeLogger.debug({
+        isNewSession,
+        intent: intent.type,
+        sentiment: sentiment,
+      }, '✅ Updated ChatAnalytics for dashboard');
 
     } catch (dbError) {
       // Log error but don't break the chatbot
