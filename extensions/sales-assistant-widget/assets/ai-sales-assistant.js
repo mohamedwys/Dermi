@@ -330,26 +330,6 @@ function getProductIdFromPage() {
   return match ? match[1] : null;
 }
 
-function shouldShowProductRecommendations(message) {
-  if (!message) return false;
-
-  const lowerMessage = message.toLowerCase();
-
-  // Product-related keywords that indicate recommendations are relevant
-  const productKeywords = [
-    'recommend', 'suggestion', 'product', 'item', 'check out', 'take a look',
-    'might like', 'perfect for', 'here are', 'found', 'show you', 'browse',
-    'available', 'stock', 'collection', 'popular', 'best seller', 'trending',
-    'new arrival', 'on sale', 'discount', 'offer', 'deal', 'price',
-    'similar', 'alternative', 'option', 'choice', 'consider', 'see these',
-    'recommande', 'produit', 'article', 'regarde', 'voici', 'disponible',
-    'collection', 'populaire', 'nouveau', 'solde', 'promotion', 'prix'
-  ];
-
-  // Check if the message contains any product-related keywords
-  return productKeywords.some(keyword => lowerMessage.includes(keyword));
-}
-
 async function sendMessageToServer(message) {
   showLoading(true);
   try {
@@ -379,8 +359,9 @@ async function sendMessageToServer(message) {
       const responseMessage = data.response || data.message;
       addMessageToChat('assistant', responseMessage);
 
-      // Only show product recommendations if the response explicitly mentions products
-      if (data.recommendations?.length && shouldShowProductRecommendations(responseMessage)) {
+      // Show product recommendations when backend sends them
+      // Backend already filters when to send recommendations
+      if (data.recommendations?.length) {
         displayProductRecommendations(data.recommendations);
       }
 
