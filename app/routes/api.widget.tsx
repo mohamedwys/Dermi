@@ -69,7 +69,20 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   let conversationHistory = [];
   let widgetSettings = null;
   let isLoading = false;
-  let sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+  // ✅ FIX: Persist sessionId in localStorage to prevent repeated greetings
+  // Try to retrieve existing sessionId from localStorage, or create a new one
+  let sessionId = null;
+  try {
+    sessionId = localStorage.getItem('ai_assistant_session_id');
+    if (!sessionId) {
+      sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('ai_assistant_session_id', sessionId);
+    }
+  } catch (e) {
+    // If localStorage is not available (privacy mode), use a session-scoped ID
+    sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  }
 
   // ============================================================================
   // Utility Functions

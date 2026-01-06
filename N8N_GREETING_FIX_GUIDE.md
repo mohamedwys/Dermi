@@ -1,14 +1,56 @@
 # N8N Greeting Repetition Fix - Complete Guide
 
-## Problem Fixed
+## Problems Fixed
+
+### Problem 1: N8N Not Receiving Conversation History
 The N8N agent was saying "Bonjour" or "Hello" at the beginning of **every** response, even after multiple exchanges in the same conversation.
 
-## Root Cause
-The N8N workflow was not receiving conversation history, so it thought each message was the first message in the conversation and greeted the user every time.
+**Root Cause:** The N8N workflow was not receiving conversation history, so it thought each message was the first message in the conversation and greeted the user every time.
+
+### Problem 2: Session Lost on Page Reload / Short Messages
+When users sent short messages like "oui" (yes) or when they reloaded the page, a NEW session was created instead of reusing the existing one, causing the bot to greet again.
+
+**Root Cause:** The frontend was not persisting the `sessionId` in localStorage, so every time the widget loaded or the page refreshed, a brand new session ID was generated.
 
 ## Solution Implemented
 
-### 1. Backend Changes (✅ COMPLETED)
+### 1. Frontend Session Persistence (✅ COMPLETED)
+
+#### Files Modified:
+- `app/routes/api.widget.tsx` - Widget script for standalone widget
+- `extensions/sales-assistant-widget/assets/ai-sales-assistant.js` - Theme extension widget
+
+#### What Changed:
+
+**Before:**
+```javascript
+// sessionId created fresh every time widget loads
+let sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+```
+
+**After:**
+```javascript
+// ✅ FIX: Persist sessionId in localStorage
+let sessionId = null;
+try {
+  sessionId = localStorage.getItem('ai_assistant_session_id');
+  if (!sessionId) {
+    sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('ai_assistant_session_id', sessionId);
+  }
+} catch (e) {
+  // Fallback if localStorage not available
+  sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+```
+
+**Benefits:**
+- ✅ SessionId persists across page reloads
+- ✅ SessionId persists when widget reopens
+- ✅ Same user gets same session = conversation continuity
+- ✅ Graceful fallback if localStorage is blocked (privacy mode)
+
+### 2. Backend Changes (✅ COMPLETED)
 
 #### Files Modified:
 - `app/routes/apps.sales-assistant-api.tsx` - Added conversation history to N8N payload

@@ -10,6 +10,20 @@ let currentSuggestedActions = [];
 let messageQueue = [];
 let isOnline = navigator.onLine;
 
+// ✅ FIX: Persist sessionId in localStorage to prevent repeated greetings
+// Try to retrieve existing sessionId from localStorage, or create a new one
+let sessionId = null;
+try {
+  sessionId = localStorage.getItem('ai_assistant_session_id');
+  if (!sessionId) {
+    sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    localStorage.setItem('ai_assistant_session_id', sessionId);
+  }
+} catch (e) {
+  // If localStorage is not available (privacy mode), use a session-scoped ID
+  sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
 // --- DOM Elements Cache ---
 const elements = {
   container: null,
@@ -334,6 +348,7 @@ async function sendMessageToServer(message) {
   showLoading(true);
   try {
     const contextData = {
+      sessionId: sessionId, // ✅ FIX: Include sessionId to maintain conversation
       page: window.location.pathname,
       productId: getProductIdFromPage(),
       conversationHistory,
