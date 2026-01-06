@@ -604,6 +604,81 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       referer: request.headers.get('referer') || undefined,
     };
 
+    // ✅ CRITICAL FIX: Fetch conversation history to prevent repeated greetings
+    // This must happen BEFORE calling N8N so AI knows it's not the first message
+    let conversationHistory: Array<{ role: string; content: string }> = [];
+    let chatSessionId: string | null = null;
+    let isFirstMessage = true;
+
+    try {
+      // Get session ID from context
+      const sessionId = context.sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      // Try to find existing user profile and chat session
+      const userProfile = await db.userProfile.findUnique({
+        where: {
+          shop_sessionId: {
+            shop: shopDomain,
+            sessionId: sessionId
+          }
+        }
+      });
+
+      if (userProfile) {
+        // Find active chat session (from last 24 hours)
+        const chatSession = await db.chatSession.findFirst({
+          where: {
+            shop: shopDomain,
+            userProfileId: userProfile.id,
+            lastMessageAt: {
+              gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
+            }
+          },
+          orderBy: {
+            lastMessageAt: 'desc'
+          },
+          include: {
+            messages: {
+              orderBy: {
+                timestamp: 'asc'
+              },
+              take: 10 // Last 10 messages
+            }
+          }
+        });
+
+        if (chatSession && chatSession.messages.length > 0) {
+          isFirstMessage = false;
+          chatSessionId = chatSession.id;
+
+          // Convert messages to conversation history format
+          conversationHistory = chatSession.messages.map(msg => ({
+            role: msg.role,
+            content: msg.content
+          }));
+
+          routeLogger.debug({
+            sessionId,
+            messageCount: conversationHistory.length,
+            isFirstMessage
+          }, '✅ Loaded conversation history');
+        }
+      }
+
+      // Add conversation history to enhanced context
+      if (conversationHistory.length > 0) {
+        (enhancedContext as any).previousMessages = conversationHistory.map(m => m.content);
+        (enhancedContext as any).conversationHistory = conversationHistory;
+        (enhancedContext as any).isFirstMessage = false;
+      } else {
+        (enhancedContext as any).isFirstMessage = true;
+      }
+
+    } catch (error) {
+      routeLogger.warn({ error: (error as Error).message }, 'Failed to load conversation history (non-blocking)');
+      // Continue without history - better to respond than fail
+    }
+
     // ========================================
     // GET WEBHOOK URL (for all intents)
     // ========================================

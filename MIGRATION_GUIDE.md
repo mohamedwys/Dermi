@@ -1,145 +1,64 @@
-# Database Migration Required
+# Database Migration Guide
 
-## ⚠️ Issue: Missing `workflowUsage` Column
+## Problem
 
-Your analytics dashboard is failing because the `workflowUsage` column doesn't exist in your production database's `ChatAnalytics` table.
+The dashboard is empty because Prisma migrations haven't been applied to the production database. You're seeing these errors:
 
-**Error you're seeing:**
 ```
-The column `ChatAnalytics.workflowUsage` does not exist in the current database.
-```
-
-## ✅ Solution: Run Prisma Migration
-
-The migration file already exists at:
-```
-prisma/migrations/20251216190500_add_workflow_usage_tracking/migration.sql
+The column `workflowUsage` does not exist in the current database.
+The column `WidgetSettings.workflowType` does not exist in the current database.
 ```
 
-You just need to apply it to your production database.
+## Solution
+
+The migrations already exist in your codebase. You just need to apply them to your production database.
+
+### Migrations to Apply
+
+1. **`20251216190500_add_workflow_usage_tracking`** - Adds `workflowUsage` column to `ChatAnalytics`
+2. **`20251220_add_workflow_type`** - Adds `workflowType` column and enum to `WidgetSettings`
 
 ---
 
-## How to Run the Migration
+## Option 1: Deploy via Vercel Build (Recommended)
 
-### On Your Production Server:
+### Step 1: Verify Build Script
 
-```bash
-# Navigate to your project directory
-cd /path/to/shopibot
+Your `package.json` already includes migration in the build script:
 
-# Run pending migrations
-npx prisma migrate deploy
-```
-
-This will:
-- ✅ Detect the pending `add_workflow_usage_tracking` migration
-- ✅ Add the `workflowUsage` column to `ChatAnalytics` table
-- ✅ Set default value of `'{}'` for existing records
-
----
-
-## Platform-Specific Instructions
-
-### Vercel
-
-**Option 1 - Using Vercel CLI:**
-```bash
-vercel env pull .env.local
-npx prisma migrate deploy
-```
-
-**Option 2 - Build Hook:**
-Add to your `package.json`:
 ```json
 {
   "scripts": {
-    "vercel-build": "prisma migrate deploy && remix vite:build"
+    "build": "prisma generate && prisma migrate deploy && remix vite:build"
   }
 }
 ```
 
-### Render / Railway
+### Step 2: Trigger Vercel Redeploy
 
-SSH into your service and run:
-```bash
-npx prisma migrate deploy
-```
-
-Or add as a build command:
-```bash
-npx prisma migrate deploy && npm run build
-```
-
-### Direct Database Access
-
-If you have direct PostgreSQL access:
-```sql
-ALTER TABLE "ChatAnalytics"
-ADD COLUMN "workflowUsage" TEXT NOT NULL DEFAULT '{}';
-```
+1. Go to your Vercel dashboard
+2. Click "Deployments"
+3. Click "Redeploy" on the latest deployment
+4. Check deployment logs for migration success
 
 ---
 
-## Verify Migration Success
+## Verification Steps
 
-After running the migration:
+After applying migrations:
+
+1. Check Vercel logs for Prisma errors (should be gone)
+2. Test dashboard - should show analytics data
+3. Send test messages - verify they're saved to database
+
+---
+
+## Quick Check
+
+Run locally to see migration status:
 
 ```bash
-# Check migration status
 npx prisma migrate status
-
-# You should see: "Database schema is up to date!"
 ```
 
-Or query directly:
-```sql
-SELECT column_name
-FROM information_schema.columns
-WHERE table_name = 'ChatAnalytics'
-AND column_name = 'workflowUsage';
-```
-
----
-
-## After Migration
-
-1. **No restart needed** - Changes take effect immediately
-2. **Visit** `/app/analytics`
-3. **Send a test message** via the widget
-4. **Refresh dashboard** - Data should now appear!
-
----
-
-## Troubleshooting
-
-### "Cannot find Prisma engines"
-
-```bash
-npx prisma generate
-npx prisma migrate deploy
-```
-
-### Network Issues
-
-If you get 403 errors downloading Prisma engines:
-```bash
-PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1 npx prisma migrate deploy
-```
-
-### Still Not Working?
-
-Check the logs for specific errors and ensure:
-- Database connection string is correct
-- You have ALTER TABLE permissions
-- The migration hasn't already been applied (`npx prisma migrate status`)
-
----
-
-## What This Migration Does
-
-Adds workflow usage tracking to distinguish between:
-- **Default workflow** - Built-in N8N workflow
-- **Custom workflow** - User-configured N8N webhook
-
-This data appears in your analytics dashboard to show which workflow type is being used more.
+Expected: "Database schema is up to date!"
