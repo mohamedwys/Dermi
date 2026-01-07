@@ -105,6 +105,8 @@
     "inputPlaceholderHelp": "Texte indicatif dans le champ de saisie des messages",
     "primaryColor": "Couleur principale",
     "currentColor": "Couleur actuelle",
+    "interfaceLanguage": "Langue de l'interface du chatbot",
+    "interfaceLanguageHelp": "Langue pour les éléments d'interface du chatbot (boutons, étiquettes, etc.). Les réponses de l'IA détecteront toujours automatiquement la langue du client.",
     "aiWorkflow": "Configuration du workflow IA",
     "aiWorkflowDesc": "Choisissez le workflow IA à utiliser pour traiter les messages clients. Vous pouvez utiliser le workflow par défaut du développeur ou configurer votre propre workflow N8N.",
     "workflowType": "Type de workflow",
@@ -236,5 +238,22 @@
     "close": "Fermer",
     "confirm": "Confirmer",
     "language": "Langue"
+  },
+  "chatbot": {
+    "online": "En ligne",
+    "offline": "Hors ligne",
+    "close": "Fermer",
+    "thinking": "Réflexion",
+    "poweredByAI": "Propulsé par IA",
+    "bestSellers": "Meilleures ventes",
+    "newArrivals": "Nouveautés",
+    "onSale": "En promotion",
+    "recommended": "Recommandé",
+    "shipping": "Livraison",
+    "returns": "Retours",
+    "trackOrder": "Suivre commande",
+    "help": "Aide",
+    "discover": "Découvrir",
+    "support": "Support"
   }
 }

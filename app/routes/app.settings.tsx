@@ -35,6 +35,7 @@ const DEFAULT_SETTINGS = {
   welcomeMessage: "Hello! I'm your AI sales assistant. I can help you find products, answer questions about pricing, shipping, and provide personalized recommendations. How can I assist you today?",
   inputPlaceholder: "Ask me anything about our products...",
   primaryColor: "#e620e6",
+  interfaceLanguage: "en",
 };
 
 type SettingsType = typeof DEFAULT_SETTINGS & { shop?: string; id?: string; createdAt?: Date; updatedAt?: Date };
@@ -286,6 +287,17 @@ export default function SettingsPage() {
     { label: t("settings.positions.centerLeft"), value: "center-left" },
   ];
 
+  const languageOptions = [
+    { label: "English", value: "en" },
+    { label: "Español", value: "es" },
+    { label: "Français", value: "fr" },
+    { label: "Deutsch", value: "de" },
+    { label: "日本語", value: "ja" },
+    { label: "Italiano", value: "it" },
+    { label: "Português", value: "pt" },
+    { label: "中文", value: "zh" },
+  ];
+
   return (
     <Page
       title={t("settings.title")}
@@ -388,6 +400,16 @@ export default function SettingsPage() {
                     {t("settings.currentColor")}: {settings.primaryColor}
                   </Text>
                 </BlockStack>
+
+                <Select
+                  label={t("settings.interfaceLanguage")}
+                  options={languageOptions}
+                  value={(settings as any).interfaceLanguage || "en"}
+                  onChange={(value) =>
+                    setSettings((prev: SettingsType) => ({ ...prev, interfaceLanguage: value } as any))
+                  }
+                  helpText={t("settings.interfaceLanguageHelp")}
+                />
               </FormLayout>
             </BlockStack>
           </Card>

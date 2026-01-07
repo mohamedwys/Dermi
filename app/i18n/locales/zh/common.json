@@ -236,5 +236,22 @@
     "close": "关闭",
     "confirm": "确认",
     "language": "语言"
+  },
+  "chatbot": {
+    "online": "在线",
+    "offline": "离线",
+    "close": "关闭",
+    "thinking": "思考中",
+    "poweredByAI": "AI驱动",
+    "bestSellers": "畅销商品",
+    "newArrivals": "新品上市",
+    "onSale": "促销中",
+    "recommended": "推荐",
+    "shipping": "配送",
+    "returns": "退货",
+    "trackOrder": "追踪订单",
+    "help": "帮助",
+    "discover": "发现",
+    "support": "支持"
   }
 }

@@ -236,5 +236,22 @@
     "close": "Cerrar",
     "confirm": "Confirmar",
     "language": "Idioma"
+  },
+  "chatbot": {
+    "online": "En línea",
+    "offline": "Desconectado",
+    "close": "Cerrar",
+    "thinking": "Pensando",
+    "poweredByAI": "Impulsado por IA",
+    "bestSellers": "Más vendidos",
+    "newArrivals": "Novedades",
+    "onSale": "En oferta",
+    "recommended": "Recomendado",
+    "shipping": "Envío",
+    "returns": "Devoluciones",
+    "trackOrder": "Rastrear pedido",
+    "help": "Ayuda",
+    "discover": "Descubrir",
+    "support": "Soporte"
   }
 }

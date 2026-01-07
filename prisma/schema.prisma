@@ -37,6 +37,7 @@ model WidgetSettings {
   inputPlaceholder String       @default("Ask me anything about our products...")
   primaryColor     String       @default("#ee5cee")
   webhookUrl       String?
+  interfaceLanguage String      @default("en")
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   workflowType     WorkflowType @default(DEFAULT)

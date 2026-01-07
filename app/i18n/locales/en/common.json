@@ -105,6 +105,8 @@
     "inputPlaceholderHelp": "Placeholder text in the message input field",
     "primaryColor": "Primary Color",
     "currentColor": "Current color",
+    "interfaceLanguage": "Chatbot Interface Language",
+    "interfaceLanguageHelp": "Language for chatbot UI elements (buttons, labels, etc.). AI responses will still auto-detect customer language.",
     "aiWorkflow": "AI Workflow Configuration",
     "aiWorkflowDesc": "Choose which AI workflow to use for processing customer messages. You can use the developer's default workflow or configure your own N8N workflow.",
     "workflowType": "Workflow Type",
@@ -236,5 +238,22 @@
     "close": "Close",
     "confirm": "Confirm",
     "language": "Language"
+  },
+  "chatbot": {
+    "online": "Online",
+    "offline": "Offline",
+    "close": "Close",
+    "thinking": "Thinking",
+    "poweredByAI": "Powered by AI",
+    "bestSellers": "Best Sellers",
+    "newArrivals": "New Arrivals",
+    "onSale": "On Sale",
+    "recommended": "Recommended",
+    "shipping": "Shipping",
+    "returns": "Returns",
+    "trackOrder": "Track Order",
+    "help": "Help",
+    "discover": "Discover",
+    "support": "Support"
   }
 }

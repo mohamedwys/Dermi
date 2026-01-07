@@ -9,6 +9,7 @@ let currentSentiment = 'neutral';
 let currentSuggestedActions = [];
 let messageQueue = [];
 let isOnline = navigator.onLine;
+let translations = null; // Store loaded translations
 
 // ✅ FIX: Persist sessionId in localStorage to prevent repeated greetings
 // Try to retrieve existing sessionId from localStorage, or create a new one
@@ -34,6 +35,45 @@ const elements = {
   messagesContainer: null,
   chatWindow: null
 };
+
+// ======================
+// Translation Functions
+// ======================
+
+async function loadTranslations(lang) {
+  try {
+    const response = await fetch(`https://shopibot.vercel.app/api/chatbot-translations?lang=${lang}`);
+    if (!response.ok) throw new Error('Failed to load translations');
+    const data = await response.json();
+    translations = data.translations;
+    return translations;
+  } catch (error) {
+    console.error('Failed to load translations:', error);
+    // Fallback to English defaults
+    translations = {
+      online: 'Online',
+      offline: 'Offline',
+      close: 'Close',
+      thinking: 'Thinking',
+      poweredByAI: 'Powered by AI',
+      bestSellers: 'Best Sellers',
+      newArrivals: 'New Arrivals',
+      onSale: 'On Sale',
+      recommended: 'Recommended',
+      shipping: 'Shipping',
+      returns: 'Returns',
+      trackOrder: 'Track Order',
+      help: 'Help',
+      discover: 'Discover',
+      support: 'Support'
+    };
+    return translations;
+  }
+}
+
+function t(key) {
+  return (translations && translations[key]) || key;
+}
 
 // ======================
 // Utility Functions
@@ -293,7 +333,7 @@ function showLoading(show) {
     // Loading text - using CSS class
     const loadingText = document.createElement('span');
     loadingText.className = 'ai-loading-text';
-    loadingText.textContent = 'Thinking';
+    loadingText.textContent = t('thinking');
 
     loaderContainer.appendChild(spinner);
     loaderContainer.appendChild(dotsContainer);
@@ -1324,10 +1364,10 @@ function createWidget() {
               <h3 id="ai-chat-title">${escapeHTML(widgetSettings.chatTitle || 'AI Assistant')}</h3>
               <div class="header-status">
                 <span class="status-dot"></span>
-                <span class="status-text">${escapeHTML(widgetSettings.statusText || 'Online')}</span>
+                <span class="status-text">${escapeHTML(widgetSettings.statusText || t('online'))}</span>
               </div>
             </div>
-            <button class="ai-chat-close" id="ai-chat-close-btn" aria-label="${escapeHTML(widgetSettings.closeButtonLabel || 'Close')}" title="Close chat (Esc)">
+            <button class="ai-chat-close" id="ai-chat-close-btn" aria-label="${escapeHTML(widgetSettings.closeButtonLabel || t('close'))}" title="Close chat (Esc)">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M13.5 4.5L4.5 13.5M4.5 4.5L13.5 13.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -1346,36 +1386,36 @@ function createWidget() {
                   <h2 class="welcome-title">${escapeHTML(widgetSettings.welcomeMessage || 'Hello! How can I assist you?')}</h2>
                 </div>
                 <div class="quick-actions-section">
-                  <div class="section-label"><span>${escapeHTML(widgetSettings.sectionDiscoveryLabel || 'Discover')}</span></div>
+                  <div class="section-label"><span>${escapeHTML(widgetSettings.sectionDiscoveryLabel || t('discover'))}</span></div>
                   <div class="quick-actions-grid">
                     <button class="quick-action-btn" data-prompt="Show me your popular products">
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.bestSellersText || 'Best Sellers')}</span>
+                      <span class="quick-action-text">${escapeHTML(widgetSettings.bestSellersText || t('bestSellers'))}</span>
                     </button>
                     <button class="quick-action-btn" data-prompt="Show me new arrivals">
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.newArrivalsText || 'New Arrivals')}</span>
+                      <span class="quick-action-text">${escapeHTML(widgetSettings.newArrivalsText || t('newArrivals'))}</span>
                     </button>
                     <button class="quick-action-btn" data-prompt="What products are on sale?">
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.onSaleText || 'On Sale')}</span>
+                      <span class="quick-action-text">${escapeHTML(widgetSettings.onSaleText || t('onSale'))}</span>
                     </button>
                     <button class="quick-action-btn" data-prompt="Show me recommendations for me">
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.recommendationsText || 'Recommended')}</span>
+                      <span class="quick-action-text">${escapeHTML(widgetSettings.recommendationsText || t('recommended'))}</span>
                     </button>
                   </div>
                 </div>
                 <div class="quick-actions-section">
-                  <div class="section-label"><span>${escapeHTML(widgetSettings.sectionSupportLabel || 'Support')}</span></div>
+                  <div class="section-label"><span>${escapeHTML(widgetSettings.sectionSupportLabel || t('support'))}</span></div>
                   <div class="quick-actions-grid">
                     <button class="quick-action-btn" data-prompt="Tell me about shipping and delivery">
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.shippingText || 'Shipping')}</span>
+                      <span class="quick-action-text">${escapeHTML(widgetSettings.shippingText || t('shipping'))}</span>
                     </button>
                     <button class="quick-action-btn" data-prompt="What is your return policy?">
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.returnsText || 'Returns')}</span>
+                      <span class="quick-action-text">${escapeHTML(widgetSettings.returnsText || t('returns'))}</span>
                     </button>
                     <button class="quick-action-btn" data-prompt="How can I track my order?">
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.trackOrderText || 'Track Order')}</span>
+                      <span class="quick-action-text">${escapeHTML(widgetSettings.trackOrderText || t('trackOrder'))}</span>
                     </button>
                     <button class="quick-action-btn" data-prompt="I need help with something">
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.helpText || 'Help')}</span>
+                      <span class="quick-action-text">${escapeHTML(widgetSettings.helpText || t('help'))}</span>
                     </button>
                   </div>
                 </div>
@@ -1393,7 +1433,7 @@ function createWidget() {
               </svg>
             </button>
           </div>
-          <div class="ai-powered-footer">Powered by AI</div>
+          <div class="ai-powered-footer">${escapeHTML(t('poweredByAI'))}</div>
         </div>
       </div>
     </div>
@@ -1448,7 +1488,7 @@ function setupEventListeners() {
 // ======================
 
 // FINAL SAFE INIT — waits for container to appear
-function safeInit(retries = 20) {
+async function safeInit(retries = 20) {
   if (!window.aiSalesAssistantSettings?.enabled) {
     console.log('AI Sales Assistant: disabled');
     return;
@@ -1458,6 +1498,11 @@ function safeInit(retries = 20) {
   if (container) {
     // Proceed only if container exists
     widgetSettings = window.aiSalesAssistantSettings;
+
+    // Load translations based on interfaceLanguage setting
+    const lang = widgetSettings.interfaceLanguage || 'en';
+    await loadTranslations(lang);
+
     loadConversationHistory();
     loadMessageQueue();
     createWidget();

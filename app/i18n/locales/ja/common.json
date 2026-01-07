@@ -236,5 +236,22 @@
     "close": "閉じる",
     "confirm": "確認",
     "language": "言語"
+  },
+  "chatbot": {
+    "online": "オンライン",
+    "offline": "オフライン",
+    "close": "閉じる",
+    "thinking": "考え中",
+    "poweredByAI": "AI搭載",
+    "bestSellers": "ベストセラー",
+    "newArrivals": "新着商品",
+    "onSale": "セール中",
+    "recommended": "おすすめ",
+    "shipping": "配送",
+    "returns": "返品",
+    "trackOrder": "注文を追跡",
+    "help": "ヘルプ",
+    "discover": "発見",
+    "support": "サポート"
   }
 }
