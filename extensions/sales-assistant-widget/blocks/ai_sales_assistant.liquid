@@ -70,6 +70,23 @@
       "default": "#ee5cee"
     },
     {
+      "type": "select",
+      "id": "interface_language",
+      "label": "Chatbot Interface Language",
+      "info": "Language for chatbot UI elements (buttons, labels, etc.). AI responses will auto-detect customer language.",
+      "options": [
+        { "value": "en", "label": "English" },
+        { "value": "es", "label": "Español" },
+        { "value": "fr", "label": "Français" },
+        { "value": "de", "label": "Deutsch" },
+        { "value": "ja", "label": "日本語" },
+        { "value": "it", "label": "Italiano" },
+        { "value": "pt", "label": "Português" },
+        { "value": "zh", "label": "中文" }
+      ],
+      "default": "en"
+    },
+    {
       "type": "header",
       "content": "Welcome Screen - Quick Actions"
     },
@@ -159,7 +176,8 @@
     welcomeMessage: {{ block.settings.welcome_message | default: "Hello! I'm your AI sales assistant. How can I help you today?" | json }},
     inputPlaceholder: {{ block.settings.input_placeholder | default: "Ask me anything about our products..." | json }},
     primaryColor: {{ block.settings.primary_color | default: "#ee5cee" | json }},
-    
+    interfaceLanguage: {{ block.settings.interface_language | default: "en" | json }},
+
     // Quick action labels
     sectionDiscoveryLabel: {{ block.settings.section_discovery_label | default: "Product Discovery" | json }},
     bestSellersText: {{ block.settings.best_sellers_text | default: "Best Sellers" | json }},
