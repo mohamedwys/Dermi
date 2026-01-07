@@ -14,6 +14,7 @@ import {
   Box,
   Divider,
   Banner,
+  InlineGrid,
 } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
 import { checkBillingStatus, requireBilling } from "../lib/billing.server";
@@ -244,132 +245,126 @@ export default function Index() {
 
         {/* Main Content Grid */}
         <Layout.Section>
-          <InlineStack gap="400" align="start">
-            {/* System Status Card */}
-            <Box width="50%">
-              <Card>
-                <BlockStack gap="500">
-                  <BlockStack gap="200">
-                    <Text variant="headingLg" as="h3" fontWeight="bold">
-                      {t("dashboard.systemStatus")}
-                    </Text>
-                    <Text variant="bodyMd" as="p" tone="subdued">
-                      {t("dashboard.monitorComponents")}
-                    </Text>
-                  </BlockStack>
+  <InlineGrid
+    columns={{ xs: 1, md: 2 }}
+    gap="400"
+    alignItems="start"
+  >
+    {/* System Status Card */}
+    <Card>
+      <BlockStack gap="500">
+        <BlockStack gap="200">
+          <Text variant="headingLg" as="h3" fontWeight="bold">
+            {t("dashboard.systemStatus")}
+          </Text>
+          <Text variant="bodyMd" as="p" tone="subdued">
+            {t("dashboard.monitorComponents")}
+          </Text>
+        </BlockStack>
 
-                  <BlockStack gap="400">
-                    {([
-                      {
-                        title: t("dashboard.aiAssistant"),
-                        desc: t("dashboard.coreChatbot"),
-                        badge: t("dashboard.active"),
-                        tone: "success",
-                      },
-                      {
-                        title: t("dashboard.themeIntegration"),
-                        desc: t("dashboard.widgetEmbedded"),
-                        badge: t("dashboard.enabled"),
-                        tone: "success",
-                      },
-                      {
-                        title: t("dashboard.n8nWebhook"),
-                        desc: t("dashboard.advancedWorkflow"),
-                        badge: t("dashboard.fallback"),
-                        tone: "warning",
-                      },
-                      {
-                        title: t("dashboard.analyticsTracking"),
-                        desc: t("dashboard.dataCollection"),
-                        badge: t("dashboard.running"),
-                        tone: "success",
-                      },
-                    ] as const).map((item, i) => (
-                      <Box key={i}>
-                        <InlineStack align="space-between" blockAlign="center">
-                          <BlockStack gap="100">
-                            <Text variant="bodyMd" as="p" fontWeight="semibold">
-                              {item.title}
-                            </Text>
-                            <Text variant="bodySm" as="p" tone="subdued">
-                              {item.desc}
-                            </Text>
-                          </BlockStack>
-                          <Badge tone={item.tone} size="medium">
-                            {item.badge}
-                          </Badge>
-                        </InlineStack>
-                        {i < 3 && <Divider />}
-                      </Box>
-                    ))}
-                  </BlockStack>
-
-                  <Box paddingBlockStart="200">
-                    <Button variant="primary" size="large" fullWidth url="/app/settings">
-                      {t("dashboard.configureSettings")}
-                    </Button>
-                  </Box>
+        <BlockStack gap="400">
+          {([
+            {
+              title: t("dashboard.aiAssistant"),
+              desc: t("dashboard.coreChatbot"),
+              badge: t("dashboard.active"),
+              tone: "success",
+            },
+            {
+              title: t("dashboard.themeIntegration"),
+              desc: t("dashboard.widgetEmbedded"),
+              badge: t("dashboard.enabled"),
+              tone: "success",
+            },
+            {
+              title: t("dashboard.n8nWebhook"),
+              desc: t("dashboard.advancedWorkflow"),
+              badge: t("dashboard.fallback"),
+              tone: "warning",
+            },
+            {
+              title: t("dashboard.analyticsTracking"),
+              desc: t("dashboard.dataCollection"),
+              badge: t("dashboard.running"),
+              tone: "success",
+            },
+          ] as const).map((item, i) => (
+            <Box key={i}>
+              <InlineStack align="space-between" blockAlign="center">
+                <BlockStack gap="100">
+                  <Text variant="bodyMd" fontWeight="semibold" as="dd">
+                    {item.title}
+                  </Text>
+                  <Text variant="bodySm" tone="subdued" as={"dd"}>
+                    {item.desc}
+                  </Text>
                 </BlockStack>
-              </Card>
+                <Badge tone={item.tone}>{item.badge}</Badge>
+              </InlineStack>
+              {i < 3 && <Divider />}
             </Box>
-          </InlineStack>
-        </Layout.Section>
+          ))}
+        </BlockStack>
 
-        {/* Top Questions and Setup Progress - Side by Side */}
+        <Button variant="primary" size="large" fullWidth url="/app/settings">
+          {t("dashboard.configureSettings")}
+        </Button>
+      </BlockStack>
+    </Card>
+
+    {/* Top Questions Card */}
+    <Card>
+      <BlockStack gap="500">
+        <InlineStack align="space-between">
+          <BlockStack gap="100">
+            <Text variant="headingLg" as="h3" fontWeight="bold">
+              {t("dashboard.topQuestions")}
+            </Text>
+            <Text variant="bodyMd" tone="subdued" as={"dd"}>
+              {t("dashboard.mostAsked")}
+            </Text>
+          </BlockStack>
+          <Badge>{t("dashboard.last7Days")}</Badge>
+        </InlineStack>
+
+        <BlockStack gap="300">
+          {stats.topQuestions.map((item, index) => {
+            const maxCount = Math.max(
+              ...stats.topQuestions.map((q) => q.count),
+              1
+            );
+            const percentage = (item.count / maxCount) * 100;
+
+            return (
+              <BlockStack key={index} gap="200">
+                <InlineStack align="space-between">
+                  <Text as={"dd"}>
+                    {index + 1}. {item.question}
+                  </Text>
+                  <Badge tone="info">
+                    {item.count > 0
+                      ? `${item.count}${t("dashboard.timesAsked")}`
+                      : t("dashboard.new")}
+                  </Badge>
+                </InlineStack>
+                <ProgressBar progress={percentage} size="small" />
+              </BlockStack>
+            );
+          })}
+        </BlockStack>
+
+        <Button size="large" fullWidth url="/app/analytics">
+          {t("dashboard.viewFullAnalytics")}
+        </Button>
+      </BlockStack>
+    </Card>
+  </InlineGrid>
+</Layout.Section>
+
         <Layout.Section>
           <InlineStack gap="400" align="start">
-            {/* Top Questions Card */}
-            <Box width="50%">
-              <Card>
-                <BlockStack gap="500">
-                  <InlineStack align="space-between" blockAlign="start">
-                    <BlockStack gap="100">
-                      <Text variant="headingLg" as="h3" fontWeight="bold">
-                        {t("dashboard.topQuestions")}
-                      </Text>
-                      <Text variant="bodyMd" as="p" tone="subdued">
-                        {t("dashboard.mostAsked")}
-                      </Text>
-                    </BlockStack>
-                    <Badge>{t("dashboard.last7Days")}</Badge>
-                  </InlineStack>
-
-                  <BlockStack gap="300">
-                    {stats.topQuestions.map((item, index) => {
-                      const maxCount = Math.max(...stats.topQuestions.map((q) => q.count), 1);
-                      const percentage = maxCount > 0 ? (item.count / maxCount) * 100 : 0;
-
-                      return (
-                        <Box key={index}>
-                          <BlockStack gap="200">
-                            <InlineStack align="space-between" blockAlign="center">
-                              <Text variant="bodyMd" as="p">
-                                {index + 1}. {item.question}
-                              </Text>
-                              <Badge tone="info">
-                                {item.count > 0
-                                  ? `${item.count}${t("dashboard.timesAsked")}`
-                                  : t("dashboard.new")}
-                              </Badge>
-                            </InlineStack>
-                            <ProgressBar progress={percentage} size="small" tone="primary" />
-                          </BlockStack>
-                        </Box>
-                      );
-                    })}
-                  </BlockStack>
-
-                  <Box paddingBlockStart="200">
-                    <Button size="large" fullWidth url="/app/sales-assistant">
-                      {t("dashboard.viewFullAnalytics")}
-                    </Button>
-                  </Box>
-                </BlockStack>
-              </Card>
-            </Box>
-
             {/* Setup Progress Card */}
-            <Box width="50%">
+            <Box width="100%">
               <Card>
                 <BlockStack gap="500">
                   <InlineStack align="space-between" blockAlign="center">
@@ -451,7 +446,7 @@ export default function Index() {
             </Box>
           </InlineStack>
         </Layout.Section>
-        
+
         {/* Quick Actions */}
         <Layout.Section>
           <BlockStack gap="400">
