@@ -463,7 +463,7 @@ export default function Index() {
                 {
                   title: t("dashboard.viewAnalyticsTitle"),
                   desc: t("dashboard.viewAnalyticsDesc"),
-                  url: "/app/sales-assistant",
+                  url: "/app/analytics",
                   label: t("dashboard.openAnalytics"),
                 },
                 {
