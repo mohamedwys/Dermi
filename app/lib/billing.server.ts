@@ -27,7 +27,7 @@ export async function checkBillingStatus(
   billing: BillingAPI
 ): Promise<BillingCheckResult> {
   const { hasActivePayment, appSubscriptions } = await billing.check({
-    plans: ["Starter Plan", "Professional Plan"] as any,
+    plans: ["BYOK Plan", "Starter Plan", "Professional Plan"] as any,
     isTest: process.env.NODE_ENV !== "production",
   });
 
@@ -61,11 +61,11 @@ export async function requireBilling(
   }
 
   const billingCheck = await billing.require({
-    plans: ["Starter Plan", "Professional Plan"] as any,
+    plans: ["BYOK Plan", "Starter Plan", "Professional Plan"] as any,
     isTest: process.env.NODE_ENV !== "production",
     onFailure: async () => {
-      // No active subscription - redirect to billing page
-      throw redirect("/app/billing");
+      // No active subscription - redirect to onboarding page
+      throw redirect("/app/onboarding");
     },
   });
 
@@ -114,6 +114,15 @@ export async function hasStarterPlan(
  */
 export function getPlanLimits(activePlan: string | null) {
   switch (activePlan) {
+    case "BYOK Plan":
+      return {
+        maxConversations: Infinity,
+        hasAdvancedAnalytics: false,
+        hasCustomWebhook: false,
+        hasPrioritySupport: false,
+        hasSentimentAnalysis: false,
+      };
+
     case "Starter Plan":
       return {
         maxConversations: 1000,

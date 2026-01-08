@@ -153,9 +153,86 @@ export default function BillingPage() {
 
         {/* Pricing Cards */}
         <Layout.Section>
-          <InlineStack gap="400" wrap={false}>
+          <InlineStack gap="400" wrap={true} align="center">
+            {/* BYOK Plan */}
+            <Box minWidth="300px" maxWidth="350px">
+              <Card>
+                <BlockStack gap="500">
+                  {/* Header */}
+                  <BlockStack gap="400">
+                    <InlineStack align="space-between" blockAlign="start">
+                      <Text as="h2" variant="headingLg" fontWeight="bold">
+                        {t("billing.byokPlan") || "BYOK"}
+                      </Text>
+                      <Badge tone="info">{t("billing.budgetFriendly") || "Budget"}</Badge>
+                    </InlineStack>
+                    <Text as="p" variant="bodyMd" tone="subdued">
+                      {t("billing.byokDesc") || "Bring Your Own API Key"}
+                    </Text>
+                  </BlockStack>
+
+                  {/* Pricing */}
+                  <BlockStack gap="100">
+                    <InlineStack gap="100" blockAlign="end">
+                      <Text as="h3" variant="heading3xl" fontWeight="bold">
+                        $5
+                      </Text>
+                      <Text as="span" variant="bodyLg" tone="subdued">
+                        {t("billing.perMonth")}
+                      </Text>
+                    </InlineStack>
+                    <Badge tone="info">{t("billing.freeTrialIncluded")}</Badge>
+                  </BlockStack>
+
+                  <Divider />
+
+                  {/* Features */}
+                  <BlockStack gap="400">
+                    <Text as="p" variant="headingSm" fontWeight="semibold">
+                      {t("billing.whatsIncluded")}
+                    </Text>
+                    <List type="bullet">
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          {t("billing.features.unlimitedConversations")}
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          Use your own OpenAI API key
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          Pay your own AI expenses
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          {t("billing.features.widgetCustomization")}
+                        </Text>
+                      </List.Item>
+                    </List>
+                  </BlockStack>
+
+                  {/* CTA Button */}
+                  <Button
+                    variant="primary"
+                    size="large"
+                    fullWidth
+                    onClick={() => handleSubscribe("BYOK Plan")}
+                    disabled={hasActivePayment && activePlan?.name === "BYOK Plan"}
+                  >
+                    {hasActivePayment && activePlan?.name === "BYOK Plan"
+                      ? t("billing.currentPlan")
+                      : t("billing.startFreeTrial")}
+                  </Button>
+                </BlockStack>
+              </Card>
+            </Box>
+
             {/* Starter Plan */}
-            <Box width="50%" minWidth="400px">
+            <Box minWidth="300px" maxWidth="350px">
               <Card>
                 <BlockStack gap="500">
                   {/* Header */}
@@ -237,7 +314,7 @@ export default function BillingPage() {
             </Box>
 
             {/* Professional Plan */}
-            <Box width="50%" minWidth="400px">
+            <Box minWidth="300px" maxWidth="350px">
               <Card background="bg-surface-selected">
                 <BlockStack gap="500">
                   {/* Header */}
@@ -338,13 +415,19 @@ export default function BillingPage() {
               <Text as="h3" variant="headingLg" alignment="center">
                 {t("billing.comparePlans")}
               </Text>
+              <InlineStack align="center" gap="400">
+                <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">BYOK</Text>
+                <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">Starter</Text>
+                <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">Professional</Text>
+              </InlineStack>
               <Divider />
               <BlockStack gap="300">
                 <InlineStack align="space-between">
                   <Text as="p" variant="bodyMd" tone="subdued">
                     {t("billing.monthlyConversations")}
                   </Text>
-                  <InlineStack gap="800">
+                  <InlineStack gap="600">
+                    <Text as="span" variant="bodyMd" fontWeight="semibold">{t("billing.unlimited")}</Text>
                     <Text as="span" variant="bodyMd">1,000</Text>
                     <Text as="span" variant="bodyMd" fontWeight="semibold">{t("billing.unlimited")}</Text>
                   </InlineStack>
@@ -354,7 +437,8 @@ export default function BillingPage() {
                   <Text as="p" variant="bodyMd" tone="subdued">
                     {t("billing.aiRecommendations")}
                   </Text>
-                  <InlineStack gap="800">
+                  <InlineStack gap="600">
+                    <Text as="span" variant="bodyMd">BYOK</Text>
                     <Text as="span" variant="bodyMd">✓</Text>
                     <Text as="span" variant="bodyMd">✓</Text>
                   </InlineStack>
@@ -364,7 +448,8 @@ export default function BillingPage() {
                   <Text as="p" variant="bodyMd" tone="subdued">
                     {t("billing.analyticsDashboard")}
                   </Text>
-                  <InlineStack gap="800">
+                  <InlineStack gap="600">
+                    <Text as="span" variant="bodyMd">{t("billing.basic")}</Text>
                     <Text as="span" variant="bodyMd">{t("billing.basic")}</Text>
                     <Text as="span" variant="bodyMd" fontWeight="semibold">{t("billing.advanced")}</Text>
                   </InlineStack>
@@ -374,7 +459,8 @@ export default function BillingPage() {
                   <Text as="p" variant="bodyMd" tone="subdued">
                     {t("billing.n8nWebhook")}
                   </Text>
-                  <InlineStack gap="800">
+                  <InlineStack gap="600">
+                    <Text as="span" variant="bodyMd">–</Text>
                     <Text as="span" variant="bodyMd">–</Text>
                     <Text as="span" variant="bodyMd">✓</Text>
                   </InlineStack>
@@ -384,7 +470,8 @@ export default function BillingPage() {
                   <Text as="p" variant="bodyMd" tone="subdued">
                     {t("billing.support")}
                   </Text>
-                  <InlineStack gap="800">
+                  <InlineStack gap="600">
+                    <Text as="span" variant="bodyMd">{t("billing.email")}</Text>
                     <Text as="span" variant="bodyMd">{t("billing.email")}</Text>
                     <Text as="span" variant="bodyMd" fontWeight="semibold">{t("billing.priority24x7")}</Text>
                   </InlineStack>

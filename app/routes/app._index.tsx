@@ -157,16 +157,27 @@ export default function Index() {
           <Layout.Section>
             <Banner
               title={`✓ ${billingStatus.activePlan} ${t("dashboard.planActive")}`}
-              tone="success"
+              tone={billingStatus.appSubscriptions[0]?.trialDays && billingStatus.appSubscriptions[0]?.trialDays > 0 ? "info" : "success"}
               action={{
                 content: t("dashboard.manageBilling"),
                 url: "/app/billing",
               }}
             >
-              <p>
-                {t("dashboard.subscriptionActive")}
-                {billingStatus.appSubscriptions[0]?.test && <> {t("dashboard.testModeNote")}</>}
-              </p>
+              <BlockStack gap="200">
+                <p>
+                  {billingStatus.appSubscriptions[0]?.trialDays && billingStatus.appSubscriptions[0]?.trialDays > 0 ? (
+                    <>
+                      🎉 <strong>Free Trial Active!</strong> You have {billingStatus.appSubscriptions[0].trialDays} days remaining in your trial.
+                      {billingStatus.appSubscriptions[0]?.test && <> {t("dashboard.testModeNote")}</>}
+                    </>
+                  ) : (
+                    <>
+                      {t("dashboard.subscriptionActive")}
+                      {billingStatus.appSubscriptions[0]?.test && <> {t("dashboard.testModeNote")}</>}
+                    </>
+                  )}
+                </p>
+              </BlockStack>
             </Banner>
           </Layout.Section>
         )}

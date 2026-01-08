@@ -16,10 +16,18 @@ export interface BillingPlan {
 /**
  * Billing plan definitions
  * Amounts can be overridden via environment variables:
+ * - BYOK_PLAN_PRICE (default: 5.00)
  * - STARTER_PLAN_PRICE (default: 25.00)
  * - PROFESSIONAL_PLAN_PRICE (default: 79.00)
  */
 export const BILLING_PLANS = {
+  BYOK: {
+    name: "BYOK Plan",
+    amount: parseFloat(process.env.BYOK_PLAN_PRICE || "5.0"),
+    currencyCode: "USD",
+    interval: "EVERY_30_DAYS",
+    trialDays: 7,
+  },
   STARTER: {
     name: "Starter Plan",
     amount: parseFloat(process.env.STARTER_PLAN_PRICE || "25.0"),
@@ -40,6 +48,7 @@ export const BILLING_PLANS = {
  * Get all plan names for billing API
  */
 export const PLAN_NAMES = [
+  BILLING_PLANS.BYOK.name,
   BILLING_PLANS.STARTER.name,
   BILLING_PLANS.PROFESSIONAL.name,
 ] as const;
