@@ -238,7 +238,7 @@ export default function SettingsPage() {
             setUsageData(data);
           }
         } catch (error) {
-          logger.error(error, "Failed to fetch BYOK usage data");
+          console.error("Failed to fetch BYOK usage data:", error);
         } finally {
           setLoadingUsage(false);
         }
