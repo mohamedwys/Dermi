@@ -16,6 +16,7 @@ import {
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
+import { ChatLoadingAnimation } from "../components/ChatLoadingAnimation";
 
 interface Message {
   id: string;
@@ -272,15 +273,18 @@ export default function SalesAssistantSimple() {
                   ))}
                   {fetcher.state === "submitting" && (
                     <div style={{ display: "flex", justifyContent: "flex-start" }}>
-                      <div style={{ 
-                        padding: "12px", 
+                      <div style={{
+                        padding: "12px",
                         borderRadius: "8px",
                         backgroundColor: "#ffffff",
                         border: "1px solid #e1e3e5"
                       }}>
-                        <Text variant="bodyMd" as="p">
-                          Thinking...
-                        </Text>
+                        <ChatLoadingAnimation
+                          primaryColor="#006fbb"
+                          ariaLabel="AI is thinking"
+                          dotSize={10}
+                          gap={6}
+                        />
                       </div>
                     </div>
                   )}

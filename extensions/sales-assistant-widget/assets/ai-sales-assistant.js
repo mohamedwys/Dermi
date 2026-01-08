@@ -295,35 +295,28 @@ function showLoading(show) {
     loadingDiv = document.createElement('div');
     loadingDiv.id = 'ai-loading';
     loadingDiv.className = 'ai-message assistant-message';
+    loadingDiv.setAttribute('role', 'status');
+    loadingDiv.setAttribute('aria-label', t('thinking'));
+    loadingDiv.setAttribute('aria-live', 'polite');
     loadingDiv.style.cssText = `
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 16px 20px;
       background: white;
       border-radius: 12px;
       border: 1px solid #f3f4f6;
       box-shadow: 0 2px 8px rgba(0,0,0,0.08);
       margin-bottom: 16px;
-      max-width: 85%;
-      align-self: center;
+      max-width: fit-content;
+      align-self: flex-start;
+      margin-left: 12px;
     `;
 
-    // Create modern loading animation
-    const loaderContainer = document.createElement('div');
-    loaderContainer.style.cssText = `
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    `;
-
-    // Animated spinner - using CSS class
-    const spinner = document.createElement('div');
-    spinner.className = 'ai-loading-spinner';
-
-    // Animated dots - using CSS class
+    // Create modern 3-dot bouncing animation
     const dotsContainer = document.createElement('div');
     dotsContainer.className = 'ai-loading-dots-container';
+    dotsContainer.setAttribute('aria-hidden', 'true');
 
     for (let i = 0; i < 3; i++) {
       const dot = document.createElement('div');
@@ -331,15 +324,7 @@ function showLoading(show) {
       dotsContainer.appendChild(dot);
     }
 
-    // Loading text - using CSS class
-    const loadingText = document.createElement('span');
-    loadingText.className = 'ai-loading-text';
-    loadingText.textContent = t('thinking');
-
-    loaderContainer.appendChild(spinner);
-    loaderContainer.appendChild(dotsContainer);
-    loaderContainer.appendChild(loadingText);
-    loadingDiv.appendChild(loaderContainer);
+    loadingDiv.appendChild(dotsContainer);
 
     // Add to messages
     elements.messagesContainer.appendChild(loadingDiv);

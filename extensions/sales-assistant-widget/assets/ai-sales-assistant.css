@@ -1281,28 +1281,22 @@
   }
 }
 
-/* Professional Loading Animation Styles */
-.ai-loading-spinner {
-  width: 24px;
-  height: 24px;
-  border: 3px solid rgba(59, 130, 246, 0.2);
-  border-top-color: var(--ai-primary-color, #3b82f6);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
+/* Modern Loading Animation Styles */
 .ai-loading-dots-container {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
+  justify-content: center;
+  min-height: 24px;
 }
 
 .ai-loading-dot {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   background: var(--ai-primary-color, #3b82f6);
   border-radius: 50%;
-  animation: bounce 1.4s ease-in-out infinite;
+  animation: modernDotBounce 1.4s ease-in-out infinite;
+  box-shadow: 0 2px 4px rgba(var(--ai-primary-color-rgb, 59, 130, 246), 0.3);
 }
 
 .ai-loading-dot:nth-child(1) {
@@ -1310,32 +1304,29 @@
 }
 
 .ai-loading-dot:nth-child(2) {
-  animation-delay: 0.16s;
+  animation-delay: 0.2s;
 }
 
 .ai-loading-dot:nth-child(3) {
-  animation-delay: 0.32s;
+  animation-delay: 0.4s;
 }
 
-.ai-loading-text {
-  color: #6b7280;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-/* Loading animations */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes bounce {
+/* Smooth bouncing animation */
+@keyframes modernDotBounce {
   0%, 60%, 100% {
     transform: translateY(0) scale(1);
-    opacity: 0.6;
+    opacity: 0.7;
   }
   30% {
-    transform: translateY(-8px) scale(1.1);
+    transform: translateY(-12px) scale(1.2);
     opacity: 1;
+  }
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .ai-loading-dot {
+    animation: none;
+    opacity: 0.7;
   }
 }
