@@ -1,6 +1,6 @@
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
 import { logger } from "../lib/logger.server";
-import db from "../db.server";
+import { prisma as db } from "../db.server";
 
 /**
  * API endpoint to get BYOK usage statistics for a shop

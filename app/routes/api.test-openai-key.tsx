@@ -1,6 +1,6 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { logger } from "../lib/logger.server";
-import db from "../db.server";
+import { prisma as db } from "../db.server";
 import { encryptApiKey, isValidOpenAIKey } from "../lib/encryption.server";
 
 /**
