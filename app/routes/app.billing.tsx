@@ -153,9 +153,9 @@ export default function BillingPage() {
 
         {/* Pricing Cards */}
         <Layout.Section>
-          <InlineStack gap="400" wrap={true} align="center">
+          <InlineStack gap="400" wrap={false}>
             {/* BYOK Plan */}
-            <Box minWidth="300px" maxWidth="350px">
+            <Box width="33.33%">
               <Card>
                 <BlockStack gap="500">
                   {/* Header */}
@@ -242,7 +242,7 @@ export default function BillingPage() {
             </Box>
 
             {/* Starter Plan */}
-            <Box minWidth="300px" maxWidth="350px">
+            <Box width="33.33%">
               <Card>
                 <BlockStack gap="500">
                   {/* Header */}
@@ -329,7 +329,7 @@ export default function BillingPage() {
             </Box>
 
             {/* Professional Plan */}
-            <Box minWidth="300px" maxWidth="350px">
+            <Box width="33.33%">
               <Card background="bg-surface-selected">
                 <BlockStack gap="500">
                   {/* Header */}
@@ -427,103 +427,252 @@ export default function BillingPage() {
         <Layout.Section>
           <Card>
             <BlockStack gap="400">
-              <Text as="h3" variant="headingLg" alignment="center">
-                {t("billing.comparePlans")}
+              <Text as="h3" variant="headingLg" alignment="center" fontWeight="bold">
+                Compare Plans
               </Text>
-              <InlineStack align="center" gap="400">
-                <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">BYOK</Text>
-                <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">Starter</Text>
-                <Text as="p" variant="bodySm" fontWeight="semibold" tone="subdued">Professional</Text>
-              </InlineStack>
+
+              {/* Table Header */}
+              <Box paddingBlockStart="400">
+                <InlineStack gap="0" blockAlign="center">
+                  <Box width="40%">
+                    {/* Empty space for feature names column */}
+                  </Box>
+                  <Box width="20%">
+                    <Text as="p" variant="bodyMd" alignment="center" fontWeight="bold">
+                      BYOK
+                    </Text>
+                  </Box>
+                  <Box width="20%">
+                    <Text as="p" variant="bodyMd" alignment="center" fontWeight="bold">
+                      Starter
+                    </Text>
+                  </Box>
+                  <Box width="20%">
+                    <Text as="p" variant="bodyMd" alignment="center" fontWeight="bold">
+                      Professional
+                    </Text>
+                  </Box>
+                </InlineStack>
+              </Box>
+
               <Divider />
-              <BlockStack gap="300">
-                <InlineStack align="space-between">
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    Conversations mensuelles
-                  </Text>
-                  <InlineStack gap="600">
-                    <Text as="span" variant="bodyMd">∞</Text>
-                    <Text as="span" variant="bodyMd">1,000</Text>
-                    <Text as="span" variant="bodyMd" fontWeight="semibold">∞</Text>
+
+              {/* Table Rows */}
+              <BlockStack gap="0">
+                {/* Row: Conversations */}
+                <Box paddingBlock="300">
+                  <InlineStack gap="0" blockAlign="center">
+                    <Box width="40%">
+                      <Text as="p" variant="bodyMd" tone="subdued">
+                        Conversations mensuelles
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ∞
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        1,000
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center" fontWeight="bold">
+                        ∞
+                      </Text>
+                    </Box>
                   </InlineStack>
-                </InlineStack>
+                </Box>
                 <Divider />
-                <InlineStack align="space-between">
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    Intégration OpenAI
-                  </Text>
-                  <InlineStack gap="600">
-                    <Text as="span" variant="bodyMd">User</Text>
-                    <Text as="span" variant="bodyMd">✓</Text>
-                    <Text as="span" variant="bodyMd">✓</Text>
+
+                {/* Row: OpenAI Integration */}
+                <Box paddingBlock="300">
+                  <InlineStack gap="0" blockAlign="center">
+                    <Box width="40%">
+                      <Text as="p" variant="bodyMd" tone="subdued">
+                        Intégration OpenAI
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        User
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
                   </InlineStack>
-                </InlineStack>
+                </Box>
                 <Divider />
-                <InlineStack align="space-between">
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    Analyses approfondies
-                  </Text>
-                  <InlineStack gap="600">
-                    <Text as="span" variant="bodyMd">✓</Text>
-                    <Text as="span" variant="bodyMd">✓</Text>
-                    <Text as="span" variant="bodyMd">✓</Text>
+
+                {/* Row: Analytics */}
+                <Box paddingBlock="300">
+                  <InlineStack gap="0" blockAlign="center">
+                    <Box width="40%">
+                      <Text as="p" variant="bodyMd" tone="subdued">
+                        Analyses approfondies
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
                   </InlineStack>
-                </InlineStack>
+                </Box>
                 <Divider />
-                <InlineStack align="space-between">
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    Webhook N8N personnalisé
-                  </Text>
-                  <InlineStack gap="600">
-                    <Text as="span" variant="bodyMd">✓</Text>
-                    <Text as="span" variant="bodyMd">✓</Text>
-                    <Text as="span" variant="bodyMd">✓</Text>
+
+                {/* Row: Webhook N8N */}
+                <Box paddingBlock="300">
+                  <InlineStack gap="0" blockAlign="center">
+                    <Box width="40%">
+                      <Text as="p" variant="bodyMd" tone="subdued">
+                        Webhook N8N personnalisé
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
                   </InlineStack>
-                </InlineStack>
+                </Box>
                 <Divider />
-                <InlineStack align="space-between">
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    Analyse des sentiments
-                  </Text>
-                  <InlineStack gap="600">
-                    <Text as="span" variant="bodyMd">✓</Text>
-                    <Text as="span" variant="bodyMd">✓</Text>
-                    <Text as="span" variant="bodyMd">✓</Text>
+
+                {/* Row: Sentiment Analysis */}
+                <Box paddingBlock="300">
+                  <InlineStack gap="0" blockAlign="center">
+                    <Box width="40%">
+                      <Text as="p" variant="bodyMd" tone="subdued">
+                        Analyse des sentiments
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
                   </InlineStack>
-                </InlineStack>
+                </Box>
                 <Divider />
-                <InlineStack align="space-between">
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    Profilage utilisateur
-                  </Text>
-                  <InlineStack gap="600">
-                    <Text as="span" variant="bodyMd">✓</Text>
-                    <Text as="span" variant="bodyMd">✓</Text>
-                    <Text as="span" variant="bodyMd">✓</Text>
+
+                {/* Row: User Profiling */}
+                <Box paddingBlock="300">
+                  <InlineStack gap="0" blockAlign="center">
+                    <Box width="40%">
+                      <Text as="p" variant="bodyMd" tone="subdued">
+                        Profilage utilisateur
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
                   </InlineStack>
-                </InlineStack>
+                </Box>
                 <Divider />
-                <InlineStack align="space-between">
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    Suivi des produits
-                  </Text>
-                  <InlineStack gap="600">
-                    <Text as="span" variant="bodyMd">✓</Text>
-                    <Text as="span" variant="bodyMd">✓</Text>
-                    <Text as="span" variant="bodyMd">✓</Text>
+
+                {/* Row: Product Tracking */}
+                <Box paddingBlock="300">
+                  <InlineStack gap="0" blockAlign="center">
+                    <Box width="40%">
+                      <Text as="p" variant="bodyMd" tone="subdued">
+                        Suivi des produits
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        ✓
+                      </Text>
+                    </Box>
                   </InlineStack>
-                </InlineStack>
+                </Box>
                 <Divider />
-                <InlineStack align="space-between">
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    Support
-                  </Text>
-                  <InlineStack gap="600">
-                    <Text as="span" variant="bodyMd">Email</Text>
-                    <Text as="span" variant="bodyMd">Email</Text>
-                    <Text as="span" variant="bodyMd" fontWeight="semibold">24/7</Text>
+
+                {/* Row: Support */}
+                <Box paddingBlock="300">
+                  <InlineStack gap="0" blockAlign="center">
+                    <Box width="40%">
+                      <Text as="p" variant="bodyMd" tone="subdued">
+                        Support
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        Email
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center">
+                        Email
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodyMd" alignment="center" fontWeight="bold">
+                        24/7
+                      </Text>
+                    </Box>
                   </InlineStack>
-                </InlineStack>
+                </Box>
               </BlockStack>
             </BlockStack>
           </Card>
