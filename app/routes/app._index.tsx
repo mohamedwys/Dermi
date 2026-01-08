@@ -171,11 +171,6 @@ export default function Index() {
           </Layout.Section>
         )}
 
-        {/* Language Switcher */}
-        {/* <Layout.Section>
-          <LanguageSwitcher currentLocale={locale} />
-        </Layout.Section> */}
-
         {/* Key Metrics Section */}
         <Layout.Section>
           <BlockStack gap="400">

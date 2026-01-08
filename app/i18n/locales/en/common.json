@@ -130,16 +130,16 @@
     "guideTitle": "Step-by-Step Activation Guide:",
     
     "step1Title": "Navigate to Theme Editor",
-    "step1Description": "Go to <strong>Online Store → Themes</strong> in your Shopify admin, then click <strong>Customize</strong> on your active theme",
+    "step1Description": "Go to Online Store → Themes in your Shopify admin, then click Customize on your active theme",
     
     "step2Title": "Enable App Embed",
-    "step2Description": "In the theme editor, click the <strong>App embeds</strong> section in the left sidebar. Find <strong>AI Sales Assistant</strong> and toggle it <strong>ON</strong>",
+    "step2Description": "In the theme editor, click the App embeds section in the left sidebar. Find AI Sales Assistant and toggle it ON",
     
     "step3Title": "Customize Settings (Optional)",
-    "step3Description": "After enabling the app embed, you can click on <strong>AI Sales Assistant</strong> to access additional customization options directly in the theme editor, such as positioning and visibility preferences.",
+    "step3Description": "After enabling the app embed, you can click on AI Sales Assistant to access additional customization options directly in the theme editor, such as positioning and visibility preferences.",
     
     "step4Title": "Save & Publish",
-    "step4Description": "Click <strong>Save</strong> in the top right corner to publish your changes. Your chatbot will now be live on your store!",
+    "step4Description": "Click Save in the top right corner to publish your changes. Your chatbot will now be live on your store!",
     
     "customizationTitle": "Customization & Design",
     "customizationDescription": "All chatbot customizations including design, positioning, colors, button text, and welcome messages are managed directly from this app settings page. Any changes you make here will automatically reflect on your storefront once the app embed is activated in your theme.",
