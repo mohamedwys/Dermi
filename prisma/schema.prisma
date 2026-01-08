@@ -171,7 +171,6 @@ model ByokUsage {
   @@unique([shop, date])
   @@index([shop, date])
   @@index([date])
-  @@map("BYOKUsage")
 }
 
 enum WorkflowType {

@@ -4,7 +4,7 @@ ADD COLUMN "apiKeyLastUpdated" TIMESTAMP(3),
 ADD COLUMN "apiKeyStatus" TEXT;
 
 -- CreateTable
-CREATE TABLE "BYOKUsage" (
+CREATE TABLE "ByokUsage" (
     "id" TEXT NOT NULL,
     "shop" TEXT NOT NULL,
     "date" TIMESTAMP(3) NOT NULL,
@@ -17,14 +17,14 @@ CREATE TABLE "BYOKUsage" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "BYOKUsage_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "ByokUsage_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "BYOKUsage_shop_date_key" ON "BYOKUsage"("shop", "date");
+CREATE UNIQUE INDEX "ByokUsage_shop_date_key" ON "ByokUsage"("shop", "date");
 
 -- CreateIndex
-CREATE INDEX "BYOKUsage_shop_date_idx" ON "BYOKUsage"("shop", "date");
+CREATE INDEX "ByokUsage_shop_date_idx" ON "ByokUsage"("shop", "date");
 
 -- CreateIndex
-CREATE INDEX "BYOKUsage_date_idx" ON "BYOKUsage"("date");
+CREATE INDEX "ByokUsage_date_idx" ON "ByokUsage"("date");
