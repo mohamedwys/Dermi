@@ -232,7 +232,7 @@ export default function SettingsPage() {
       const fetchUsage = async () => {
         setLoadingUsage(true);
         try {
-          const response = await fetch(`/api/byok-usage/${(settings as any).shop}`);
+          const response = await fetch(`/api/byok-usage?shop=${encodeURIComponent((settings as any).shop)}`);
           if (response.ok) {
             const data = await response.json();
             setUsageData(data);

@@ -4,18 +4,19 @@ import db from "../db.server";
 
 /**
  * API endpoint to get BYOK usage statistics for a shop
- * GET /api/byok-usage/:shop?period=today|month
+ * GET /api/byok-usage?shop=example.myshopify.com
  *
  * Returns: {
  *   today: { totalApiCalls, totalTokensUsed, estimatedCost },
  *   thisMonth: { totalApiCalls, totalTokensUsed, estimatedCost }
  * }
  */
-export const loader = async ({ request, params }: LoaderFunctionArgs) => {
-  const shop = params.shop;
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const url = new URL(request.url);
+  const shop = url.searchParams.get("shop");
 
   if (!shop) {
-    return json({ error: "Shop parameter is required" }, { status: 400 });
+    return json({ error: "Shop query parameter is required" }, { status: 400 });
   }
 
   try {
