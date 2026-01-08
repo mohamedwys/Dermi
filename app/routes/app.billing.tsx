@@ -193,23 +193,33 @@ export default function BillingPage() {
                     </Text>
                     <List type="bullet">
                       <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.unlimitedConversations")}
+                        <Text as="span" variant="bodyMd" fontWeight="semibold">
+                          OpenAI integration needed by the user
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Use your own OpenAI API key
+                          Analyses et analyses approfondies
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Pay your own AI expenses
+                          Intégration webhook N8N personnalisée
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          {t("billing.features.widgetCustomization")}
+                          Analyse des sentiments et suivi des intentions
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          Profilage et personnalisation utilisateur
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          Suivi des clics sur les produits
                         </Text>
                       </List.Item>
                     </List>
@@ -270,28 +280,33 @@ export default function BillingPage() {
                     </Text>
                     <List type="bullet">
                       <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.conversations1k")}
+                        <Text as="span" variant="bodyMd" fontWeight="semibold">
+                          1,000 conversations/month
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          {t("billing.features.aiRecommendations")}
+                          Analyses et analyses approfondies
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          {t("billing.features.basicAnalytics")}
+                          Intégration webhook N8N personnalisée
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          {t("billing.features.emailSupport")}
+                          Analyse des sentiments et suivi des intentions
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          {t("billing.features.widgetCustomization")}
+                          Profilage et personnalisation utilisateur
+                        </Text>
+                      </List.Item>
+                      <List.Item>
+                        <Text as="span" variant="bodyMd">
+                          Suivi des clics sur les produits
                         </Text>
                       </List.Item>
                     </List>
@@ -348,42 +363,42 @@ export default function BillingPage() {
                   {/* Features */}
                   <BlockStack gap="400">
                     <Text as="p" variant="headingSm" fontWeight="semibold">
-                      {t("billing.everythingInStarter")}
+                      {t("billing.whatsIncluded")}
                     </Text>
                     <List type="bullet">
                       <List.Item>
                         <Text as="span" variant="bodyMd" fontWeight="semibold">
-                          {t("billing.features.unlimitedConversations")}
+                          Conversations illimitées
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          {t("billing.features.advancedAnalytics")}
+                          Analyses et analyses approfondies
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          {t("billing.features.n8nIntegration")}
+                          Intégration webhook N8N personnalisée
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          {t("billing.features.prioritySupport")}
+                          Analyse des sentiments et suivi des intentions
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          {t("billing.features.sentimentAnalysis")}
+                          Profilage et personnalisation utilisateur
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          {t("billing.features.userProfiling")}
+                          Suivi des clics sur les produits
                         </Text>
                       </List.Item>
                       <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.productTracking")}
+                        <Text as="span" variant="bodyMd" fontWeight="semibold">
+                          Assistance prioritaire (24/7)
                         </Text>
                       </List.Item>
                     </List>
@@ -424,21 +439,21 @@ export default function BillingPage() {
               <BlockStack gap="300">
                 <InlineStack align="space-between">
                   <Text as="p" variant="bodyMd" tone="subdued">
-                    {t("billing.monthlyConversations")}
+                    Conversations mensuelles
                   </Text>
                   <InlineStack gap="600">
-                    <Text as="span" variant="bodyMd" fontWeight="semibold">{t("billing.unlimited")}</Text>
+                    <Text as="span" variant="bodyMd">∞</Text>
                     <Text as="span" variant="bodyMd">1,000</Text>
-                    <Text as="span" variant="bodyMd" fontWeight="semibold">{t("billing.unlimited")}</Text>
+                    <Text as="span" variant="bodyMd" fontWeight="semibold">∞</Text>
                   </InlineStack>
                 </InlineStack>
                 <Divider />
                 <InlineStack align="space-between">
                   <Text as="p" variant="bodyMd" tone="subdued">
-                    {t("billing.aiRecommendations")}
+                    Intégration OpenAI
                   </Text>
                   <InlineStack gap="600">
-                    <Text as="span" variant="bodyMd">BYOK</Text>
+                    <Text as="span" variant="bodyMd">User</Text>
                     <Text as="span" variant="bodyMd">✓</Text>
                     <Text as="span" variant="bodyMd">✓</Text>
                   </InlineStack>
@@ -446,34 +461,67 @@ export default function BillingPage() {
                 <Divider />
                 <InlineStack align="space-between">
                   <Text as="p" variant="bodyMd" tone="subdued">
-                    {t("billing.analyticsDashboard")}
+                    Analyses approfondies
                   </Text>
                   <InlineStack gap="600">
-                    <Text as="span" variant="bodyMd">{t("billing.basic")}</Text>
-                    <Text as="span" variant="bodyMd">{t("billing.basic")}</Text>
-                    <Text as="span" variant="bodyMd" fontWeight="semibold">{t("billing.advanced")}</Text>
-                  </InlineStack>
-                </InlineStack>
-                <Divider />
-                <InlineStack align="space-between">
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    {t("billing.n8nWebhook")}
-                  </Text>
-                  <InlineStack gap="600">
-                    <Text as="span" variant="bodyMd">–</Text>
-                    <Text as="span" variant="bodyMd">–</Text>
+                    <Text as="span" variant="bodyMd">✓</Text>
+                    <Text as="span" variant="bodyMd">✓</Text>
                     <Text as="span" variant="bodyMd">✓</Text>
                   </InlineStack>
                 </InlineStack>
                 <Divider />
                 <InlineStack align="space-between">
                   <Text as="p" variant="bodyMd" tone="subdued">
-                    {t("billing.support")}
+                    Webhook N8N personnalisé
                   </Text>
                   <InlineStack gap="600">
-                    <Text as="span" variant="bodyMd">{t("billing.email")}</Text>
-                    <Text as="span" variant="bodyMd">{t("billing.email")}</Text>
-                    <Text as="span" variant="bodyMd" fontWeight="semibold">{t("billing.priority24x7")}</Text>
+                    <Text as="span" variant="bodyMd">✓</Text>
+                    <Text as="span" variant="bodyMd">✓</Text>
+                    <Text as="span" variant="bodyMd">✓</Text>
+                  </InlineStack>
+                </InlineStack>
+                <Divider />
+                <InlineStack align="space-between">
+                  <Text as="p" variant="bodyMd" tone="subdued">
+                    Analyse des sentiments
+                  </Text>
+                  <InlineStack gap="600">
+                    <Text as="span" variant="bodyMd">✓</Text>
+                    <Text as="span" variant="bodyMd">✓</Text>
+                    <Text as="span" variant="bodyMd">✓</Text>
+                  </InlineStack>
+                </InlineStack>
+                <Divider />
+                <InlineStack align="space-between">
+                  <Text as="p" variant="bodyMd" tone="subdued">
+                    Profilage utilisateur
+                  </Text>
+                  <InlineStack gap="600">
+                    <Text as="span" variant="bodyMd">✓</Text>
+                    <Text as="span" variant="bodyMd">✓</Text>
+                    <Text as="span" variant="bodyMd">✓</Text>
+                  </InlineStack>
+                </InlineStack>
+                <Divider />
+                <InlineStack align="space-between">
+                  <Text as="p" variant="bodyMd" tone="subdued">
+                    Suivi des produits
+                  </Text>
+                  <InlineStack gap="600">
+                    <Text as="span" variant="bodyMd">✓</Text>
+                    <Text as="span" variant="bodyMd">✓</Text>
+                    <Text as="span" variant="bodyMd">✓</Text>
+                  </InlineStack>
+                </InlineStack>
+                <Divider />
+                <InlineStack align="space-between">
+                  <Text as="p" variant="bodyMd" tone="subdued">
+                    Support
+                  </Text>
+                  <InlineStack gap="600">
+                    <Text as="span" variant="bodyMd">Email</Text>
+                    <Text as="span" variant="bodyMd">Email</Text>
+                    <Text as="span" variant="bodyMd" fontWeight="semibold">24/7</Text>
                   </InlineStack>
                 </InlineStack>
               </BlockStack>
