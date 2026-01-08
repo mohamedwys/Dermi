@@ -155,7 +155,7 @@ model Conversation {
   @@index([shop, timestamp])
 }
 
-model BYOKUsage {
+model ByokUsage {
   id              String   @id @default(cuid())
   shop            String
   date            DateTime
@@ -171,6 +171,7 @@ model BYOKUsage {
   @@unique([shop, date])
   @@index([shop, date])
   @@index([date])
+  @@map("BYOKUsage")
 }
 
 enum WorkflowType {

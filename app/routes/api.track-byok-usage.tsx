@@ -65,7 +65,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }, "Tracking BYOK usage");
 
     // Update or create usage record for today
-    const usage = await db.bYOKUsage.upsert({
+    const usage = await db.byokUsage.upsert({
       where: {
         shop_date: {
           shop,

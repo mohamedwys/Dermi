@@ -23,7 +23,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const todayUsage = await db.bYOKUsage.findUnique({
+    const todayUsage = await db.byokUsage.findUnique({
       where: {
         shop_date: {
           shop,
@@ -36,7 +36,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999);
 
-    const monthUsages = await db.bYOKUsage.findMany({
+    const monthUsages = await db.byokUsage.findMany({
       where: {
         shop,
         date: {
