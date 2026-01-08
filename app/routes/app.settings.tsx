@@ -100,7 +100,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
 
   const webhookUrl = formData.get("webhookUrl") as string | null;
-  const normalizedWebhookUrl = webhookUrl?.trim() || null;
+  // Normalize webhook URL - convert empty strings and "null" string to actual null
+  const normalizedWebhookUrl = (webhookUrl && webhookUrl.trim() !== "" && webhookUrl !== "null" && webhookUrl !== "undefined")
+    ? webhookUrl.trim()
+    : null;
   const workflowType = (formData.get("workflowType") as string) || "DEFAULT";
   const plan = (formData.get("plan") as string) || "BASIC";
   const openaiApiKey = formData.get("openaiApiKey") as string | null;

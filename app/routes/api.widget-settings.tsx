@@ -131,7 +131,7 @@ function detectLanguage(message: string): string {
   const lower = message.toLowerCase();
 
   // French detection - expanded with more common words
-  if (/(bonjour|salut|merci|montre|produit|cherche|voudrais|pourrais|nouveauté|meilleures?|vente|jaimerais|j'aimerais|parler|quelqu'un|quelqun|comment|faire|avec|pour|suis|être|avoir|puis|peux|peut|dois|doit|besoin|aide|aidez|s'il vous plaît|svp|oui|non)/i.test(message)) {
+  if (/(bonjour|salut|merci|montre|produit|cherche|voudrais|pourrais|nouveauté|meilleures?|vente|jaimerais|j'aimerais|parler|quelqu'un|quelqun|comment|faire|avec|pour|suis|être|avoir|puis|peux|peut|dois|doit|besoin|aide|aidez|s'il vous plaît|svp|oui|non|vous|avez|des|chaussures|chaussure)/i.test(message)) {
     return 'fr';
   }
 
@@ -964,6 +964,62 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             confidence: 0.8,
             messageType: "product_recommendation"
           };
+        }
+      }
+      // ✅ NEW: Handle product intent when NO products found
+      else if (isProductIntent && products.length === 0) {
+        console.log('📭 DEBUG: Product intent but no products found - asking N8N for help');
+
+        // Get language for localized message
+        const lang = enhancedContext.locale?.toLowerCase().split('-')[0] || 'en';
+
+        // Try N8N to generate a helpful response even without products
+        try {
+          const { N8NService } = await import("../services/n8n.service.server");
+          const customN8NService = new N8NService(webhookUrl);
+          n8nResponse = await customN8NService.processUserMessage({
+            userMessage: finalMessage,
+            products: [], // Empty array - let AI know no products found
+            context: {
+              ...enhancedContext,
+              noProductsFound: true,
+              intentType: "product_search_no_results"
+            }
+          });
+
+          recommendations = [];
+          console.log('✅ DEBUG: N8N handled no-products scenario');
+          routeLogger.info({ intent: intent.type }, 'N8N handled product search with no results');
+        } catch (error) {
+          console.log('❌ DEBUG: N8N failed for no-products scenario, using fallback');
+
+          // Fallback messages by language
+          const noProductMessages: Record<string, string> = {
+            fr: "Je suis désolé, nous n'avons pas de produits correspondant à votre recherche pour le moment. Puis-je vous aider à trouver autre chose ?",
+            en: "I'm sorry, we don't have any products matching your search at the moment. Can I help you find something else?",
+            es: "Lo siento, no tenemos productos que coincidan con tu búsqueda en este momento. ¿Puedo ayudarte a encontrar algo más?",
+            de: "Es tut mir leid, wir haben derzeit keine Produkte, die Ihrer Suche entsprechen. Kann ich Ihnen helfen, etwas anderes zu finden?",
+            pt: "Desculpe, não temos produtos que correspondam à sua pesquisa no momento. Posso ajudá-lo a encontrar outra coisa?",
+            it: "Mi dispiace, al momento non abbiamo prodotti corrispondenti alla tua ricerca. Posso aiutarti a trovare qualcos'altro?"
+          };
+
+          const quickRepliesLang: Record<string, string[]> = {
+            fr: ["Voir les meilleures ventes", "Nouveautés", "Tous les produits"],
+            en: ["View bestsellers", "New arrivals", "All products"],
+            es: ["Ver más vendidos", "Novedades", "Todos los productos"],
+            de: ["Bestseller ansehen", "Neuankömmlinge", "Alle Produkte"],
+            pt: ["Ver mais vendidos", "Novidades", "Todos os produtos"],
+            it: ["Visualizza i più venduti", "Nuovi arrivi", "Tutti i prodotti"]
+          };
+
+          n8nResponse = {
+            message: noProductMessages[lang] || noProductMessages['en'],
+            recommendations: [],
+            quickReplies: quickRepliesLang[lang] || quickRepliesLang['en'],
+            confidence: 0.6,
+            messageType: "no_products_found"
+          };
+          recommendations = [];
         }
       } else {
         // General chat - use N8N
