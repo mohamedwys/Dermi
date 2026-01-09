@@ -69,7 +69,11 @@ async function loadTranslations(lang) {
       support: 'Support',
       shippingPrompt: 'Tell me about shipping and delivery',
       returnsPrompt: 'What is your return policy?',
-      trackOrderPrompt: 'How can I track my order?'
+      trackOrderPrompt: 'How can I track my order?',
+      bestSellersPrompt: 'Show me your popular products',
+      newArrivalsPrompt: 'Show me new arrivals',
+      onSalePrompt: 'What products are on sale?',
+      recommendedPrompt: 'Show me recommendations for me'
     };
     return translations;
   }
@@ -1367,16 +1371,16 @@ function createWidget() {
                 <div class="quick-actions-section">
                   <div class="section-label"><span>${escapeHTML(widgetSettings.sectionDiscoveryLabel || t('discover'))}</span></div>
                   <div class="quick-actions-grid">
-                    <button class="quick-action-btn" data-prompt="Show me your popular products">
+                    <button class="quick-action-btn" data-prompt="${escapeHTML(t('bestSellersPrompt'))}">
                       <span class="quick-action-text">${escapeHTML(widgetSettings.bestSellersText || t('bestSellers'))}</span>
                     </button>
-                    <button class="quick-action-btn" data-prompt="Show me new arrivals">
+                    <button class="quick-action-btn" data-prompt="${escapeHTML(t('newArrivalsPrompt'))}">
                       <span class="quick-action-text">${escapeHTML(widgetSettings.newArrivalsText || t('newArrivals'))}</span>
                     </button>
-                    <button class="quick-action-btn" data-prompt="What products are on sale?">
+                    <button class="quick-action-btn" data-prompt="${escapeHTML(t('onSalePrompt'))}">
                       <span class="quick-action-text">${escapeHTML(widgetSettings.onSaleText || t('onSale'))}</span>
                     </button>
-                    <button class="quick-action-btn" data-prompt="Show me recommendations for me">
+                    <button class="quick-action-btn" data-prompt="${escapeHTML(t('recommendedPrompt'))}">
                       <span class="quick-action-text">${escapeHTML(widgetSettings.recommendationsText || t('recommended'))}</span>
                     </button>
                   </div>

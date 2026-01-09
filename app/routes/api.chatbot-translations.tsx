@@ -23,7 +23,12 @@ const translations: Record<string, any> = {
     // 🌍 Button prompts for quick actions
     shippingPrompt: "Tell me about shipping and delivery",
     returnsPrompt: "What is your return policy?",
-    trackOrderPrompt: "How can I track my order?"
+    trackOrderPrompt: "How can I track my order?",
+    // 🛍️ Discovery button prompts
+    bestSellersPrompt: "Show me your popular products",
+    newArrivalsPrompt: "Show me new arrivals",
+    onSalePrompt: "What products are on sale?",
+    recommendedPrompt: "Show me recommendations for me"
   },
   es: {
     online: "En línea",
@@ -45,7 +50,12 @@ const translations: Record<string, any> = {
     // 🌍 Button prompts for quick actions
     shippingPrompt: "Cuéntame sobre el envío y la entrega",
     returnsPrompt: "¿Cuál es su política de devoluciones?",
-    trackOrderPrompt: "¿Cómo puedo rastrear mi pedido?"
+    trackOrderPrompt: "¿Cómo puedo rastrear mi pedido?",
+    // 🛍️ Discovery button prompts
+    bestSellersPrompt: "Muéstrame tus productos populares",
+    newArrivalsPrompt: "Muéstrame novedades",
+    onSalePrompt: "¿Qué productos están en oferta?",
+    recommendedPrompt: "Muéstrame recomendaciones para mí"
   },
   fr: {
     online: "En ligne",
@@ -67,7 +77,12 @@ const translations: Record<string, any> = {
     // 🌍 Button prompts for quick actions
     shippingPrompt: "Parlez-moi de la livraison et de l'expédition",
     returnsPrompt: "Quelle est votre politique de retour ?",
-    trackOrderPrompt: "Comment puis-je suivre ma commande ?"
+    trackOrderPrompt: "Comment puis-je suivre ma commande ?",
+    // 🛍️ Discovery button prompts
+    bestSellersPrompt: "Montrez-moi vos produits populaires",
+    newArrivalsPrompt: "Montrez-moi les nouveautés",
+    onSalePrompt: "Quels produits sont en promotion ?",
+    recommendedPrompt: "Montrez-moi des recommandations pour moi"
   },
   de: {
     online: "Online",
@@ -89,7 +104,12 @@ const translations: Record<string, any> = {
     // 🌍 Button prompts for quick actions
     shippingPrompt: "Erzählen Sie mir über Versand und Lieferung",
     returnsPrompt: "Was ist Ihre Rückgaberichtlinie?",
-    trackOrderPrompt: "Wie kann ich meine Bestellung verfolgen?"
+    trackOrderPrompt: "Wie kann ich meine Bestellung verfolgen?",
+    // 🛍️ Discovery button prompts
+    bestSellersPrompt: "Zeigen Sie mir Ihre beliebten Produkte",
+    newArrivalsPrompt: "Zeigen Sie mir Neuheiten",
+    onSalePrompt: "Welche Produkte sind im Angebot?",
+    recommendedPrompt: "Zeigen Sie mir Empfehlungen für mich"
   },
   ja: {
     online: "オンライン",
@@ -111,7 +131,12 @@ const translations: Record<string, any> = {
     // 🌍 Button prompts for quick actions
     shippingPrompt: "配送と配達について教えてください",
     returnsPrompt: "返品ポリシーは何ですか？",
-    trackOrderPrompt: "注文を追跡するにはどうすればよいですか？"
+    trackOrderPrompt: "注文を追跡するにはどうすればよいですか？",
+    // 🛍️ Discovery button prompts
+    bestSellersPrompt: "人気商品を見せてください",
+    newArrivalsPrompt: "新着商品を見せてください",
+    onSalePrompt: "セール中の商品は何ですか？",
+    recommendedPrompt: "おすすめを見せてください"
   },
   it: {
     online: "Online",
@@ -133,7 +158,12 @@ const translations: Record<string, any> = {
     // 🌍 Button prompts for quick actions
     shippingPrompt: "Parlami della spedizione e della consegna",
     returnsPrompt: "Qual è la vostra politica di reso?",
-    trackOrderPrompt: "Come posso tracciare il mio ordine?"
+    trackOrderPrompt: "Come posso tracciare il mio ordine?",
+    // 🛍️ Discovery button prompts
+    bestSellersPrompt: "Mostrami i tuoi prodotti popolari",
+    newArrivalsPrompt: "Mostrami le novità",
+    onSalePrompt: "Quali prodotti sono in offerta?",
+    recommendedPrompt: "Mostrami raccomandazioni per me"
   },
   pt: {
     online: "Online",
@@ -155,7 +185,12 @@ const translations: Record<string, any> = {
     // 🌍 Button prompts for quick actions
     shippingPrompt: "Conte-me sobre envio e entrega",
     returnsPrompt: "Qual é a sua política de devolução?",
-    trackOrderPrompt: "Como posso rastrear meu pedido?"
+    trackOrderPrompt: "Como posso rastrear meu pedido?",
+    // 🛍️ Discovery button prompts
+    bestSellersPrompt: "Mostre-me seus produtos populares",
+    newArrivalsPrompt: "Mostre-me novidades",
+    onSalePrompt: "Quais produtos estão em promoção?",
+    recommendedPrompt: "Mostre-me recomendações para mim"
   },
   zh: {
     online: "在线",
@@ -177,7 +212,12 @@ const translations: Record<string, any> = {
     // 🌍 Button prompts for quick actions
     shippingPrompt: "告诉我关于配送和交付",
     returnsPrompt: "你们的退货政策是什么？",
-    trackOrderPrompt: "我如何追踪我的订单？"
+    trackOrderPrompt: "我如何追踪我的订单？",
+    // 🛍️ Discovery button prompts
+    bestSellersPrompt: "给我看你们的热门产品",
+    newArrivalsPrompt: "给我看新品上市",
+    onSalePrompt: "哪些产品在促销？",
+    recommendedPrompt: "给我看推荐产品"
   }
 };
 
