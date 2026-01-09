@@ -157,6 +157,7 @@
     "daysRemaining": "días restantes en tu prueba gratuita",
     "billing.byokPlan": "Plan BYOK",
     "billing.byokDesc": "Trae tu propia clave API de OpenAI y mantén el control total de tu uso y costos de IA. Ideal para comerciantes conscientes del presupuesto.",
+    "budgetFriendly": "Asequible",
     "starterPlan": "Starter",
     "starterDesc": "Perfecto para pequeñas tiendas que comienzan con atención al cliente impulsada por IA. Configuración sencilla, sin conocimientos técnicos.",
     "professionalPlan": "Profesional",
@@ -170,6 +171,7 @@
     "currentPlan": "✓ Plan actual",
     "startFreeTrial": "Iniciar prueba gratuita",
     "features": {
+      "OpenAiKey": "Integración de OpenAI requerida por el usuario",
       "conversations1k": "Hasta 1.000 conversaciones/mes",
       "aiRecommendations": "Recomendaciones de productos con IA",
       "basicAnalytics": "Panel de análisis básico",

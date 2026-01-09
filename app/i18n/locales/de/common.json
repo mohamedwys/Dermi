@@ -157,6 +157,7 @@
     "daysRemaining": "Tage verbleiben in Ihrer kostenlosen Testversion",
     "billing.byokPlan": "BYOK-Plan",
     "billing.byokDesc": "Bringen Sie Ihren eigenen OpenAI-API-Schlüssel mit und behalten Sie die volle Kontrolle über Ihre KI-Nutzung und Kosten. Ideal für die detaillierte Kostenaufstellung.",
+    "budgetFriendly": "Kostengünstig",
     "starterPlan": "Starter",
     "starterDesc": "Perfekt für kleine Shops, die mit KI-Kundensupport starten möchten. Einfache Einrichtung, keine technischen Kenntnisse erforderlich.",
     "professionalPlan": "Professional",
@@ -170,6 +171,7 @@
     "currentPlan": "✓ Aktueller Plan",
     "startFreeTrial": "Kostenlose Testversion starten",
     "features": {
+      "OpenAiKey": "OpenAI-Integration durch den Benutzer erforderlich",
       "conversations1k": "Bis zu 1.000 Gespräche/Monat",
       "aiRecommendations": "KI-gestützte Produktempfehlungen",
       "basicAnalytics": "Einfaches Analyse-Dashboard",

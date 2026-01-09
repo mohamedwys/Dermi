@@ -194,6 +194,7 @@
     "currentPlan": "✓ Current Plan",
     "startFreeTrial": "Start Free Trial",
     "features": {
+      "OpenAiKey": "OpenAI integration needed by the user",
       "conversations1k": "Up to 1,000 conversations/month",
       "aiRecommendations": "AI-powered product recommendations",
       "basicAnalytics": "Basic analytics dashboard",

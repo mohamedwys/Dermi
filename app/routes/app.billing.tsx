@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { useActionData, useLoaderData, useSubmit } from "@remix-run/react";
@@ -194,32 +193,32 @@ export default function BillingPage() {
                     <List type="bullet">
                       <List.Item>
                         <Text as="span" variant="bodyMd" fontWeight="semibold">
-                          OpenAI integration needed by the user
+                          {t("billing.features.OpenAiKey")}
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Analyses et analyses approfondies
+                          {t("billing.features.advancedAnalytics")}
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Intégration webhook N8N personnalisée
+                          {t("billing.features.n8nIntegration")}
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Analyse des sentiments et suivi des intentions
+                          {t("billing.features.sentimentAnalysis")}
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Profilage et personnalisation utilisateur
+                          {t("billing.features.userProfiling")}
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Suivi des clics sur les produits
+                          {t("billing.features.productTracking")}
                         </Text>
                       </List.Item>
                     </List>
@@ -281,32 +280,32 @@ export default function BillingPage() {
                     <List type="bullet">
                       <List.Item>
                         <Text as="span" variant="bodyMd" fontWeight="semibold">
-                          1,000 conversations/month
+                          {t("billing.features.conversations1k")}
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Analyses et analyses approfondies
+                          {t("billing.features.advancedAnalytics")}
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Intégration webhook N8N personnalisée
+                          {t("billing.features.n8nIntegration")}
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Analyse des sentiments et suivi des intentions
+                          {t("billing.features.sentimentAnalysis")}
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Profilage et personnalisation utilisateur
+                          {t("billing.features.userProfiling")}
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Suivi des clics sur les produits
+                          {t("billing.features.productTracking")}
                         </Text>
                       </List.Item>
                     </List>
@@ -368,37 +367,37 @@ export default function BillingPage() {
                     <List type="bullet">
                       <List.Item>
                         <Text as="span" variant="bodyMd" fontWeight="semibold">
-                          Conversations illimitées
+                          {t("billing.features.unlimitedConversations")}
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Analyses et analyses approfondies
+                          {t("billing.features.advancedAnalytics")}
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Intégration webhook N8N personnalisée
+                          {t("billing.features.n8nIntegration")}
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Analyse des sentiments et suivi des intentions
+                          {t("billing.features.sentimentAnalysis")}
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Profilage et personnalisation utilisateur
+                          {t("billing.features.userProfiling")}
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd">
-                          Suivi des clics sur les produits
+                          {t("billing.features.productTracking")}
                         </Text>
                       </List.Item>
                       <List.Item>
                         <Text as="span" variant="bodyMd" fontWeight="semibold">
-                          Assistance prioritaire (24/7)
+                          {t("billing.features.prioritySupport")}
                         </Text>
                       </List.Item>
                     </List>
@@ -733,7 +732,7 @@ export default function BillingPage() {
           </Card>
         </Layout.Section>
 
-        {/* Trust Section */}
+        {/* Trust Section
         <Layout.Section>
           <Card>
             <BlockStack gap="400" align="center">
@@ -770,7 +769,7 @@ export default function BillingPage() {
               </InlineStack>
             </BlockStack>
           </Card>
-        </Layout.Section>
+        </Layout.Section> */}
       </Layout>
     </Page>
   );

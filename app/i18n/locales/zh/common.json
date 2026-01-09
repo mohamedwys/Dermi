@@ -157,6 +157,7 @@
     "daysRemaining": "免费试用剩余天数",
     "billing.byokPlan": "BYOK 方案",
     "billing.byokDesc": "使用您自己的 OpenAI API 密钥，全面掌控 AI 的使用情况和成本。非常适合开发者和注重成本的商家。",
+    "budgetFriendly": "高性价比",
     "starterPlan": "入门版",
     "starterDesc": "非常适合刚开始使用 AI 客户支持的小型商店。设置简单，无需技术知识。",
     "professionalPlan": "专业版",
@@ -170,6 +171,7 @@
     "currentPlan": "✓ 当前套餐",
     "startFreeTrial": "开始免费试用",
     "features": {
+      "OpenAiKey": "需要用户进行 OpenAI 集成",
       "conversations1k": "每月最多 1,000 次对话",
       "aiRecommendations": "AI 驱动的商品推荐",
       "basicAnalytics": "基础分析仪表盘",

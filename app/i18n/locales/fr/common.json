@@ -173,6 +173,7 @@
     "currentPlan": "✓ Formule actuelle",
     "startFreeTrial": "Commencer l’essai gratuit",
     "features": {
+      "OpenAiKey": "Intégration OpenAI requise par l’utilisateur",
       "conversations1k": "Jusqu’à 1 000 conversations/mois",
       "aiRecommendations": "Recommandations de produits assistées par l’IA",
       "basicAnalytics": "Tableau de bord d’analyses de base",
