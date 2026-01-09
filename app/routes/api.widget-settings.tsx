@@ -127,7 +127,40 @@ function analyzeSentiment(message: string): string {
   return "neutral";
 }
 
-// ✅ ADDED: Language detection helper
+// ✅ ADDED: Locale to language code mapper
+// Maps browser locale codes (e.g., 'fr-FR', 'en-US') to language codes ('fr', 'en')
+function getLanguageFromLocale(locale: string | undefined): string | null {
+  if (!locale) return null;
+
+  const normalizedLocale = locale.toLowerCase();
+
+  // Extract language code from locale (e.g., 'fr-FR' -> 'fr', 'en-US' -> 'en')
+  const languageCode = normalizedLocale.split('-')[0];
+
+  // Validate against supported languages
+  const supportedLanguages = ['fr', 'es', 'de', 'pt', 'it', 'en'];
+  if (supportedLanguages.includes(languageCode)) {
+    return languageCode;
+  }
+
+  return null;
+}
+
+// ✅ ADDED: Language code to full name mapper
+// Used for generating clear language instructions for the AI
+function getLanguageName(languageCode: string): string {
+  const languageMap: Record<string, string> = {
+    'fr': 'French',
+    'es': 'Spanish',
+    'de': 'German',
+    'pt': 'Portuguese',
+    'it': 'Italian',
+    'en': 'English'
+  };
+  return languageMap[languageCode] || 'English';
+}
+
+// ✅ ADDED: Language detection helper (used as fallback when locale is not available)
 function detectLanguage(message: string): string {
   const lower = message.toLowerCase();
 
@@ -430,7 +463,26 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // ✅ IMPROVED: Detect intent, sentiment, and language
     const intent = detectIntent(finalMessage);
     const sentiment = analyzeSentiment(finalMessage);
-    const detectedLanguage = detectLanguage(finalMessage);
+
+    // 🌍 LANGUAGE DETECTION FIX: Prioritize interface locale over message content
+    // This ensures quick buttons respond in the correct language
+    //
+    // FLOW:
+    // 1. Frontend sends context.locale from navigator.language (e.g., 'fr-FR', 'es-ES')
+    // 2. We extract language code from locale (e.g., 'fr', 'es')
+    // 3. If locale is invalid/missing, we fallback to detecting from message content
+    // 4. Language is passed to N8N in both context.locale and context.languageInstruction
+    // 5. N8N workflow uses context.locale to determine response language
+    const localeLanguage = getLanguageFromLocale(context.locale);
+    const messageLanguage = detectLanguage(finalMessage);
+    const detectedLanguage = localeLanguage || messageLanguage; // Use locale first, fallback to message detection
+
+    routeLogger.debug({
+      contextLocale: context.locale,
+      localeLanguage: localeLanguage,
+      messageLanguage: messageLanguage,
+      finalLanguage: detectedLanguage
+    }, '🌍 Language detection result');
 
     routeLogger.debug({
       intent: intent.type,
@@ -693,6 +745,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     // Enhanced context for better AI responses
     // NOTE: decryptedOpenAIKey will be added later after we fetch settings
+    const languageName = getLanguageName(detectedLanguage);
     const enhancedContext = {
       ...context,
       customerId: context.customerId || undefined,
@@ -702,7 +755,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       intent: intent.type,
       shopDomain: shopDomain,
       locale: detectedLanguage, // ✅ ADDED: Pass detected language to AI
-      languageInstruction: `IMPORTANT: Respond in ${detectedLanguage === 'fr' ? 'French' : detectedLanguage === 'es' ? 'Spanish' : detectedLanguage === 'de' ? 'German' : detectedLanguage === 'pt' ? 'Portuguese' : detectedLanguage === 'it' ? 'Italian' : 'English'}. User's language: ${detectedLanguage}`, // ✅ ADDED: Explicit language instruction
+      languageInstruction: `🌍 CRITICAL LANGUAGE INSTRUCTION: You MUST respond ONLY in ${languageName}. User's interface language: ${detectedLanguage}. NEVER respond in English unless the locale is 'en'. This is a strict requirement.`, // ✅ IMPROVED: More explicit language instruction
       timestamp: new Date().toISOString(),
       userAgent: request.headers.get('user-agent') || undefined,
       referer: request.headers.get('referer') || undefined,
