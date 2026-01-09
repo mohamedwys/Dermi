@@ -205,13 +205,13 @@
             {
               "id": "2",
               "name": "messageType",
-              "value": "={{ $('Prepare Data').item.json.noProductsFound ? 'no_products_found' : ($('Prepare Data').item.json.products.length > 0 ? 'product_recommendation' : 'general') }}",
+              "value": "={{ $('Prepare Data').item.json.noProductsFound ? 'no_products_found' : (['BESTSELLERS', 'NEW_ARRIVALS', 'ON_SALE', 'RECOMMENDATIONS', 'PRODUCT_SEARCH'].includes($('Prepare Data').item.json.intent) ? 'product_recommendation' : 'general') }}",
               "type": "string"
             },
             {
               "id": "3",
               "name": "recommendations",
-              "value": "={{ $('Prepare Data').item.json.products.slice(0, 6).map(p => ({ id: p.id, title: p.title, handle: p.handle, price: p.price, image: p.image, description: p.description, relevanceScore: 70 })) }}",
+              "value": "={{ ['BESTSELLERS', 'NEW_ARRIVALS', 'ON_SALE', 'RECOMMENDATIONS', 'PRODUCT_SEARCH'].includes($('Prepare Data').item.json.intent) ? $('Prepare Data').item.json.products.slice(0, 6).map(p => ({ id: p.id, title: p.title, handle: p.handle, price: p.price, image: p.image, description: p.description, relevanceScore: 70 })) : [] }}",
               "type": "array"
             },
             {
@@ -247,7 +247,7 @@
             {
               "id": "9",
               "name": "analytics",
-              "value": "={{ { intentDetected: $('Prepare Data').item.json.intent, productsShown: $('Prepare Data').item.json.products.length, responseTime: 0 } }}",
+              "value": "={{ { intentDetected: $('Prepare Data').item.json.intent, productsShown: ['BESTSELLERS', 'NEW_ARRIVALS', 'ON_SALE', 'RECOMMENDATIONS', 'PRODUCT_SEARCH'].includes($('Prepare Data').item.json.intent) ? $('Prepare Data').item.json.products.slice(0, 6).length : 0, responseTime: 0 } }}",
               "type": "object"
             },
             {
