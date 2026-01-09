@@ -178,8 +178,14 @@
     "testModeDesc": "You won't be charged during development. Billing will be activated in production.",
     "activeSubscription": "Active Subscription",
     "daysRemaining": "days remaining in your free trial",
+<<<<<<< HEAD
     "billing.byokPlan": "BYOK Plan",
     "billing.byokDesc": "Bring your own OpenAI API key and stay in full control of your AI usage and costs. Ideal for cost-conscious merchants.",
+=======
+    "byokPlan": "BYOK",
+    "byokDesc": "Bring Your Own API Key",
+    "budgetFriendly": "Budget Friendly",
+>>>>>>> origin/claude/add-free-trial-plan-selection-D1aJh
     "starterPlan": "Starter",
     "starterDesc": "Perfect for small stores getting started with AI customer support. Simple setup, no technical knowledge required.",
     "professionalPlan": "Professional",
