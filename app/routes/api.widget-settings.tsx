@@ -497,7 +497,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // HANDLE SUPPORT INTENTS (NO PRODUCTS)
     // ========================================
 
-    // Support intents return text-only responses but still need product context for better answers
+    // Support intents return text-only responses and DON'T need products
     const isSupportIntent = ["SHIPPING_INFO", "RETURNS", "TRACK_ORDER", "HELP_FAQ"].includes(intent.type);
 
     // ✅ IMPROVED: Fetch more products (50 instead of 20) - ONLY for product intents
@@ -513,12 +513,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const productIntents = ["BESTSELLERS", "NEW_ARRIVALS", "ON_SALE", "RECOMMENDATIONS", "PRODUCT_SEARCH"];
     const isProductIntent = productIntents.includes(intent.type);
 
-    // ✅ IMPROVED: Always fetch products, even for support questions
-    // This provides shop context to AI and prevents "no products available" messages
-    // Support questions get a smaller set of products for context only
-    const shouldFetchProducts = true; // Always fetch products for context
+    // ✅ BYOK FIX: Always fetch products to send to N8N, even for GENERAL_CHAT
+    // This prevents AI from inventing generic products like "Electronics, Smartphones"
+    // 🆘 CRITICAL: Do NOT fetch for support intents - they don't need inventory
+    const shouldFetchProducts = isProductIntent || intent.type === "GENERAL_CHAT";
 
-    if (shouldFetchProducts) {
+    if (shouldFetchProducts && !isSupportIntent) {
       try {
         console.log('🔍 STEP 1: Getting admin context for shop:', shopDomain);
         // Use unauthenticated admin (uses offline token, works in production)
@@ -986,16 +986,39 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         const customN8NService = new N8NService(webhookUrl);
 
         // Send to N8N with intent context so AI knows it's a support query
-        // ✅ IMPROVED: Send products for context, even for support queries
-        // This prevents "no products available" messages and provides better context
+        // 🆘 CRITICAL FIX: Support questions don't need products - they need store policies
+        // Questions like "return policy" have NOTHING to do with inventory
         n8nResponse = await customN8NService.processUserMessage({
           userMessage: finalMessage,
-          products: products, // ✅ Send products for context (AI won't show them but knows shop has inventory)
+          products: [], // NO PRODUCTS - support questions don't need inventory
           context: {
             ...enhancedContext,
             intentType: "customer_support",
             supportCategory: intent.type, // SHIPPING_INFO, RETURNS, TRACK_ORDER, or HELP_FAQ
-            noProductsInResponse: true // ✅ Tell AI to not mention products in response
+            // ✅ Add standard store policies (N8N will use these in response)
+            storePolicies: {
+              returns: enhancedContext.locale === 'fr'
+                ? "Notre politique de retour permet les retours dans les 30 jours suivant l'achat. Contactez notre service client pour plus de détails."
+                : enhancedContext.locale === 'es'
+                ? "Nuestra política de devoluciones permite devoluciones dentro de los 30 días posteriores a la compra. Póngase en contacto con atención al cliente para más detalles."
+                : enhancedContext.locale === 'de'
+                ? "Unsere Rückgaberichtlinie erlaubt Rückgaben innerhalb von 30 Tagen nach dem Kauf. Kontaktieren Sie unseren Kundenservice für weitere Details."
+                : "Our return policy allows returns within 30 days of purchase. Please contact customer support for more details.",
+              shipping: enhancedContext.locale === 'fr'
+                ? "La plupart de nos produits bénéficient de la livraison gratuite pour les commandes de plus de 50$. Les délais de livraison varient selon votre localisation."
+                : enhancedContext.locale === 'es'
+                ? "La mayoría de nuestros productos ofrecen envío gratis en pedidos superiores a $50. Los tiempos de entrega varían según su ubicación."
+                : enhancedContext.locale === 'de'
+                ? "Die meisten unserer Produkte bieten kostenlosen Versand bei Bestellungen über 50$. Die Lieferzeiten variieren je nach Standort."
+                : "Most of our products offer free shipping on orders over $50. Delivery times vary by location.",
+              trackOrder: enhancedContext.locale === 'fr'
+                ? "Vous recevrez un email avec un numéro de suivi dès que votre commande sera expédiée. Consultez votre email ou contactez le support."
+                : enhancedContext.locale === 'es'
+                ? "Recibirá un correo electrónico con un número de seguimiento una vez que se envíe su pedido. Consulte su correo o contacte al soporte."
+                : enhancedContext.locale === 'de'
+                ? "Sie erhalten eine E-Mail mit einer Tracking-Nummer, sobald Ihre Bestellung versendet wird. Überprüfen Sie Ihre E-Mail oder kontaktieren Sie den Support."
+                : "You will receive an email with a tracking number once your order ships. Check your email or contact support."
+            }
           }
         });
 
