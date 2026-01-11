@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
 import { logger } from "../lib/logger.server";
 import { json } from "@remix-run/node";
@@ -10,7 +10,6 @@ import {
   Text,
   BlockStack,
   InlineGrid,
-  Button,
   Select,
   Badge,
   InlineStack,
@@ -49,7 +48,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   try {
     // Enhanced logging for debugging
-    logger.info("Analytics loader started", {
+    logger.info("Analytics loader started", "Loading analytics data", {
       shop: session.shop,
       periodPreset,
       startDate: period.startDate.toISOString(),

@@ -19,6 +19,8 @@ import {
   Icon,
   Button,
   Spinner,
+  Badge,
+  Box,
 } from "@shopify/polaris";
 import { CheckCircleIcon, AlertCircleIcon } from "@shopify/polaris-icons";
 import { authenticate } from "../shopify.server";
@@ -613,46 +615,48 @@ export default function SettingsPage() {
                   {/* Usage Stats */}
                   <InlineStack align="space-between" blockAlign="center">
                     <Text variant="headingLg" as="p" fontWeight="bold">
-                      {conversationUsage.used.toLocaleString()} / {conversationUsage.limit.toLocaleString()}
+                      {conversationUsage.used?.toLocaleString() ?? 0} / {conversationUsage.limit?.toLocaleString() ?? 0}
                     </Text>
-                    <Badge tone={
-                      conversationUsage.percentUsed >= 100 ? "critical" :
-                      conversationUsage.percentUsed >= 90 ? "warning" :
-                      conversationUsage.percentUsed >= 75 ? "attention" :
-                      "success"
-                    }>
-                      {conversationUsage.percentUsed}% Used
+                    <Badge
+                      tone={
+                        (conversationUsage.percentUsed ?? 0) >= 100 ? "critical" :
+                        (conversationUsage.percentUsed ?? 0) >= 90 ? "warning" :
+                        (conversationUsage.percentUsed ?? 0) >= 75 ? "attention" :
+                        "success"
+                      }
+                    >
+                      {`${conversationUsage.percentUsed ?? 0}% Used`}
                     </Badge>
                   </InlineStack>
 
                   {/* Progress Bar */}
                   <Box
-                    background={conversationUsage.percentUsed >= 100 ? "bg-fill-critical" : "bg-fill"}
+                    background={(conversationUsage.percentUsed ?? 0) >= 100 ? "bg-fill-critical" : "bg-fill"}
                     borderRadius="100"
                     paddingBlock="050"
                   >
                     <Box
                       background={
-                        conversationUsage.percentUsed >= 100 ? "bg-fill-critical-active" :
-                        conversationUsage.percentUsed >= 90 ? "bg-fill-warning-active" :
-                        conversationUsage.percentUsed >= 75 ? "bg-fill-caution-active" :
+                        (conversationUsage.percentUsed ?? 0) >= 100 ? "bg-fill-critical-active" :
+                        (conversationUsage.percentUsed ?? 0) >= 90 ? "bg-fill-warning-active" :
+                        (conversationUsage.percentUsed ?? 0) >= 75 ? "bg-fill-caution-active" :
                         "bg-fill-success-active"
                       }
                       borderRadius="100"
                       paddingBlock="050"
-                      width={`${Math.min(conversationUsage.percentUsed, 100)}%`}
+                      width={`${Math.min(conversationUsage.percentUsed ?? 0, 100)}%`}
                     />
                   </Box>
 
                   {/* Warning Messages */}
-                  {conversationUsage.percentUsed >= 100 && (
+                  {(conversationUsage.percentUsed ?? 0) >= 100 && (
                     <Banner tone="critical">
                       <BlockStack gap="200">
                         <Text variant="bodyMd" as="p" fontWeight="semibold">
                           🚫 Monthly limit reached!
                         </Text>
                         <Text variant="bodyMd" as="p">
-                          You've reached your {conversationUsage.limit.toLocaleString()} conversation limit for this month.
+                          You've reached your {conversationUsage.limit?.toLocaleString() ?? 0} conversation limit for this month.
                           Upgrade to Professional Plan for unlimited conversations.
                         </Text>
                         <Button
@@ -666,10 +670,10 @@ export default function SettingsPage() {
                     </Banner>
                   )}
 
-                  {conversationUsage.percentUsed >= 90 && conversationUsage.percentUsed < 100 && (
+                  {(conversationUsage.percentUsed ?? 0) >= 90 && (conversationUsage.percentUsed ?? 0) < 100 && (
                     <Banner tone="warning">
                       <Text variant="bodyMd" as="p">
-                        ⚠️ You're approaching your monthly limit ({conversationUsage.percentUsed}% used).
+                        ⚠️ You're approaching your monthly limit ({conversationUsage.percentUsed ?? 0}% used).
                         Consider upgrading to avoid service interruption.
                       </Text>
                     </Banner>
