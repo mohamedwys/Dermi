@@ -4,6 +4,7 @@ import {
   ApiVersion,
   AppDistribution,
   shopifyApp,
+  DeliveryMethod,
 } from "@shopify/shopify-app-remix/server";
 // ✅ CRITICAL FIX: Use PrismaSessionStorage for persistent sessions
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
@@ -21,6 +22,32 @@ const shopify = shopifyApp({
   // This fixes the "Could not find a session" error that required app reinstallation
   sessionStorage: new PrismaSessionStorage(prisma),
   distribution: AppDistribution.AppStore,
+  // ✅ SHOPIFY APP SUBMISSION FIX: Explicit webhook configuration for GDPR compliance
+  // This ensures Shopify's automated checks can detect the mandatory webhooks
+  webhooks: {
+    // GDPR Compliance Webhooks (Mandatory for App Store submission)
+    CUSTOMERS_DATA_REQUEST: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/customers/data_request",
+    },
+    CUSTOMERS_REDACT: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/customers/redact",
+    },
+    SHOP_REDACT: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/shop/redact",
+    },
+    // Additional webhooks for app lifecycle management
+    APP_UNINSTALLED: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/app/uninstalled",
+    },
+    APP_SUBSCRIPTIONS_UPDATE: {
+      deliveryMethod: DeliveryMethod.Http,
+      callbackUrl: "/webhooks/app/scopes_update",
+    },
+  },
   future: {
     unstable_newEmbeddedAuthStrategy: true, // ✅ enables token-based auth
     removeRest: true,
