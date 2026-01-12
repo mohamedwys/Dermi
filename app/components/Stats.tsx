@@ -140,7 +140,7 @@ export function Stats() {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 mb-16">
-            <StatItem end={50} suffix="+" label="Active Merchants" icon={Users} duration={2000} />
+            <StatItem end={5} suffix="+" label="Active Merchants" icon={Users} duration={2000} />
             <StatItem end={98} suffix="%" label="Satisfaction Rate" icon={TrendingUp} duration={2000} />
             <StatItem end={250} suffix="%" label="Conversion Lift" icon={Zap} duration={2000} />
             <StatItem end={1} suffix="M+" label="Conversations" icon={MessageSquare} duration={2000} />
@@ -163,7 +163,7 @@ export function Stats() {
               },
               {
                 icon: Clock,
-                title: "5 Min",
+                title: "3 Min",
                 subtitle: "Setup Time",
                 gradient: "from-pink-500 to-orange-500",
               },

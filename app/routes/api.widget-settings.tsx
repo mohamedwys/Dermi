@@ -1218,7 +1218,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             "shoe": "👟 Here are our shoes:",
             "product": "📦 Here are some products you might like:"
           };
-          responseText = messages[(intent as any).query] || messages["product"];
+          const query = (intent as any).query || "product";
+          responseText = messages[query] || messages["product"];
           quickReplies = ["Show bestsellers", "What's on sale?", "New arrivals"];
         } else {
           responseText = "📦 Here are some products you might like:";

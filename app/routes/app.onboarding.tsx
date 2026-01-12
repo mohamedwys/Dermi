@@ -99,7 +99,7 @@ export default function OnboardingPage() {
       badgeTone: "info" as const,
       features: [
         "OpenAI integration needed by the user",
-        "Analyses et analyses approfondies",
+        "Analyses approfondies",
         "Intégration webhook N8N personnalisée",
         "Analyse des sentiments et suivi des intentions",
         "Profilage et personnalisation utilisateur",
@@ -115,7 +115,7 @@ export default function OnboardingPage() {
       badgeTone: "attention" as const,
       features: [
         "1,000 conversations/month",
-        "Analyses et analyses approfondies",
+        "Analyses approfondies",
         "Intégration webhook N8N personnalisée",
         "Analyse des sentiments et suivi des intentions",
         "Profilage et personnalisation utilisateur",
@@ -131,7 +131,7 @@ export default function OnboardingPage() {
       badgeTone: "success" as const,
       features: [
         "Conversations illimitées",
-        "Analyses et analyses approfondies",
+        "Analyses approfondies",
         "Intégration webhook N8N personnalisée",
         "Analyse des sentiments et suivi des intentions",
         "Profilage et personnalisation utilisateur",

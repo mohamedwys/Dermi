@@ -25,9 +25,9 @@ export function TrustSection() {
 
           <div className="p-8 bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl border border-purple-200">
             <Lock className="w-12 h-12 text-purple-600 mb-4" />
-            <h3 className="text-xl font-bold text-slate-900 mb-3">CCPA Compliant</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-3">Compliant</h3>
             <p className="text-slate-700 leading-relaxed">
-              California Consumer Privacy Act ready. Users have full control over their data with easy opt-out options.
+              Users have full control over their data with easy opt-out options.
             </p>
           </div>
 
