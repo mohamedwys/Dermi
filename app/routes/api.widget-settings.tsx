@@ -240,6 +240,23 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           ...DEFAULT_SETTINGS
         }
       });
+    } else {
+      // ✅ Migrate legacy plan codes if needed
+      const originalPlan = settings.plan;
+      const normalizedPlan = normalizePlanCode(settings.plan);
+
+      if (originalPlan !== normalizedPlan) {
+        try {
+          await db.widgetSettings.update({
+            where: { id: settings.id },
+            data: { plan: normalizedPlan }
+          });
+          settings.plan = normalizedPlan;
+          console.log(`✅ Migrated plan code for ${shopDomain}: ${originalPlan} → ${normalizedPlan}`);
+        } catch (error) {
+          console.warn(`Failed to migrate plan code for ${shopDomain}:`, error);
+        }
+      }
     }
 
     // ✅ IMPROVED: Fetch conversation usage for widget display

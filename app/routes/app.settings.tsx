@@ -85,8 +85,30 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       }
     }
 
-    // Normalize plan code to ensure consistency (handles legacy BASIC/UNLIMITED codes)
-    decryptedSettings.plan = normalizePlanCode(settings.plan);
+    // ✅ Normalize plan code and migrate database if needed (handles legacy BASIC/UNLIMITED codes)
+    const originalPlan = settings.plan;
+    const normalizedPlan = normalizePlanCode(settings.plan);
+    decryptedSettings.plan = normalizedPlan;
+
+    // Migrate database if plan code changed
+    if (originalPlan !== normalizedPlan) {
+      try {
+        await db.widgetSettings.update({
+          where: { id: settings.id },
+          data: { plan: normalizedPlan }
+        });
+        logger.info({
+          shop: session.shop,
+          oldPlan: originalPlan,
+          newPlan: normalizedPlan
+        }, 'Migrated plan code in database');
+      } catch (error) {
+        logger.warn({
+          error: error instanceof Error ? error.message : String(error),
+          shop: session.shop
+        }, 'Failed to migrate plan code (non-blocking)');
+      }
+    }
 
     // ✅ IMPROVED: Use shared conversation usage utility with proper timezone handling
     let conversationUsage: ConversationUsage | null = null;
@@ -814,16 +836,17 @@ export default function SettingsPage() {
           </Layout.Section>
         )}
 
-        {/* AI Workflow Settings */}
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="400">
-              <Text variant="headingMd" as="h2">
-                {t("settings.aiWorkflow")}
-              </Text>
-              <Text variant="bodyMd" as="p" tone="subdued">
-                {t("settings.aiWorkflowDesc")}
-              </Text>
+        {/* AI Workflow Settings - Only for Professional Plan */}
+        {planLimits && planLimits.hasCustomWebhook && (
+          <Layout.Section>
+            <Card>
+              <BlockStack gap="400">
+                <Text variant="headingMd" as="h2">
+                  {t("settings.aiWorkflow")}
+                </Text>
+                <Text variant="bodyMd" as="p" tone="subdued">
+                  {t("settings.aiWorkflowDesc")}
+                </Text>
 
               <FormLayout>
                 <Select
@@ -898,6 +921,26 @@ export default function SettingsPage() {
             </BlockStack>
           </Card>
         </Layout.Section>
+        )}
+
+        {/* Upgrade Banner for BYOK/Starter Plans */}
+        {planLimits && !planLimits.hasCustomWebhook && (
+          <Layout.Section>
+            <Banner tone="info">
+              <BlockStack gap="200">
+                <Text variant="bodyMd" as="p" fontWeight="semibold">
+                  Custom AI workflows available on Professional Plan
+                </Text>
+                <Text variant="bodyMd" as="p">
+                  Connect your own n8n workflow or custom AI endpoint to fully customize the chatbot behavior.
+                </Text>
+                <Button onClick={() => window.location.href = '/app/billing'}>
+                  Upgrade to Professional
+                </Button>
+              </BlockStack>
+            </Banner>
+          </Layout.Section>
+        )}
       </Layout>
     </Page>
   );
