@@ -41,6 +41,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         chatSessions: 0,
         userProfiles: 0,
         chatAnalytics: 0,
+        conversations: 0,
+        byokUsage: 0,
       };
 
       // Find all chat sessions first (needed for foreign key cleanup)
@@ -89,6 +91,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       });
       deletionStats.chatAnalytics = deletedAnalytics.count;
 
+      // Delete conversation records (for usage tracking)
+      const deletedConversations = await tx.conversation.deleteMany({
+        where: { shop },
+      });
+      deletionStats.conversations = deletedConversations.count;
+
+      // Delete BYOK usage records
+      const deletedByokUsage = await tx.byokUsage.deleteMany({
+        where: { shop },
+      });
+      deletionStats.byokUsage = deletedByokUsage.count;
+
       // Delete sessions
       const deletedSessionRecords = await tx.session.deleteMany({
         where: { shop },
@@ -118,15 +132,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       shop,
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined
-    }, "Error during app uninstall cleanup - shop/redact webhook will retry in 48 hours");
+    }, "Error during app uninstall cleanup - Shopify will retry");
 
-    // Return success to prevent webhook retries
-    // The shop/redact webhook (48 hours later) will catch any missed data
+    // ✅ GDPR COMPLIANCE FIX: Return 500 to allow webhook retries for transient errors
+    // Shopify will retry failed webhooks automatically
+    // The shop/redact webhook (48 hours later) provides additional backup
     return new Response(JSON.stringify({
       error: "Cleanup error",
       message: error instanceof Error ? error.message : 'Unknown error',
     }), {
-      status: 200,
+      status: 500,
       headers: { "Content-Type": "application/json", ...getWebhookSecurityHeaders() }
     });
   }
