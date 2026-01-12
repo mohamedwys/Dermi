@@ -99,11 +99,19 @@ export default function OnboardingPage() {
       badgeTone: "info" as const,
       features: [
         "OpenAI integration needed by the user",
+<<<<<<< HEAD
         "Analyses approfondies",
         "Intégration webhook N8N personnalisée",
         "Analyse des sentiments et suivi des intentions",
         "Profilage et personnalisation utilisateur",
         "Suivi des clics sur les produits",
+=======
+        "Advanced analytics and insights",
+        "Custom N8N webhook integration",
+        "Sentiment analysis and intent tracking",
+        "User profiling and personalization",
+        "Product click tracking",
+>>>>>>> origin/claude/shopify-submission-audit-POjr3
       ],
     },
     {
@@ -115,11 +123,19 @@ export default function OnboardingPage() {
       badgeTone: "attention" as const,
       features: [
         "1,000 conversations/month",
+<<<<<<< HEAD
         "Analyses approfondies",
         "Intégration webhook N8N personnalisée",
         "Analyse des sentiments et suivi des intentions",
         "Profilage et personnalisation utilisateur",
         "Suivi des clics sur les produits",
+=======
+        "Advanced analytics and insights",
+        "Custom N8N webhook integration",
+        "Sentiment analysis and intent tracking",
+        "User profiling and personalization",
+        "Product click tracking",
+>>>>>>> origin/claude/shopify-submission-audit-POjr3
       ],
     },
     {
@@ -130,6 +146,7 @@ export default function OnboardingPage() {
       badge: "Best Value",
       badgeTone: "success" as const,
       features: [
+<<<<<<< HEAD
         "Conversations illimitées",
         "Analyses approfondies",
         "Intégration webhook N8N personnalisée",
@@ -137,6 +154,15 @@ export default function OnboardingPage() {
         "Profilage et personnalisation utilisateur",
         "Suivi des clics sur les produits",
         "Assistance prioritaire (24/7)",
+=======
+        "Unlimited conversations",
+        "Advanced analytics and insights",
+        "Custom N8N webhook integration",
+        "Sentiment analysis and intent tracking",
+        "User profiling and personalization",
+        "Product click tracking",
+        "Priority support (24/7)",
+>>>>>>> origin/claude/shopify-submission-audit-POjr3
       ],
     },
   ];
