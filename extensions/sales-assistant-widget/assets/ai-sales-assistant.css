@@ -1149,20 +1149,22 @@
      ======================================== */
 
   .ai-chat-header {
-    padding: 16px 16px 12px 16px;
-    min-height: 80px;
+    padding: 20px 16px 20px 16px;
+    min-height: 100px;
     border-radius: 0 !important;
     /* Add safe area for notch */
-    padding-top: max(16px, env(safe-area-inset-top));
+    padding-top: max(20px, env(safe-area-inset-top));
   }
 
   .header-info h3 {
     font-size: 16px;
     font-weight: 600;
+    margin-bottom: 8px;
   }
 
   .header-status {
-    font-size: 12px;
+    font-size: 13px;
+    margin-top: 4px;
   }
 
   /* Close button - Larger tap target */
