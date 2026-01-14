@@ -344,12 +344,7 @@
     transition: none !important;
   }
 
-  /* Show static dots when reduced motion is enabled */
-  .ai-loading-dot {
-    animation: none !important;
-    opacity: 0.7 !important;
-    transform: none !important;
-  }
+  /* Loading dots are handled by JavaScript to work with inline !important styles */
 }
 
 /* Loading dot animation - Ensure proper rendering */

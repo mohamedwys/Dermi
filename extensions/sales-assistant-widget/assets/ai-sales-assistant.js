@@ -594,6 +594,9 @@ function showLoading(show) {
 
     const primaryColor = widgetSettings.primaryColor || '#3b82f6';
 
+    // Check if user prefers reduced motion
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     // Create 3 dots with explicit animation properties
     [0, 0.2, 0.4].forEach(delay => {
       const dot = document.createElement('div');
@@ -606,12 +609,20 @@ function showLoading(show) {
         border-radius: 50%;
         display: inline-block;
       `;
-      // Set animation properties separately to ensure they apply
-      dot.style.animationName = 'bounce';
-      dot.style.animationDuration = '1.4s';
-      dot.style.animationTimingFunction = 'ease-in-out';
-      dot.style.animationIterationCount = 'infinite';
-      dot.style.animationDelay = `${delay}s`;
+
+      // Only apply animation if reduced motion is NOT enabled
+      if (!prefersReducedMotion) {
+        // Use setProperty with 'important' to override CSS !important rules
+        dot.style.setProperty('animation-name', 'bounce', 'important');
+        dot.style.setProperty('animation-duration', '1.4s', 'important');
+        dot.style.setProperty('animation-timing-function', 'ease-in-out', 'important');
+        dot.style.setProperty('animation-iteration-count', 'infinite', 'important');
+        dot.style.setProperty('animation-delay', `${delay}s`, 'important');
+      } else {
+        // Show static dots with reduced opacity for accessibility
+        dot.style.opacity = '0.7';
+      }
+
       loadingDiv.appendChild(dot);
     });
 
