@@ -1106,6 +1106,7 @@ function displayProductRecommendations(recommendations) {
       imageDiv.style.backgroundImage = bgImageStyle;
       imageDiv.style.backgroundSize = 'cover';
       imageDiv.style.backgroundPosition = 'center';
+      imageDiv.style.display = 'block'; // Ensure element displays
 
       // 🐛 DEBUG: Verify style was applied
       console.log('🐛 DEBUG: Applied backgroundImage style:', bgImageStyle);
