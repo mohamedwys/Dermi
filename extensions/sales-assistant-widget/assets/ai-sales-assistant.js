@@ -1029,6 +1029,16 @@ function applySentimentStyling(sentiment) {
 }
 
 function displayProductRecommendations(recommendations) {
+  // 🐛 DEBUG: Log recommendations received
+  console.log('🐛 DEBUG: displayProductRecommendations called with:', recommendations);
+  if (recommendations.length > 0) {
+    console.log('🐛 DEBUG: First product:', {
+      title: recommendations[0].title,
+      image: recommendations[0].image,
+      hasImage: !!recommendations[0].image
+    });
+  }
+
   const messagesContainer = document.getElementById('ai-chat-messages');
   if (!messagesContainer) return;
 

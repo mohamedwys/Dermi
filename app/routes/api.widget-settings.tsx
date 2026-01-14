@@ -1188,6 +1188,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         // Limit to 8 products for display
         recommendations = products.slice(0, 8);
 
+        // 🐛 DEBUG: Log first product to check image field
+        if (recommendations.length > 0) {
+          routeLogger.info({
+            productSample: {
+              title: recommendations[0].title,
+              image: recommendations[0].image,
+              hasImage: !!recommendations[0].image
+            }
+          }, '🐛 DEBUG: First recommendation product data');
+        }
+
         // Try N8N first, but have fallback ready
         try {
           const { N8NService } = await import("../services/n8n.service.server");
@@ -1304,6 +1315,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     const responseTime = Date.now() - startTime;
+
+    // 🐛 DEBUG: Log final recommendations being sent
+    if (recommendations.length > 0) {
+      routeLogger.info({
+        recommendationsSample: recommendations.slice(0, 2).map(r => ({
+          title: r.title,
+          image: r.image,
+          hasImage: !!r.image
+        }))
+      }, '🐛 DEBUG: Final recommendations being sent');
+    }
 
     routeLogger.info({
       hasRecommendations: recommendations.length > 0,
