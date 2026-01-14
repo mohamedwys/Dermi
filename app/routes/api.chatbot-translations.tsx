@@ -34,7 +34,9 @@ const translations: Record<string, any> = {
     ratingFeedbackPlaceholder: "Additional feedback (optional)",
     ratingSkip: "Skip",
     ratingThankYou: "Thank you for your feedback!",
-    ratingAriaLabel: "Rate {{stars}} star"
+    ratingAriaLabel: "Rate {{stars}} star",
+    // 👋 Welcome popup
+    welcomeMessage: "👋 I'm here to help"
   },
   es: {
     online: "En línea",
@@ -67,7 +69,9 @@ const translations: Record<string, any> = {
     ratingFeedbackPlaceholder: "Comentarios adicionales (opcional)",
     ratingSkip: "Omitir",
     ratingThankYou: "¡Gracias por tu comentario!",
-    ratingAriaLabel: "Calificar {{stars}} estrella"
+    ratingAriaLabel: "Calificar {{stars}} estrella",
+    // 👋 Welcome popup
+    welcomeMessage: "👋 Estoy aquí para ayudarte"
   },
   fr: {
     online: "En ligne",
@@ -100,7 +104,9 @@ const translations: Record<string, any> = {
     ratingFeedbackPlaceholder: "Commentaires supplémentaires (facultatif)",
     ratingSkip: "Passer",
     ratingThankYou: "Merci pour votre retour !",
-    ratingAriaLabel: "Noter {{stars}} étoile"
+    ratingAriaLabel: "Noter {{stars}} étoile",
+    // 👋 Welcome popup
+    welcomeMessage: "👋 Je suis là pour vous aider"
   },
   de: {
     online: "Online",
@@ -133,7 +139,9 @@ const translations: Record<string, any> = {
     ratingFeedbackPlaceholder: "Zusätzliches Feedback (optional)",
     ratingSkip: "Überspringen",
     ratingThankYou: "Vielen Dank für Ihr Feedback!",
-    ratingAriaLabel: "{{stars}} Stern bewerten"
+    ratingAriaLabel: "{{stars}} Stern bewerten",
+    // 👋 Welcome popup
+    welcomeMessage: "👋 Ich bin hier, um Ihnen zu helfen"
   },
   ja: {
     online: "オンライン",
@@ -166,7 +174,9 @@ const translations: Record<string, any> = {
     ratingFeedbackPlaceholder: "追加のフィードバック（任意）",
     ratingSkip: "スキップ",
     ratingThankYou: "フィードバックありがとうございます！",
-    ratingAriaLabel: "{{stars}}つ星を評価"
+    ratingAriaLabel: "{{stars}}つ星を評価",
+    // 👋 Welcome popup
+    welcomeMessage: "👋 お手伝いさせていただきます"
   },
   it: {
     online: "Online",
@@ -199,7 +209,9 @@ const translations: Record<string, any> = {
     ratingFeedbackPlaceholder: "Feedback aggiuntivo (facoltativo)",
     ratingSkip: "Salta",
     ratingThankYou: "Grazie per il tuo feedback!",
-    ratingAriaLabel: "Valuta {{stars}} stella"
+    ratingAriaLabel: "Valuta {{stars}} stella",
+    // 👋 Welcome popup
+    welcomeMessage: "👋 Sono qui per aiutarti"
   },
   pt: {
     online: "Online",
@@ -232,7 +244,9 @@ const translations: Record<string, any> = {
     ratingFeedbackPlaceholder: "Feedback adicional (opcional)",
     ratingSkip: "Pular",
     ratingThankYou: "Obrigado pelo seu feedback!",
-    ratingAriaLabel: "Avaliar {{stars}} estrela"
+    ratingAriaLabel: "Avaliar {{stars}} estrela",
+    // 👋 Welcome popup
+    welcomeMessage: "👋 Estou aqui para ajudar"
   },
   zh: {
     online: "在线",
@@ -265,7 +279,9 @@ const translations: Record<string, any> = {
     ratingFeedbackPlaceholder: "额外反馈（可选）",
     ratingSkip: "跳过",
     ratingThankYou: "感谢您的反馈！",
-    ratingAriaLabel: "评价{{stars}}星"
+    ratingAriaLabel: "评价{{stars}}星",
+    // 👋 Welcome popup
+    welcomeMessage: "👋 我在这里帮助您"
   }
 };
 

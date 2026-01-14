@@ -570,6 +570,210 @@ function closeRatingModal(overlay) {
   }, 300);
 }
 
+// ======================
+// Welcome Popup
+// ======================
+
+function shouldShowWelcomePopup() {
+  // Check if welcome popup is enabled (default: true)
+  if (widgetSettings && widgetSettings.welcomePopupEnabled === false) {
+    return false;
+  }
+
+  // Never show if chat has been opened already this session
+  try {
+    if (sessionStorage.getItem('ai_chat_opened')) {
+      return false;
+    }
+  } catch (e) {
+    // Ignore if sessionStorage unavailable
+  }
+
+  // Never show if welcome popup was already shown this session
+  try {
+    if (sessionStorage.getItem('ai_welcome_shown')) {
+      return false;
+    }
+  } catch (e) {
+    // Ignore if sessionStorage unavailable
+  }
+
+  return true;
+}
+
+function showWelcomePopup() {
+  if (!shouldShowWelcomePopup()) return;
+
+  // Mark as shown in sessionStorage
+  try {
+    sessionStorage.setItem('ai_welcome_shown', 'true');
+  } catch (e) {
+    // Ignore if sessionStorage unavailable
+  }
+
+  // Get the chat toggle button position to position popup near it
+  const toggleBtn = elements.toggleBtn;
+  if (!toggleBtn) return;
+
+  // Create popup container
+  const popup = document.createElement('div');
+  popup.id = 'ai-welcome-popup';
+  popup.setAttribute('role', 'button');
+  popup.setAttribute('aria-label', (widgetSettings && widgetSettings.welcomePopupMessage)
+    ? widgetSettings.welcomePopupMessage
+    : t('welcomeMessage'));
+  popup.setAttribute('tabindex', '0');
+
+  // Get position configuration
+  const position = widgetSettings?.position || 'bottom-right';
+  const isLeft = position.includes('left');
+  const isBottom = position.includes('bottom');
+
+  // Style the popup - positioned near the chat launcher
+  popup.style.cssText = `
+    position: fixed;
+    ${isBottom ? 'bottom' : 'top'}: ${isBottom ? '100px' : '100px'};
+    ${isLeft ? 'left' : 'right'}: 24px;
+    background: #ffffff;
+    color: #1f2937;
+    padding: 14px 18px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    z-index: 999998;
+    max-width: 280px;
+    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+    transform: translateY(10px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  `;
+
+  // Add close button
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '&times;';
+  closeBtn.style.cssText = `
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    font-size: 20px;
+    font-weight: 400;
+    cursor: pointer;
+    padding: 0;
+    margin-left: auto;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1;
+    transition: color 0.2s ease;
+  `;
+  closeBtn.setAttribute('aria-label', t('close'));
+  closeBtn.setAttribute('tabindex', '0');
+
+  closeBtn.addEventListener('mouseenter', () => {
+    closeBtn.style.color = '#1f2937';
+  });
+
+  closeBtn.addEventListener('mouseleave', () => {
+    closeBtn.style.color = '#9ca3af';
+  });
+
+  closeBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    closeWelcomePopup(popup);
+  });
+
+  // Add message text - use custom message if provided, otherwise use translation
+  const messageSpan = document.createElement('span');
+  messageSpan.textContent = (widgetSettings && widgetSettings.welcomePopupMessage)
+    ? widgetSettings.welcomePopupMessage
+    : t('welcomeMessage');
+  messageSpan.style.cssText = 'flex: 1;';
+
+  popup.appendChild(messageSpan);
+  popup.appendChild(closeBtn);
+
+  // Hover effect
+  popup.addEventListener('mouseenter', () => {
+    popup.style.transform = 'translateY(0) scale(1.02)';
+    popup.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1)';
+  });
+
+  popup.addEventListener('mouseleave', () => {
+    popup.style.transform = 'translateY(0) scale(1)';
+    popup.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08)';
+  });
+
+  // Click handler - open chat and dismiss popup
+  popup.addEventListener('click', () => {
+    closeWelcomePopup(popup);
+    if (!chatOpen) {
+      toggleAIChat();
+    }
+  });
+
+  // Keyboard support
+  popup.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      popup.click();
+    } else if (e.key === 'Escape') {
+      closeWelcomePopup(popup);
+    }
+  });
+
+  closeBtn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      closeWelcomePopup(popup);
+    }
+  });
+
+  // Add to body
+  document.body.appendChild(popup);
+
+  // Animate in
+  requestAnimationFrame(() => {
+    popup.style.opacity = '1';
+    popup.style.transform = 'translateY(0)';
+  });
+
+  // Auto-dismiss after 10 seconds
+  setTimeout(() => {
+    if (popup.parentNode) {
+      closeWelcomePopup(popup);
+    }
+  }, 10000);
+}
+
+function closeWelcomePopup(popup) {
+  if (!popup || !popup.parentNode) return;
+  popup.style.transition = 'all 0.2s cubic-bezier(0.4, 0, 1, 1)';
+  popup.style.opacity = '0';
+  popup.style.transform = 'translateY(10px) scale(0.95)';
+  setTimeout(() => {
+    if (popup.parentNode) {
+      popup.remove();
+    }
+  }, 250);
+}
+
+function initWelcomePopup() {
+  // Show welcome popup 3 seconds after page load
+  setTimeout(() => {
+    showWelcomePopup();
+  }, 3000);
+}
+
 function showLoading(show) {
   let loadingDiv = document.getElementById('ai-loading');
 
@@ -1432,6 +1636,15 @@ function toggleAIChat() {
     }
   );
 
+  // Mark chat as opened in sessionStorage to prevent welcome popup
+  if (chatOpen) {
+    try {
+      sessionStorage.setItem('ai_chat_opened', 'true');
+    } catch (e) {
+      // Ignore if sessionStorage unavailable
+    }
+  }
+
   // Update toggle button accessibility attributes
   if (elements.toggleBtn) {
     elements.toggleBtn.setAttribute('aria-expanded', chatOpen.toString());
@@ -1687,6 +1900,9 @@ async function safeInit(retries = 20) {
     loadConversationHistory();
     loadMessageQueue();
     createWidget();
+
+    // Initialize welcome popup (shows after 3 seconds)
+    initWelcomePopup();
   } else if (retries > 0) {
     // Retry if not found yet (common in Theme Editor)
     setTimeout(() => safeInit(retries - 1), 200);
