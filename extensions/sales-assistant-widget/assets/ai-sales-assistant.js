@@ -1067,46 +1067,53 @@ function displayProductRecommendations(recommendations) {
     productCard.style.minHeight = '86px';
     productCard.style.maxHeight = '86px';
 
-    // Image section - compact thumbnail
-    if (product.image) {
-      const imageDiv = document.createElement('div');
-      imageDiv.className = 'product-image-compact';
-      imageDiv.style.width = '70px';
-      imageDiv.style.minWidth = '70px';
-      imageDiv.style.height = '70px';
-      imageDiv.style.position = 'relative';
-      imageDiv.style.overflow = 'hidden';
-      imageDiv.style.borderRadius = '6px';
-      imageDiv.style.flexShrink = '0';
+    // Image section - compact thumbnail (always show, with placeholder if no image)
+    const imageDiv = document.createElement('div');
+    imageDiv.className = 'product-image-compact';
+    imageDiv.style.width = '70px';
+    imageDiv.style.minWidth = '70px';
+    imageDiv.style.height = '70px';
+    imageDiv.style.position = 'relative';
+    imageDiv.style.overflow = 'hidden';
+    imageDiv.style.borderRadius = '6px';
+    imageDiv.style.flexShrink = '0';
+    imageDiv.style.backgroundColor = '#f3f4f6';
 
+    if (product.image) {
       const sanitizedImageUrl = sanitizeUrl(product.image);
       if (sanitizedImageUrl) {
         const escapedUrl = sanitizedImageUrl.replace(/'/g, "\\'");
         imageDiv.style.backgroundImage = `url('${escapedUrl}')`;
+        imageDiv.style.backgroundSize = 'cover';
+        imageDiv.style.backgroundPosition = 'center';
       }
-      imageDiv.style.backgroundSize = 'cover';
-      imageDiv.style.backgroundPosition = 'center';
-      imageDiv.style.backgroundColor = '#f9fafb';
-
-      // Only show discount badge if applicable - small pill style
-      if (product.badge || product.discountPercent) {
-        const discountBadge = document.createElement('div');
-        discountBadge.style.position = 'absolute';
-        discountBadge.style.top = '4px';
-        discountBadge.style.left = '4px';
-        discountBadge.style.background = '#ef4444';
-        discountBadge.style.color = 'white';
-        discountBadge.style.padding = '2px 6px';
-        discountBadge.style.borderRadius = '4px';
-        discountBadge.style.fontSize = '9px';
-        discountBadge.style.fontWeight = '700';
-        discountBadge.style.lineHeight = '1';
-        discountBadge.textContent = product.badge || `-${product.discountPercent}%`;
-        imageDiv.appendChild(discountBadge);
-      }
-
-      productCard.appendChild(imageDiv);
+    } else {
+      // Placeholder icon when no image available
+      imageDiv.style.display = 'flex';
+      imageDiv.style.alignItems = 'center';
+      imageDiv.style.justifyContent = 'center';
+      imageDiv.style.fontSize = '28px';
+      imageDiv.innerHTML = '🛍️';
     }
+
+    // Only show discount badge if applicable - small pill style
+    if (product.badge || product.discountPercent) {
+      const discountBadge = document.createElement('div');
+      discountBadge.style.position = 'absolute';
+      discountBadge.style.top = '4px';
+      discountBadge.style.left = '4px';
+      discountBadge.style.background = '#ef4444';
+      discountBadge.style.color = 'white';
+      discountBadge.style.padding = '2px 6px';
+      discountBadge.style.borderRadius = '4px';
+      discountBadge.style.fontSize = '9px';
+      discountBadge.style.fontWeight = '700';
+      discountBadge.style.lineHeight = '1';
+      discountBadge.textContent = product.badge || `-${product.discountPercent}%`;
+      imageDiv.appendChild(discountBadge);
+    }
+
+    productCard.appendChild(imageDiv);
 
     // Content section - title and price only
     const contentDiv = document.createElement('div');
