@@ -1092,14 +1092,32 @@ function displayProductRecommendations(recommendations) {
     // Sanitize and check if we have a valid image URL
     const sanitizedImageUrl = product.image ? sanitizeUrl(product.image) : '';
 
+    // 🐛 DEBUG: Log sanitization and rendering
+    console.log('🐛 DEBUG: Image rendering for', product.title, {
+      originalUrl: product.image,
+      sanitizedUrl: sanitizedImageUrl,
+      willShowImage: !!sanitizedImageUrl
+    });
+
     if (sanitizedImageUrl) {
       // Show product image
       const escapedUrl = sanitizedImageUrl.replace(/'/g, "\\'");
-      imageDiv.style.backgroundImage = `url('${escapedUrl}')`;
+      const bgImageStyle = `url('${escapedUrl}')`;
+      imageDiv.style.backgroundImage = bgImageStyle;
       imageDiv.style.backgroundSize = 'cover';
       imageDiv.style.backgroundPosition = 'center';
+
+      // 🐛 DEBUG: Verify style was applied
+      console.log('🐛 DEBUG: Applied backgroundImage style:', bgImageStyle);
+      console.log('🐛 DEBUG: imageDiv computed style:', {
+        backgroundImage: imageDiv.style.backgroundImage,
+        width: imageDiv.style.width,
+        height: imageDiv.style.height,
+        display: imageDiv.style.display
+      });
     } else {
       // Placeholder icon when no image available or sanitization fails
+      console.log('🐛 DEBUG: Showing placeholder for', product.title);
       imageDiv.style.display = 'flex';
       imageDiv.style.alignItems = 'center';
       imageDiv.style.justifyContent = 'center';
