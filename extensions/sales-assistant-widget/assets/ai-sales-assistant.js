@@ -1059,9 +1059,11 @@ function displayProductRecommendations(recommendations) {
     });
     detailsDiv.appendChild(actionButton);
     productCard.appendChild(detailsDiv);
-    productCard.addEventListener('click', function(e) {
+    productCard.addEventListener('click', async function(e) {
       e.preventDefault();
       e.stopPropagation();
+
+      // Track analytics (Google Analytics, Facebook Pixel, etc.)
       trackAnalytics(analyticsEvents.PRODUCT_CLICKED, {
         productTitle: product.title,
         productHandle: product.handle,
@@ -1069,6 +1071,28 @@ function displayProductRecommendations(recommendations) {
         relevanceScore: product.relevanceScore,
         position: index + 1
       });
+
+      // ✅ FIX: Send product click to backend for analytics dashboard
+      try {
+        const productId = product.id || product.handle;
+        await fetch('https://shopibot.vercel.app/api/track-product-click', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            shop: widgetSettings.shopDomain,
+            productId: productId,
+            productHandle: product.handle,
+            productTitle: product.title,
+            sessionId: sessionId
+          })
+        }).catch(err => console.debug('Product click tracking failed:', err));
+      } catch (error) {
+        // Silently fail - don't block user navigation
+        console.debug('Product click tracking error:', error);
+      }
+
       const productUrl = product.fullUrl || `/products/${product.handle}`;
       const safeUrl = sanitizeUrl(productUrl);
       if (safeUrl) {

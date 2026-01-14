@@ -326,6 +326,28 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       a.href = '/products/' + p.handle;
       a.target = '_blank';
       a.innerHTML = '<img src="' + escapeHTML(p.image || '') + '" alt="' + escapeHTML(p.title) + '"/><div class="ai-product-info"><p class="ai-product-title">' + escapeHTML(p.title) + '</p><p class="ai-product-price">$' + escapeHTML(p.price) + '</p></div>';
+
+      // ✅ FIX: Track product clicks for analytics dashboard
+      a.addEventListener('click', async function(e) {
+        try {
+          const productId = p.id || p.handle;
+          await fetch(API_BASE_URL + '/api/track-product-click', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              shop: SHOP_DOMAIN,
+              productId: productId,
+              productHandle: p.handle,
+              productTitle: p.title,
+              sessionId: sessionId
+            })
+          }).catch(err => console.debug('Product click tracking failed:', err));
+        } catch (error) {
+          // Silently fail - don't block user navigation
+          console.debug('Product click tracking error:', error);
+        }
+      });
+
       msgs.appendChild(a);
     });
     msgs.scrollTop = msgs.scrollHeight;
