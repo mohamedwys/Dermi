@@ -48,22 +48,26 @@ function detectIntent(message: string): Intent {
   // ========================================
 
   // Shipping Info: "Tell me about shipping and delivery"
-  if (/(shipping|delivery|livraison|expédition|délai.*livraison|frais.*port)/i.test(lower)) {
+  // 🌍 Multilingual: EN, FR, ES, DE, JA, IT, PT, ZH
+  if (/(shipping|delivery|livraison|expédition|délai.*livraison|frais.*port|envío|entrega|enviar|versand|lieferung|spedizione|consegna|envio|entrega|配送|配达|发货|物流|配送について|配達)/i.test(lower)) {
     return { type: "SHIPPING_INFO" };
   }
 
   // Returns: "What is your return policy?"
-  if (/(return|refund|exchange|retour|remboursement|échange|politique.*retour)/i.test(lower)) {
+  // 🌍 Multilingual: EN, FR, ES, DE, JA, IT, PT, ZH
+  if (/(return|refund|exchange|retour|remboursement|échange|politique.*retour|devoluciones?|reembolso|cambio|rücksendung|erstattung|umtausch|resi|rimborso|cambio|devolução|reembolso|troca|退货|退款|换货|返品|返金|返品ポリシー)/i.test(lower)) {
     return { type: "RETURNS" };
   }
 
   // Track Order: "How can I track my order?"
-  if (/(track|tracking|where.*is.*my.*order|order.*status|suivre.*commande|suivi.*colis)/i.test(lower)) {
+  // 🌍 Multilingual: EN, FR, ES, DE, JA, IT, PT, ZH
+  if (/(track|tracking|where.*is.*my.*order|order.*status|suivre.*commande|suivi.*colis|rastrear|seguimiento|pedido|verfolgen|sendungsverfolgung|bestellung|traccia.*ordine|stato.*ordine|rastrear|acompanhar|pedido|追踪|订单状态|查询|追跡|注文.*追跡|注文状況)/i.test(lower)) {
     return { type: "TRACK_ORDER" };
   }
 
   // Help/FAQ: "I need help with something" or "How can I talk to someone"
-  if (/(help|faq|question|support|assistance|aide|besoin.*aide|customer.*service|service.*client|talk.*to.*someone|speak.*to.*someone|contact.*you|reach.*you|parler.*avec|parler.*quelqu'un|contacter|joindre|comment.*vous.*contacter)/i.test(lower)) {
+  // 🌍 Multilingual: EN, FR, ES, DE, JA, IT, PT, ZH
+  if (/(help|faq|question|support|assistance|aide|besoin.*aide|customer.*service|service.*client|talk.*to.*someone|speak.*to.*someone|contact.*you|reach.*you|parler.*avec|parler.*quelqu'un|contacter|joindre|comment.*vous.*contacter|ayuda|asistencia|soporte|servicio.*cliente|preguntas?|hilfe|unterstützung|kundendienst|fragen?|aiuto|supporto|assistenza|servizio.*clienti|domande?|ajuda|suporte|atendimento|perguntas?|帮助|支持|客服|联系|咨询|ヘルプ|サポート|助け|お問い合わせ)/i.test(lower)) {
     return { type: "HELP_FAQ" };
   }
 
@@ -72,22 +76,26 @@ function detectIntent(message: string): Intent {
   // ========================================
 
   // Best Sellers: "What are your best-selling products?"
-  if (/(best[-\s]?selling|best[-\s]?seller|top[-\s]?seller|most[-\s]?popular|meilleur.*vente|plus.*vendus)/i.test(lower)) {
+  // 🌍 Multilingual: EN, FR, ES, DE, JA, IT, PT, ZH
+  if (/(best[-\s]?selling|best[-\s]?seller|top[-\s]?seller|most[-\s]?popular|popular.*product|meilleur.*vente|plus.*vendus|más.*vendido|populares?|producto.*popular|bestseller|beliebte.*produkte?|più.*venduti|popolari|mais.*vendidos|畅销|热门|人気|ベストセラー|人気商品)/i.test(lower)) {
     return { type: "BESTSELLERS" };
   }
 
   // New Arrivals: "Show me new arrivals"
-  if (/(new[-\s]?arrival|latest|recent|just[-\s]?added|nouveauté|nouveau.*produit|dernier.*ajout)/i.test(lower)) {
+  // 🌍 Multilingual: EN, FR, ES, DE, JA, IT, PT, ZH
+  if (/(new[-\s]?arrival|latest|recent|just[-\s]?added|nouveauté|nouveau.*produit|dernier.*ajout|novedades?|nuevo.*producto|neuheiten?|neue.*produkte?|novità|nuovi.*prodotti|novidades?|novo.*produto|新品|新上市|新着|新商品|新製品)/i.test(lower)) {
     return { type: "NEW_ARRIVALS" };
   }
 
   // On Sale: "What products are on sale?"
-  if (/(on[-\s]?sale|discount|promo|deal|solde|réduction|promotion|rabais)/i.test(lower)) {
+  // 🌍 Multilingual: EN, FR, ES, DE, JA, IT, PT, ZH
+  if (/(on[-\s]?sale|discount|promo|deal|solde|réduction|promotion|rabais|oferta|descuento|rebaja|angebot|rabatt|reduziert|offerta|sconto|promoção|desconto|促销|打折|优惠|特价|セール|割引|特売)/i.test(lower)) {
     return { type: "ON_SALE" };
   }
 
   // Recommendations: "Show me recommendations for me"
-  if (/(recommendation|recommend.*for.*me|suggest.*for.*me|for[-\s]?you|personnalisé|recommandation)/i.test(lower)) {
+  // 🌍 Multilingual: EN, FR, ES, DE, JA, IT, PT, ZH
+  if (/(recommendation|recommend.*for.*me|suggest.*for.*me|for[-\s]?you|personnalisé|recommandation|recomendaciones?|recomendado|sugerencias?|empfehlungen?|empfohlen|vorschläge|raccomandazioni?|consigliato|suggerimenti|recomendações?|recomendado|sugestões|推荐|建议|おすすめ|推奨|お勧め)/i.test(lower)) {
     return { type: "RECOMMENDATIONS" };
   }
 
