@@ -299,6 +299,11 @@ function scrollToBottom() {
 // ======================
 
 function shouldShowRatingPopup() {
+  // Check if rating is enabled in settings
+  if (widgetSettings && widgetSettings.ratingEnabled === false) {
+    return false;
+  }
+
   // Check if rating popup has already been shown this session
   try {
     return !sessionStorage.getItem('ai_rating_shown') && conversationHistory.length >= 4;
@@ -331,10 +336,12 @@ function showRatingModal() {
   modal.id = 'ai-rating-modal';
   modal.style.cssText = 'background: white; border-radius: 20px; padding: 32px 28px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); max-width: 360px; width: calc(100% - 40px); box-sizing: border-box; position: relative;';
 
-  // Title
+  // Title - use custom text if provided, otherwise use translation
   const title = document.createElement('h2');
   title.id = 'rating-modal-title';
-  title.textContent = t('ratingTitle');
+  title.textContent = (widgetSettings && widgetSettings.ratingCustomTitle)
+    ? widgetSettings.ratingCustomTitle
+    : t('ratingTitle');
   title.style.cssText = 'margin: 0 0 24px 0; font-size: 20px; font-weight: 600; color: #111827; text-align: center; line-height: 1.3;';
   modal.appendChild(title);
 
@@ -462,9 +469,11 @@ function showSuccessConfirmation(overlay) {
   icon.innerHTML = '<svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 16px; display: block;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
   modal.appendChild(icon);
 
-  // Thank you message
+  // Thank you message - use custom text if provided, otherwise use translation
   const message = document.createElement('div');
-  message.textContent = t('ratingThankYou');
+  message.textContent = (widgetSettings && widgetSettings.ratingCustomThankYou)
+    ? widgetSettings.ratingCustomThankYou
+    : t('ratingThankYou');
   message.style.cssText = 'font-size: 18px; font-weight: 600; color: #059669; text-align: center; line-height: 1.4;';
   modal.appendChild(message);
 

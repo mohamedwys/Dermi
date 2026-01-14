@@ -46,6 +46,11 @@ model WidgetSettings {
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   workflowType     WorkflowType @default(DEFAULT)
+
+  // Rating modal customization
+  ratingEnabled       Boolean  @default(true)
+  ratingCustomTitle   String?
+  ratingCustomThankYou String?
 }
 
 model ProductEmbedding {
