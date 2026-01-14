@@ -594,11 +594,8 @@ function showLoading(show) {
 
     const primaryColor = widgetSettings.primaryColor || '#3b82f6';
 
-    // Check if user prefers reduced motion
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
     // Create 3 dots with explicit animation properties
-    [0, 0.2, 0.4].forEach(delay => {
+    [0, 0.2, 0.4].forEach((delay, index) => {
       const dot = document.createElement('div');
       dot.className = 'ai-loading-dot';
 
@@ -609,18 +606,12 @@ function showLoading(show) {
       dot.style.borderRadius = '50%';
       dot.style.display = 'inline-block';
 
-      // Only apply animation if reduced motion is NOT enabled
-      if (!prefersReducedMotion) {
-        // Use the same approach that works in console
-        dot.style.animationName = 'bounce';
-        dot.style.animationDuration = '1.4s';
-        dot.style.animationTimingFunction = 'ease-in-out';
-        dot.style.animationIterationCount = 'infinite';
-        dot.style.animationDelay = `${delay}s`;
-      } else {
-        // Show static dots with reduced opacity for accessibility
-        dot.style.opacity = '0.7';
-      }
+      // Apply animation (same approach that works in console)
+      dot.style.animationName = 'bounce';
+      dot.style.animationDuration = '1.4s';
+      dot.style.animationTimingFunction = 'ease-in-out';
+      dot.style.animationIterationCount = 'infinite';
+      dot.style.animationDelay = `${index * 0.2}s`;
 
       loadingDiv.appendChild(dot);
     });
