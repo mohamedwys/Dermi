@@ -89,11 +89,15 @@ model ChatSession {
   context       String        @default("{}")
   lastMessageAt DateTime      @default(now())
   createdAt     DateTime      @default(now())
+  rating        Int?
+  ratingComment String?
+  ratedAt       DateTime?
   messages      ChatMessage[]
   userProfile   UserProfile   @relation(fields: [userProfileId], references: [id], onDelete: Cascade)
 
   @@index([shop, userProfileId])
   @@index([shop, lastMessageAt])
+  @@index([shop, ratedAt])
 }
 
 model ChatMessage {

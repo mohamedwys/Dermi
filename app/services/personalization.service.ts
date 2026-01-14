@@ -458,6 +458,69 @@ Respond with just the category name.`,
   }
 
   /**
+   * Save satisfaction rating for a chat session
+   */
+  async saveRating(
+    shop: string,
+    sessionIdOrChatSessionId: string,
+    rating: number,
+    ratingComment?: string
+  ): Promise<void> {
+    try {
+      // Validate rating is between 1-5
+      if (rating < 1 || rating > 5) {
+        throw new Error('Rating must be between 1 and 5');
+      }
+
+      // Try to find chat session directly by ID first
+      let chatSession = await db.chatSession.findUnique({
+        where: { id: sessionIdOrChatSessionId },
+      }).catch(() => null);
+
+      // If not found, try to look up by user session ID
+      if (!chatSession) {
+        const userProfile = await db.userProfile.findUnique({
+          where: {
+            shop_sessionId: { shop, sessionId: sessionIdOrChatSessionId },
+          },
+          include: {
+            chatSessions: {
+              orderBy: { lastMessageAt: 'desc' },
+              take: 1,
+            },
+          },
+        });
+
+        chatSession = userProfile?.chatSessions?.[0];
+      }
+
+      if (!chatSession) {
+        throw new Error('Chat session not found');
+      }
+
+      // Update the chat session with the rating
+      await db.chatSession.update({
+        where: { id: chatSession.id },
+        data: {
+          rating,
+          ratingComment: ratingComment || null,
+          ratedAt: new Date(),
+        },
+      });
+
+      this.logger.info({
+        shop,
+        chatSessionId: chatSession.id.substring(0, 10) + '...',
+        rating,
+        hasComment: !!ratingComment
+      }, '⭐ Rating saved to database');
+    } catch (error) {
+      logError(error, 'Error saving rating', { shop, sessionId: sessionIdOrChatSessionId, rating });
+      throw error;
+    }
+  }
+
+  /**
    * Get personalization context for a user
    */
   async getPersonalizationContext(

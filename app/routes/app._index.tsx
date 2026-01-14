@@ -96,8 +96,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         count: data.count,
       }));
 
-    const satisfaction =
-      overview.sentimentBreakdown?.positive && overview.totalMessages > 0
+    // Use real satisfaction rating if available, otherwise fall back to sentiment-based calculation
+    const satisfaction = overview.satisfactionRating?.averageRating
+      ? overview.satisfactionRating.averageRating.toFixed(1)
+      : overview.sentimentBreakdown?.positive && overview.totalMessages > 0
         ? ((overview.sentimentBreakdown.positive / overview.totalMessages) * 5).toFixed(1)
         : "0.0";
 
@@ -108,6 +110,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         ? `${(overview.avgResponseTime / 1000).toFixed(1)}s`
         : "0.0s",
       customerSatisfaction: parseFloat(satisfaction) || 0,
+      satisfactionRatingCount: overview.satisfactionRating?.totalRatings || 0,
       topQuestions:
         topQuestions.length > 0
           ? topQuestions
@@ -213,7 +216,9 @@ export default function Index() {
                   label: t("dashboard.satisfactionScore"),
                   value: stats.customerSatisfaction,
                   badge: t("dashboard.excellent"),
-                  note: t("dashboard.basedOnFeedback"),
+                  note: stats.satisfactionRatingCount > 0
+                    ? `Based on ${stats.satisfactionRatingCount} rating${stats.satisfactionRatingCount !== 1 ? 's' : ''}`
+                    : t("dashboard.basedOnFeedback"),
                   suffix: t("dashboard.outOf5"),
                 },
               ].map((metric, idx) => (

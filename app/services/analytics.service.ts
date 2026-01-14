@@ -11,6 +11,17 @@ export interface AnalyticsOverview {
     neutral: number;
     negative: number;
   };
+  satisfactionRating?: {
+    averageRating: number;
+    totalRatings: number;
+    distribution: {
+      1: number;
+      2: number;
+      3: number;
+      4: number;
+      5: number;
+    };
+  };
   periodComparison: {
     sessionsChange: number;
     messagesChange: number;
@@ -140,6 +151,9 @@ export class AnalyticsService {
         ? ((avgConfidence - prevAvgConfidence) / prevAvgConfidence) * 100
         : 0;
 
+      // Get satisfaction rating data
+      const satisfactionRating = await this.getSatisfactionRating(shop, period);
+
       return {
         totalSessions,
         totalMessages,
@@ -150,6 +164,7 @@ export class AnalyticsService {
           neutral: sentimentCounts.neutral,
           negative: sentimentCounts.negative,
         },
+        satisfactionRating: satisfactionRating || undefined,
         periodComparison: {
           sessionsChange: Math.round(sessionsChange * 10) / 10,
           messagesChange: Math.round(messagesChange * 10) / 10,
@@ -174,6 +189,67 @@ export class AnalyticsService {
           confidenceChange: 0,
         },
       };
+    }
+  }
+
+  /**
+   * Get satisfaction rating statistics for a shop
+   */
+  async getSatisfactionRating(shop: string, period: AnalyticsPeriod): Promise<{
+    averageRating: number;
+    totalRatings: number;
+    distribution: { 1: number; 2: number; 3: number; 4: number; 5: number };
+  } | null> {
+    try {
+      // Get all rated chat sessions in the period
+      const ratedSessions = await db.chatSession.findMany({
+        where: {
+          shop,
+          rating: {
+            not: null,
+          },
+          ratedAt: {
+            gte: period.startDate,
+            lte: period.endDate,
+          },
+        },
+        select: {
+          rating: true,
+        },
+      });
+
+      if (ratedSessions.length === 0) {
+        return null; // No ratings yet
+      }
+
+      // Calculate average rating
+      const totalRating = ratedSessions.reduce((sum, session) => sum + (session.rating || 0), 0);
+      const averageRating = totalRating / ratedSessions.length;
+
+      // Calculate distribution
+      const distribution = {
+        1: ratedSessions.filter(s => s.rating === 1).length,
+        2: ratedSessions.filter(s => s.rating === 2).length,
+        3: ratedSessions.filter(s => s.rating === 3).length,
+        4: ratedSessions.filter(s => s.rating === 4).length,
+        5: ratedSessions.filter(s => s.rating === 5).length,
+      };
+
+      this.logger.debug({
+        shop,
+        averageRating,
+        totalRatings: ratedSessions.length,
+        distribution,
+      }, 'Calculated satisfaction rating');
+
+      return {
+        averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
+        totalRatings: ratedSessions.length,
+        distribution,
+      };
+    } catch (error: any) {
+      logError(error, 'Error getting satisfaction rating');
+      return null;
     }
   }
 

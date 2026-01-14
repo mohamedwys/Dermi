@@ -10,6 +10,8 @@ let currentSuggestedActions = [];
 let messageQueue = [];
 let isOnline = navigator.onLine;
 let translations = null; // Store loaded translations
+let ratingShown = false; // Track if rating prompt has been displayed
+let currentChatSessionId = null; // Track current chat session for rating
 
 // ✅ FIX: Persist sessionId in localStorage to prevent repeated greetings
 // Try to retrieve existing sessionId from localStorage, or create a new one
@@ -290,6 +292,143 @@ function addMessageToChat(sender, message) {
 function scrollToBottom() {
   if (elements.messagesContainer) {
     elements.messagesContainer.scrollTo({ top: elements.messagesContainer.scrollHeight, behavior: 'smooth' });
+  }
+}
+
+// ======================
+// Rating Functions
+// ======================
+
+function shouldShowRating() {
+  // Show rating if:
+  // 1. Not shown yet this session
+  // 2. Has at least 3 messages in conversation
+  // 3. Chat is about to close
+  return !ratingShown && conversationHistory.length >= 3;
+}
+
+function showRatingPrompt() {
+  if (!elements.messagesContainer || !shouldShowRating()) return;
+
+  ratingShown = true; // Mark as shown
+
+  // Create rating container
+  const ratingDiv = document.createElement('div');
+  ratingDiv.id = 'ai-rating-prompt';
+  ratingDiv.className = 'ai-message assistant-message';
+  ratingDiv.style.cssText = 'padding: 20px; background: white; border-radius: 12px; border: 1px solid #f3f4f6; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin: 16px 12px; max-width: 90%;';
+
+  // Rating prompt text
+  const promptText = document.createElement('div');
+  promptText.textContent = 'How was your experience?';
+  promptText.style.cssText = 'font-weight: 600; margin-bottom: 12px; font-size: 15px; color: #1f2937;';
+  ratingDiv.appendChild(promptText);
+
+  // Star rating container
+  const starsContainer = document.createElement('div');
+  starsContainer.style.cssText = 'display: flex; gap: 8px; margin-bottom: 12px;';
+
+  // Create 5 star buttons
+  for (let i = 1; i <= 5; i++) {
+    const starBtn = document.createElement('button');
+    starBtn.textContent = '⭐';
+    starBtn.style.cssText = 'font-size: 32px; background: none; border: none; cursor: pointer; padding: 4px; transition: transform 0.2s; filter: grayscale(1); opacity: 0.5;';
+    starBtn.setAttribute('aria-label', `Rate ${i} star${i > 1 ? 's' : ''}`);
+    starBtn.dataset.rating = i;
+
+    // Hover effect
+    starBtn.addEventListener('mouseenter', function() {
+      this.style.transform = 'scale(1.2)';
+      this.style.filter = 'grayscale(0)';
+      this.style.opacity = '1';
+    });
+
+    starBtn.addEventListener('mouseleave', function() {
+      this.style.transform = 'scale(1)';
+      this.style.filter = 'grayscale(1)';
+      this.style.opacity = '0.5';
+    });
+
+    // Click handler
+    starBtn.addEventListener('click', function() {
+      const rating = parseInt(this.dataset.rating);
+      handleRatingSubmission(rating);
+    });
+
+    starsContainer.appendChild(starBtn);
+  }
+
+  ratingDiv.appendChild(starsContainer);
+
+  // Optional feedback textarea
+  const feedbackInput = document.createElement('textarea');
+  feedbackInput.id = 'ai-rating-feedback';
+  feedbackInput.placeholder = 'Additional feedback (optional)';
+  feedbackInput.style.cssText = 'width: 100%; min-height: 60px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical; margin-bottom: 8px;';
+  ratingDiv.appendChild(feedbackInput);
+
+  // Skip button
+  const skipBtn = document.createElement('button');
+  skipBtn.textContent = 'Skip';
+  skipBtn.style.cssText = 'padding: 8px 16px; background: #f3f4f6; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; color: #6b7280;';
+  skipBtn.addEventListener('click', function() {
+    ratingDiv.remove();
+  });
+  ratingDiv.appendChild(skipBtn);
+
+  elements.messagesContainer.appendChild(ratingDiv);
+  scrollToBottom();
+}
+
+async function handleRatingSubmission(rating) {
+  const feedbackInput = document.getElementById('ai-rating-feedback');
+  const ratingComment = feedbackInput ? feedbackInput.value.trim() : '';
+
+  try {
+    // Use currentChatSessionId if available, otherwise use sessionId as fallback
+    const chatSessionId = currentChatSessionId || sessionId;
+
+    // Submit rating to backend
+    const url = `https://shopibot.vercel.app/api/submit-rating`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        shop: widgetSettings.shopDomain,
+        chatSessionId: chatSessionId,
+        rating: rating,
+        ratingComment: ratingComment || undefined
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Show thank you message
+      const ratingPrompt = document.getElementById('ai-rating-prompt');
+      if (ratingPrompt) {
+        ratingPrompt.innerHTML = '';
+        const thankYouText = document.createElement('div');
+        thankYouText.textContent = '✨ Thank you for your feedback!';
+        thankYouText.style.cssText = 'font-weight: 600; color: #10b981; font-size: 15px; text-align: center;';
+        ratingPrompt.appendChild(thankYouText);
+
+        // Remove after 2 seconds
+        setTimeout(() => {
+          ratingPrompt.style.opacity = '0';
+          ratingPrompt.style.transition = 'opacity 0.3s ease';
+          setTimeout(() => ratingPrompt.remove(), 300);
+        }, 2000);
+      }
+
+      console.log('⭐ Rating submitted successfully:', rating);
+    } else {
+      console.error('Failed to submit rating:', data.error);
+    }
+  } catch (error) {
+    console.error('Error submitting rating:', error);
   }
 }
 
@@ -1285,11 +1424,17 @@ function toggleAIChat() {
       }, 200);
       scrollToBottom();
     } else {
-      elements.chatWindow.classList.remove('ai-chat-open');
-      // Return focus to toggle button after closing
+      // Show rating prompt before closing (if eligible)
+      showRatingPrompt();
+
+      // Close chat window after a short delay to allow rating prompt to display
       setTimeout(() => {
-        elements.toggleBtn?.focus();
-      }, 100);
+        elements.chatWindow.classList.remove('ai-chat-open');
+        // Return focus to toggle button after closing
+        setTimeout(() => {
+          elements.toggleBtn?.focus();
+        }, 100);
+      }, 300);
     }
   }
 }
