@@ -28,7 +28,13 @@ const translations: Record<string, any> = {
     bestSellersPrompt: "Show me your popular products",
     newArrivalsPrompt: "Show me new arrivals",
     onSalePrompt: "What products are on sale?",
-    recommendedPrompt: "Show me recommendations for me"
+    recommendedPrompt: "Show me recommendations for me",
+    // ⭐ Rating prompts
+    ratingTitle: "How was your experience?",
+    ratingFeedbackPlaceholder: "Additional feedback (optional)",
+    ratingSkip: "Skip",
+    ratingThankYou: "Thank you for your feedback!",
+    ratingAriaLabel: "Rate {{stars}} star"
   },
   es: {
     online: "En línea",
@@ -55,7 +61,13 @@ const translations: Record<string, any> = {
     bestSellersPrompt: "Muéstrame tus productos populares",
     newArrivalsPrompt: "Muéstrame novedades",
     onSalePrompt: "¿Qué productos están en oferta?",
-    recommendedPrompt: "Muéstrame recomendaciones para mí"
+    recommendedPrompt: "Muéstrame recomendaciones para mí",
+    // ⭐ Rating prompts
+    ratingTitle: "¿Cómo fue tu experiencia?",
+    ratingFeedbackPlaceholder: "Comentarios adicionales (opcional)",
+    ratingSkip: "Omitir",
+    ratingThankYou: "¡Gracias por tu comentario!",
+    ratingAriaLabel: "Calificar {{stars}} estrella"
   },
   fr: {
     online: "En ligne",
@@ -82,7 +94,13 @@ const translations: Record<string, any> = {
     bestSellersPrompt: "Montrez-moi vos produits populaires",
     newArrivalsPrompt: "Montrez-moi les nouveautés",
     onSalePrompt: "Quels produits sont en promotion ?",
-    recommendedPrompt: "Montrez-moi des recommandations pour moi"
+    recommendedPrompt: "Montrez-moi des recommandations pour moi",
+    // ⭐ Rating prompts
+    ratingTitle: "Comment était votre expérience ?",
+    ratingFeedbackPlaceholder: "Commentaires supplémentaires (facultatif)",
+    ratingSkip: "Passer",
+    ratingThankYou: "Merci pour votre retour !",
+    ratingAriaLabel: "Noter {{stars}} étoile"
   },
   de: {
     online: "Online",
@@ -109,7 +127,13 @@ const translations: Record<string, any> = {
     bestSellersPrompt: "Zeigen Sie mir Ihre beliebten Produkte",
     newArrivalsPrompt: "Zeigen Sie mir Neuheiten",
     onSalePrompt: "Welche Produkte sind im Angebot?",
-    recommendedPrompt: "Zeigen Sie mir Empfehlungen für mich"
+    recommendedPrompt: "Zeigen Sie mir Empfehlungen für mich",
+    // ⭐ Rating prompts
+    ratingTitle: "Wie war Ihre Erfahrung?",
+    ratingFeedbackPlaceholder: "Zusätzliches Feedback (optional)",
+    ratingSkip: "Überspringen",
+    ratingThankYou: "Vielen Dank für Ihr Feedback!",
+    ratingAriaLabel: "{{stars}} Stern bewerten"
   },
   ja: {
     online: "オンライン",
@@ -136,7 +160,13 @@ const translations: Record<string, any> = {
     bestSellersPrompt: "人気商品を見せてください",
     newArrivalsPrompt: "新着商品を見せてください",
     onSalePrompt: "セール中の商品は何ですか？",
-    recommendedPrompt: "おすすめを見せてください"
+    recommendedPrompt: "おすすめを見せてください",
+    // ⭐ Rating prompts
+    ratingTitle: "ご体験はいかがでしたか？",
+    ratingFeedbackPlaceholder: "追加のフィードバック（任意）",
+    ratingSkip: "スキップ",
+    ratingThankYou: "フィードバックありがとうございます！",
+    ratingAriaLabel: "{{stars}}つ星を評価"
   },
   it: {
     online: "Online",
@@ -163,7 +193,13 @@ const translations: Record<string, any> = {
     bestSellersPrompt: "Mostrami i tuoi prodotti popolari",
     newArrivalsPrompt: "Mostrami le novità",
     onSalePrompt: "Quali prodotti sono in offerta?",
-    recommendedPrompt: "Mostrami raccomandazioni per me"
+    recommendedPrompt: "Mostrami raccomandazioni per me",
+    // ⭐ Rating prompts
+    ratingTitle: "Come è stata la tua esperienza?",
+    ratingFeedbackPlaceholder: "Feedback aggiuntivo (facoltativo)",
+    ratingSkip: "Salta",
+    ratingThankYou: "Grazie per il tuo feedback!",
+    ratingAriaLabel: "Valuta {{stars}} stella"
   },
   pt: {
     online: "Online",
@@ -190,7 +226,13 @@ const translations: Record<string, any> = {
     bestSellersPrompt: "Mostre-me seus produtos populares",
     newArrivalsPrompt: "Mostre-me novidades",
     onSalePrompt: "Quais produtos estão em promoção?",
-    recommendedPrompt: "Mostre-me recomendações para mim"
+    recommendedPrompt: "Mostre-me recomendações para mim",
+    // ⭐ Rating prompts
+    ratingTitle: "Como foi sua experiência?",
+    ratingFeedbackPlaceholder: "Feedback adicional (opcional)",
+    ratingSkip: "Pular",
+    ratingThankYou: "Obrigado pelo seu feedback!",
+    ratingAriaLabel: "Avaliar {{stars}} estrela"
   },
   zh: {
     online: "在线",
@@ -217,7 +259,13 @@ const translations: Record<string, any> = {
     bestSellersPrompt: "给我看你们的热门产品",
     newArrivalsPrompt: "给我看新品上市",
     onSalePrompt: "哪些产品在促销？",
-    recommendedPrompt: "给我看推荐产品"
+    recommendedPrompt: "给我看推荐产品",
+    // ⭐ Rating prompts
+    ratingTitle: "您的体验如何？",
+    ratingFeedbackPlaceholder: "额外反馈（可选）",
+    ratingSkip: "跳过",
+    ratingThankYou: "感谢您的反馈！",
+    ratingAriaLabel: "评价{{stars}}星"
   }
 };
 

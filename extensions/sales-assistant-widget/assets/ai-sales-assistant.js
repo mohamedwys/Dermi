@@ -312,47 +312,67 @@ function showRatingPrompt() {
 
   ratingShown = true; // Mark as shown
 
-  // Create rating container
+  // Create rating container with modern, minimal design
   const ratingDiv = document.createElement('div');
   ratingDiv.id = 'ai-rating-prompt';
   ratingDiv.className = 'ai-message assistant-message';
-  ratingDiv.style.cssText = 'padding: 20px; background: white; border-radius: 12px; border: 1px solid #f3f4f6; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin: 16px 12px; max-width: 90%;';
+  ratingDiv.style.cssText = 'padding: 24px 20px; background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%); border-radius: 16px; border: 1px solid #e5e7eb; box-shadow: 0 4px 12px rgba(0,0,0,0.05); margin: 20px 12px; max-width: min(340px, calc(100% - 24px)); box-sizing: border-box;';
 
-  // Rating prompt text
+  // Rating prompt text with better hierarchy
   const promptText = document.createElement('div');
-  promptText.textContent = 'How was your experience?';
-  promptText.style.cssText = 'font-weight: 600; margin-bottom: 12px; font-size: 15px; color: #1f2937;';
+  promptText.textContent = t('ratingTitle');
+  promptText.style.cssText = 'font-weight: 600; margin-bottom: 16px; font-size: 16px; color: #111827; line-height: 1.4; text-align: center;';
   ratingDiv.appendChild(promptText);
 
-  // Star rating container
+  // Star rating container with proper constraints
   const starsContainer = document.createElement('div');
-  starsContainer.style.cssText = 'display: flex; gap: 8px; margin-bottom: 12px;';
+  starsContainer.style.cssText = 'display: flex; gap: 4px; margin-bottom: 16px; justify-content: center; align-items: center; flex-wrap: nowrap;';
 
-  // Create 5 star buttons
+  // Create 5 star buttons with SVG for consistency
+  const starSVG = (filled) => `<svg width="36" height="36" viewBox="0 0 24 24" fill="${filled ? '#FCD34D' : 'none'}" stroke="${filled ? '#F59E0B' : '#D1D5DB'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+
+  let selectedRating = 0;
+
   for (let i = 1; i <= 5; i++) {
     const starBtn = document.createElement('button');
-    starBtn.textContent = '⭐';
-    starBtn.style.cssText = 'font-size: 32px; background: none; border: none; cursor: pointer; padding: 4px; transition: transform 0.2s; filter: grayscale(1); opacity: 0.5;';
-    starBtn.setAttribute('aria-label', `Rate ${i} star${i > 1 ? 's' : ''}`);
+    starBtn.innerHTML = starSVG(false);
+    starBtn.style.cssText = 'background: none; border: none; cursor: pointer; padding: 2px; transition: all 0.2s ease; flex-shrink: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px;';
+    starBtn.setAttribute('aria-label', t('ratingAriaLabel').replace('{{stars}}', i));
     starBtn.dataset.rating = i;
+    starBtn.type = 'button'; // Prevent form submission
 
     // Hover effect
     starBtn.addEventListener('mouseenter', function() {
-      this.style.transform = 'scale(1.2)';
-      this.style.filter = 'grayscale(0)';
-      this.style.opacity = '1';
+      // Highlight all stars up to this one
+      const rating = parseInt(this.dataset.rating);
+      for (let j = 1; j <= 5; j++) {
+        const btn = starsContainer.children[j - 1];
+        btn.innerHTML = j <= rating ? starSVG(true) : starSVG(false);
+        btn.style.transform = j <= rating ? 'scale(1.1)' : 'scale(1)';
+      }
     });
 
-    starBtn.addEventListener('mouseleave', function() {
-      this.style.transform = 'scale(1)';
-      this.style.filter = 'grayscale(1)';
-      this.style.opacity = '0.5';
+    starsContainer.addEventListener('mouseleave', function() {
+      // Reset to selected rating
+      for (let j = 1; j <= 5; j++) {
+        const btn = starsContainer.children[j - 1];
+        btn.innerHTML = j <= selectedRating ? starSVG(true) : starSVG(false);
+        btn.style.transform = 'scale(1)';
+      }
     });
 
     // Click handler
     starBtn.addEventListener('click', function() {
-      const rating = parseInt(this.dataset.rating);
-      handleRatingSubmission(rating);
+      selectedRating = parseInt(this.dataset.rating);
+      // Update stars to show selected rating
+      for (let j = 1; j <= 5; j++) {
+        const btn = starsContainer.children[j - 1];
+        btn.innerHTML = j <= selectedRating ? starSVG(true) : starSVG(false);
+      }
+      // Submit after short delay to show selection
+      setTimeout(() => {
+        handleRatingSubmission(selectedRating);
+      }, 400);
     });
 
     starsContainer.appendChild(starBtn);
@@ -360,23 +380,54 @@ function showRatingPrompt() {
 
   ratingDiv.appendChild(starsContainer);
 
-  // Optional feedback textarea
+  // Optional feedback textarea with modern styling
   const feedbackInput = document.createElement('textarea');
   feedbackInput.id = 'ai-rating-feedback';
-  feedbackInput.placeholder = 'Additional feedback (optional)';
-  feedbackInput.style.cssText = 'width: 100%; min-height: 60px; padding: 10px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; font-family: inherit; resize: vertical; margin-bottom: 8px;';
+  feedbackInput.placeholder = t('ratingFeedbackPlaceholder');
+  feedbackInput.style.cssText = 'width: 100%; min-height: 70px; padding: 12px; border: 1.5px solid #e5e7eb; border-radius: 10px; font-size: 14px; font-family: inherit; resize: vertical; margin-bottom: 12px; box-sizing: border-box; transition: all 0.2s ease; background: white;';
+  feedbackInput.addEventListener('focus', function() {
+    this.style.borderColor = widgetSettings.primaryColor || '#3b82f6';
+    this.style.boxShadow = `0 0 0 3px ${widgetSettings.primaryColor || '#3b82f6'}15`;
+  });
+  feedbackInput.addEventListener('blur', function() {
+    this.style.borderColor = '#e5e7eb';
+    this.style.boxShadow = 'none';
+  });
   ratingDiv.appendChild(feedbackInput);
 
-  // Skip button
+  // Skip button with modern styling
   const skipBtn = document.createElement('button');
-  skipBtn.textContent = 'Skip';
-  skipBtn.style.cssText = 'padding: 8px 16px; background: #f3f4f6; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; color: #6b7280;';
+  skipBtn.textContent = t('ratingSkip');
+  skipBtn.type = 'button';
+  skipBtn.style.cssText = 'width: 100%; padding: 10px 16px; background: transparent; border: 1.5px solid #e5e7eb; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 500; color: #6b7280; transition: all 0.2s ease; box-sizing: border-box;';
+  skipBtn.addEventListener('mouseenter', function() {
+    this.style.background = '#f9fafb';
+    this.style.borderColor = '#d1d5db';
+  });
+  skipBtn.addEventListener('mouseleave', function() {
+    this.style.background = 'transparent';
+    this.style.borderColor = '#e5e7eb';
+  });
   skipBtn.addEventListener('click', function() {
-    ratingDiv.remove();
+    ratingDiv.style.opacity = '0';
+    ratingDiv.style.transform = 'scale(0.95)';
+    ratingDiv.style.transition = 'all 0.2s ease';
+    setTimeout(() => ratingDiv.remove(), 200);
   });
   ratingDiv.appendChild(skipBtn);
 
+  // Smooth fade-in animation
+  ratingDiv.style.opacity = '0';
+  ratingDiv.style.transform = 'scale(0.95)';
   elements.messagesContainer.appendChild(ratingDiv);
+
+  // Trigger animation after DOM insertion
+  requestAnimationFrame(() => {
+    ratingDiv.style.transition = 'all 0.3s ease';
+    ratingDiv.style.opacity = '1';
+    ratingDiv.style.transform = 'scale(1)';
+  });
+
   scrollToBottom();
 }
 
@@ -406,21 +457,29 @@ async function handleRatingSubmission(rating) {
     const data = await response.json();
 
     if (data.success) {
-      // Show thank you message
+      // Show thank you message with modern design
       const ratingPrompt = document.getElementById('ai-rating-prompt');
       if (ratingPrompt) {
         ratingPrompt.innerHTML = '';
+        ratingPrompt.style.cssText = 'padding: 32px 20px; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-radius: 16px; border: 1px solid #10b981; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15); margin: 20px 12px; max-width: min(340px, calc(100% - 24px)); box-sizing: border-box;';
+
+        // Success icon
+        const iconDiv = document.createElement('div');
+        iconDiv.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 12px; display: block;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+        ratingPrompt.appendChild(iconDiv);
+
         const thankYouText = document.createElement('div');
-        thankYouText.textContent = '✨ Thank you for your feedback!';
-        thankYouText.style.cssText = 'font-weight: 600; color: #10b981; font-size: 15px; text-align: center;';
+        thankYouText.textContent = t('ratingThankYou');
+        thankYouText.style.cssText = 'font-weight: 600; color: #059669; font-size: 16px; text-align: center; line-height: 1.4;';
         ratingPrompt.appendChild(thankYouText);
 
-        // Remove after 2 seconds
+        // Remove after 2.5 seconds with fade out
         setTimeout(() => {
           ratingPrompt.style.opacity = '0';
-          ratingPrompt.style.transition = 'opacity 0.3s ease';
+          ratingPrompt.style.transform = 'scale(0.95)';
+          ratingPrompt.style.transition = 'all 0.3s ease';
           setTimeout(() => ratingPrompt.remove(), 300);
-        }, 2000);
+        }, 2500);
       }
 
       console.log('⭐ Rating submitted successfully:', rating);
