@@ -301,6 +301,7 @@ function scrollToBottom() {
 function shouldShowRatingPopup() {
   // Check if rating is enabled in settings
   if (widgetSettings && widgetSettings.ratingEnabled === false) {
+    console.log('[Rating Debug] Rating disabled in settings');
     return false;
   }
 
@@ -308,8 +309,21 @@ function shouldShowRatingPopup() {
   try {
     const ratedSessions = JSON.parse(sessionStorage.getItem('ai_rated_sessions') || '[]');
     const currentSessionId = currentChatSessionId || sessionId;
-    return !ratedSessions.includes(currentSessionId) && conversationHistory.length >= 4;
+    const hasMinMessages = conversationHistory.length >= 4;
+    const notRated = !ratedSessions.includes(currentSessionId);
+
+    console.log('[Rating Debug] Popup check:', {
+      conversationLength: conversationHistory.length,
+      hasMinMessages,
+      currentSessionId,
+      ratedSessions,
+      notRated,
+      shouldShow: notRated && hasMinMessages
+    });
+
+    return notRated && hasMinMessages;
   } catch (e) {
+    console.log('[Rating Debug] SessionStorage error, checking messages only:', conversationHistory.length);
     // Fallback if sessionStorage unavailable
     return conversationHistory.length >= 4;
   }
@@ -920,6 +934,7 @@ async function sendMessageToServer(message) {
         { role: 'assistant', content: responseMessage }
       );
       if (conversationHistory.length > 10) conversationHistory = conversationHistory.slice(-10);
+      console.log('[Rating Debug] Conversation updated, length:', conversationHistory.length);
       saveConversationHistory();
 
       trackAnalytics(analyticsEvents.MESSAGE_RECEIVED, {
@@ -1668,6 +1683,7 @@ function toggleAIChat() {
       elements.chatWindow.classList.remove('ai-chat-open');
 
       // Show rating modal popup (outside chat container)
+      console.log('[Rating Debug] Chat closed, attempting to show rating modal');
       showRatingModal();
 
       // Return focus to toggle button after closing
