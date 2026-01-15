@@ -97,12 +97,12 @@ export default function BillingPage() {
       <Layout>
         {/* Hero Section */}
         <Layout.Section>
-          <Box paddingBlockEnd="600">
-            <BlockStack gap="300" align="center">
-              <Text as="h1" variant="heading2xl" alignment="center">
+          <Box paddingBlockEnd="500">
+            <BlockStack gap="200" align="center">
+              <Text as="h1" variant="headingLg" alignment="center">
                 {t("billing.heroTitle")}
               </Text>
-              <Text as="p" variant="bodyLg" alignment="center" tone="subdued">
+              <Text as="p" variant="bodyMd" alignment="center" tone="subdued">
                 {t("billing.heroSubtitle")}
               </Text>
             </BlockStack>
@@ -113,11 +113,11 @@ export default function BillingPage() {
         {isTestMode && (
           <Layout.Section>
             <Banner tone="info">
-              <BlockStack gap="400">
-                <Text as="p" variant="bodyMd" fontWeight="semibold">
+              <BlockStack gap="200">
+                <Text as="p" variant="bodyMd" fontWeight="medium">
                   {t("billing.testMode")}
                 </Text>
-                <Text as="p" variant="bodyMd">
+                <Text as="p" variant="bodySm" tone="subdued">
                   {t("billing.testModeDesc")}
                 </Text>
               </BlockStack>
@@ -128,13 +128,13 @@ export default function BillingPage() {
         {hasActivePayment && activePlan && (
           <Layout.Section>
             <Banner tone="success">
-              <BlockStack gap="400">
+              <BlockStack gap="200">
                 <Text as="p" variant="bodyMd">
-                  <strong>{t("billing.activeSubscription")}:</strong> {activePlan.name}
+                  <Text as="span" fontWeight="semibold">{t("billing.activeSubscription")}:</Text> {activePlan.name}
                 </Text>
                 {activePlan.trialDays && activePlan.trialDays > 0 && (
-                  <Text as="p" variant="bodyMd">
-                    🎉 {activePlan.trialDays} {t("billing.daysRemaining")}
+                  <Text as="p" variant="bodySm" tone="subdued">
+                    {activePlan.trialDays} {t("billing.daysRemaining")}
                   </Text>
                 )}
               </BlockStack>
@@ -152,584 +152,595 @@ export default function BillingPage() {
 
         {/* Pricing Cards */}
         <Layout.Section>
-          <InlineStack gap="400" wrap={false}>
-            {/* BYOK Plan */}
-            <Box width="33.33%">
-              <Card>
-                <BlockStack gap="500">
-                  {/* Header */}
+          <Box paddingBlockStart="400">
+            <InlineStack gap="400" wrap={false}>
+              {/* BYOK Plan */}
+              <Box width="33.33%">
+                <Card>
                   <BlockStack gap="400">
-                    <InlineStack align="space-between" blockAlign="start">
-                      <Text as="h2" variant="headingLg" fontWeight="bold">
-                        {t("billing.byokPlan") || "BYOK"}
+                    {/* Header */}
+                    <BlockStack gap="200">
+                      <InlineStack align="space-between" blockAlign="start">
+                        <Text as="h2" variant="headingMd" fontWeight="semibold">
+                          {t("billing.byokPlan") || "BYOK"}
+                        </Text>
+                        <Badge tone="info">{t("billing.budgetFriendly") || "Budget"}</Badge>
+                      </InlineStack>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        {t("billing.byokDesc") || "Bring Your Own API Key"}
                       </Text>
-                      <Badge tone="info">{t("billing.budgetFriendly") || "Budget"}</Badge>
-                    </InlineStack>
-                    <Text as="p" variant="bodyMd" tone="subdued">
-                      {t("billing.byokDesc") || "Bring Your Own API Key"}
-                    </Text>
+                    </BlockStack>
+
+                    {/* Pricing */}
+                    <BlockStack gap="100">
+                      <InlineStack gap="100" blockAlign="end">
+                        <Text as="p" variant="heading2xl" fontWeight="semibold">
+                          $5
+                        </Text>
+                        <Text as="span" variant="bodyMd" tone="subdued">
+                          {t("billing.perMonth")}
+                        </Text>
+                      </InlineStack>
+                      <Badge tone="info">{t("billing.freeTrialIncluded")}</Badge>
+                    </BlockStack>
+
+                    <Divider />
+
+                    {/* Features */}
+                    <BlockStack gap="300">
+                      <Text as="p" variant="headingSm" fontWeight="medium">
+                        {t("billing.whatsIncluded")}
+                      </Text>
+                      <List type="bullet" gap="loose">
+                        <List.Item>
+                          <Text as="span" variant="bodySm" fontWeight="semibold">
+                            {t("billing.features.OpenAiKey")}
+                          </Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text as="span" variant="bodySm">
+                            {t("billing.features.advancedAnalytics")}
+                          </Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text as="span" variant="bodySm">
+                            {t("billing.features.n8nIntegration")}
+                          </Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text as="span" variant="bodySm">
+                            {t("billing.features.sentimentAnalysis")}
+                          </Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text as="span" variant="bodySm">
+                            {t("billing.features.userProfiling")}
+                          </Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text as="span" variant="bodySm">
+                            {t("billing.features.productTracking")}
+                          </Text>
+                        </List.Item>
+                      </List>
+                    </BlockStack>
+
+                    {/* CTA Button */}
+                    <Box paddingBlockStart="200">
+                      <Button
+                        variant="primary"
+                        size="large"
+                        fullWidth
+                        onClick={() => handleSubscribe("BYOK Plan")}
+                        disabled={hasActivePayment && activePlan?.name === "BYOK Plan"}
+                      >
+                        {hasActivePayment && activePlan?.name === "BYOK Plan"
+                          ? t("billing.currentPlan")
+                          : t("billing.startFreeTrial")}
+                      </Button>
+                    </Box>
                   </BlockStack>
+                </Card>
+              </Box>
 
-                  {/* Pricing */}
-                  <BlockStack gap="100">
-                    <InlineStack gap="100" blockAlign="end">
-                      <Text as="h3" variant="heading3xl" fontWeight="bold">
-                        $5
-                      </Text>
-                      <Text as="span" variant="bodyLg" tone="subdued">
-                        {t("billing.perMonth")}
-                      </Text>
-                    </InlineStack>
-                    <Badge tone="info">{t("billing.freeTrialIncluded")}</Badge>
-                  </BlockStack>
-
-                  <Divider />
-
-                  {/* Features */}
+              {/* Starter Plan */}
+              <Box width="33.33%">
+                <Card>
                   <BlockStack gap="400">
-                    <Text as="p" variant="headingSm" fontWeight="semibold">
-                      {t("billing.whatsIncluded")}
-                    </Text>
-                    <List type="bullet">
-                      <List.Item>
-                        <Text as="span" variant="bodyMd" fontWeight="semibold">
-                          {t("billing.features.OpenAiKey")}
+                    {/* Header */}
+                    <BlockStack gap="200">
+                      <InlineStack align="space-between" blockAlign="start">
+                        <Text as="h2" variant="headingMd" fontWeight="semibold">
+                          {t("billing.starterPlan")}
                         </Text>
-                      </List.Item>
-                      <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.advancedAnalytics")}
+                        <Badge tone="info">{t("billing.mostPopular")}</Badge>
+                      </InlineStack>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        {t("billing.starterDesc")}
+                      </Text>
+                    </BlockStack>
+
+                    {/* Pricing */}
+                    <BlockStack gap="100">
+                      <InlineStack gap="100" blockAlign="end">
+                        <Text as="p" variant="heading2xl" fontWeight="semibold">
+                          $25
                         </Text>
-                      </List.Item>
-                      <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.n8nIntegration")}
+                        <Text as="span" variant="bodyMd" tone="subdued">
+                          {t("billing.perMonth")}
                         </Text>
-                      </List.Item>
-                      <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.sentimentAnalysis")}
-                        </Text>
-                      </List.Item>
-                      <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.userProfiling")}
-                        </Text>
-                      </List.Item>
-                      <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.productTracking")}
-                        </Text>
-                      </List.Item>
-                    </List>
+                      </InlineStack>
+                      <Badge tone="info">{t("billing.freeTrialIncluded")}</Badge>
+                    </BlockStack>
+
+                    <Divider />
+
+                    {/* Features */}
+                    <BlockStack gap="300">
+                      <Text as="p" variant="headingSm" fontWeight="medium">
+                        {t("billing.whatsIncluded")}
+                      </Text>
+                      <List type="bullet" gap="loose">
+                        <List.Item>
+                          <Text as="span" variant="bodySm" fontWeight="semibold">
+                            {t("billing.features.conversations1k")}
+                          </Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text as="span" variant="bodySm">
+                            {t("billing.features.advancedAnalytics")}
+                          </Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text as="span" variant="bodySm">
+                            {t("billing.features.n8nIntegration")}
+                          </Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text as="span" variant="bodySm">
+                            {t("billing.features.sentimentAnalysis")}
+                          </Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text as="span" variant="bodySm">
+                            {t("billing.features.userProfiling")}
+                          </Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text as="span" variant="bodySm">
+                            {t("billing.features.productTracking")}
+                          </Text>
+                        </List.Item>
+                      </List>
+                    </BlockStack>
+
+                    {/* CTA Button */}
+                    <Box paddingBlockStart="200">
+                      <Button
+                        variant="primary"
+                        size="large"
+                        fullWidth
+                        onClick={() => handleSubscribe("Starter Plan")}
+                        disabled={hasActivePayment && activePlan?.name === "Starter Plan"}
+                      >
+                        {hasActivePayment && activePlan?.name === "Starter Plan"
+                          ? t("billing.currentPlan")
+                          : t("billing.startFreeTrial")}
+                      </Button>
+                    </Box>
                   </BlockStack>
+                </Card>
+              </Box>
 
-                  {/* CTA Button */}
-                  <Button
-                    variant="primary"
-                    size="large"
-                    fullWidth
-                    onClick={() => handleSubscribe("BYOK Plan")}
-                    disabled={hasActivePayment && activePlan?.name === "BYOK Plan"}
-                  >
-                    {hasActivePayment && activePlan?.name === "BYOK Plan"
-                      ? t("billing.currentPlan")
-                      : t("billing.startFreeTrial")}
-                  </Button>
-                </BlockStack>
-              </Card>
-            </Box>
-
-            {/* Starter Plan */}
-            <Box width="33.33%">
-              <Card>
-                <BlockStack gap="500">
-                  {/* Header */}
+              {/* Professional Plan - Subtle highlight via background */}
+              <Box width="33.33%">
+                <Card background="bg-surface-secondary">
                   <BlockStack gap="400">
-                    <InlineStack align="space-between" blockAlign="start">
-                      <Text as="h2" variant="headingLg" fontWeight="bold">
-                        {t("billing.starterPlan")}
+                    {/* Header */}
+                    <BlockStack gap="200">
+                      <InlineStack align="space-between" blockAlign="start">
+                        <Text as="h2" variant="headingMd" fontWeight="semibold">
+                          {t("billing.professionalPlan")}
+                        </Text>
+                        <Badge tone="success">{t("billing.bestValue")}</Badge>
+                      </InlineStack>
+                      <Text as="p" variant="bodySm" tone="subdued">
+                        {t("billing.professionalDesc")}
                       </Text>
-                      <Badge tone="attention">{t("billing.mostPopular")}</Badge>
-                    </InlineStack>
-                    <Text as="p" variant="bodyMd" tone="subdued">
-                      {t("billing.starterDesc")}
-                    </Text>
-                  </BlockStack>
+                    </BlockStack>
 
-                  {/* Pricing */}
-                  <BlockStack gap="100">
-                    <InlineStack gap="100" blockAlign="end">
-                      <Text as="h3" variant="heading3xl" fontWeight="bold">
-                        $25
+                    {/* Pricing */}
+                    <BlockStack gap="100">
+                      <InlineStack gap="100" blockAlign="end">
+                        <Text as="p" variant="heading2xl" fontWeight="semibold">
+                          $79
+                        </Text>
+                        <Text as="span" variant="bodyMd" tone="subdued">
+                          {t("billing.perMonth")}
+                        </Text>
+                      </InlineStack>
+                      <Badge tone="info">{t("billing.freeTrialIncluded")}</Badge>
+                    </BlockStack>
+
+                    <Divider />
+
+                    {/* Features */}
+                    <BlockStack gap="300">
+                      <Text as="p" variant="headingSm" fontWeight="medium">
+                        {t("billing.whatsIncluded")}
                       </Text>
-                      <Text as="span" variant="bodyLg" tone="subdued">
-                        {t("billing.perMonth")}
-                      </Text>
-                    </InlineStack>
-                    <Badge tone="info">{t("billing.freeTrialIncluded")}</Badge>
+                      <List type="bullet" gap="loose">
+                        <List.Item>
+                          <Text as="span" variant="bodySm" fontWeight="semibold">
+                            {t("billing.features.unlimitedConversations")}
+                          </Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text as="span" variant="bodySm">
+                            {t("billing.features.advancedAnalytics")}
+                          </Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text as="span" variant="bodySm">
+                            {t("billing.features.n8nIntegration")}
+                          </Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text as="span" variant="bodySm">
+                            {t("billing.features.sentimentAnalysis")}
+                          </Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text as="span" variant="bodySm">
+                            {t("billing.features.userProfiling")}
+                          </Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text as="span" variant="bodySm">
+                            {t("billing.features.productTracking")}
+                          </Text>
+                        </List.Item>
+                        <List.Item>
+                          <Text as="span" variant="bodySm" fontWeight="semibold">
+                            {t("billing.features.prioritySupport")}
+                          </Text>
+                        </List.Item>
+                      </List>
+                    </BlockStack>
+
+                    {/* CTA Button */}
+                    <Box paddingBlockStart="200">
+                      <Button
+                        variant="primary"
+                        size="large"
+                        fullWidth
+                        onClick={() => handleSubscribe("Professional Plan")}
+                        disabled={hasActivePayment && activePlan?.name === "Professional Plan"}
+                      >
+                        {hasActivePayment && activePlan?.name === "Professional Plan"
+                          ? t("billing.currentPlan")
+                          : t("billing.startFreeTrial")}
+                      </Button>
+                    </Box>
                   </BlockStack>
-
-                  <Divider />
-
-                  {/* Features */}
-                  <BlockStack gap="400">
-                    <Text as="p" variant="headingSm" fontWeight="semibold">
-                      {t("billing.whatsIncluded")}
-                    </Text>
-                    <List type="bullet">
-                      <List.Item>
-                        <Text as="span" variant="bodyMd" fontWeight="semibold">
-                          {t("billing.features.conversations1k")}
-                        </Text>
-                      </List.Item>
-                      <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.advancedAnalytics")}
-                        </Text>
-                      </List.Item>
-                      <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.n8nIntegration")}
-                        </Text>
-                      </List.Item>
-                      <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.sentimentAnalysis")}
-                        </Text>
-                      </List.Item>
-                      <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.userProfiling")}
-                        </Text>
-                      </List.Item>
-                      <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.productTracking")}
-                        </Text>
-                      </List.Item>
-                    </List>
-                  </BlockStack>
-
-                  {/* CTA Button */}
-                  <Button
-                    variant="primary"
-                    size="large"
-                    fullWidth
-                    onClick={() => handleSubscribe("Starter Plan")}
-                    disabled={hasActivePayment && activePlan?.name === "Starter Plan"}
-                  >
-                    {hasActivePayment && activePlan?.name === "Starter Plan"
-                      ? t("billing.currentPlan")
-                      : t("billing.startFreeTrial")}
-                  </Button>
-                </BlockStack>
-              </Card>
-            </Box>
-
-            {/* Professional Plan */}
-            <Box width="33.33%">
-              <Card background="bg-surface-selected">
-                <BlockStack gap="500">
-                  {/* Header */}
-                  <BlockStack gap="400">
-                    <InlineStack align="space-between" blockAlign="start">
-                      <Text as="h2" variant="headingLg" fontWeight="bold">
-                        {t("billing.professionalPlan")}
-                      </Text>
-                      <Badge tone="success">{t("billing.bestValue")}</Badge>
-                    </InlineStack>
-                    <Text as="p" variant="bodyMd" tone="subdued">
-                      {t("billing.professionalDesc")}
-                    </Text>
-                  </BlockStack>
-
-                  {/* Pricing */}
-                  <BlockStack gap="100">
-                    <InlineStack gap="100" blockAlign="end">
-                      <Text as="h3" variant="heading3xl" fontWeight="bold">
-                        $79
-                      </Text>
-                      <Text as="span" variant="bodyLg" tone="subdued">
-                        {t("billing.perMonth")}
-                      </Text>
-                    </InlineStack>
-                    <Badge tone="info">{t("billing.freeTrialIncluded")}</Badge>
-                  </BlockStack>
-
-                  <Divider />
-
-                  {/* Features */}
-                  <BlockStack gap="400">
-                    <Text as="p" variant="headingSm" fontWeight="semibold">
-                      {t("billing.whatsIncluded")}
-                    </Text>
-                    <List type="bullet">
-                      <List.Item>
-                        <Text as="span" variant="bodyMd" fontWeight="semibold">
-                          {t("billing.features.unlimitedConversations")}
-                        </Text>
-                      </List.Item>
-                      <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.advancedAnalytics")}
-                        </Text>
-                      </List.Item>
-                      <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.n8nIntegration")}
-                        </Text>
-                      </List.Item>
-                      <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.sentimentAnalysis")}
-                        </Text>
-                      </List.Item>
-                      <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.userProfiling")}
-                        </Text>
-                      </List.Item>
-                      <List.Item>
-                        <Text as="span" variant="bodyMd">
-                          {t("billing.features.productTracking")}
-                        </Text>
-                      </List.Item>
-                      <List.Item>
-                        <Text as="span" variant="bodyMd" fontWeight="semibold">
-                          {t("billing.features.prioritySupport")}
-                        </Text>
-                      </List.Item>
-                    </List>
-                  </BlockStack>
-
-                  {/* CTA Button */}
-                  <Button
-                    variant="primary"
-                    tone="success"
-                    size="large"
-                    fullWidth
-                    onClick={() => handleSubscribe("Professional Plan")}
-                    disabled={hasActivePayment && activePlan?.name === "Professional Plan"}
-                  >
-                    {hasActivePayment && activePlan?.name === "Professional Plan"
-                      ? t("billing.currentPlan")
-                      : t("billing.startFreeTrial")}
-                  </Button>
-                </BlockStack>
-              </Card>
-            </Box>
-          </InlineStack>
+                </Card>
+              </Box>
+            </InlineStack>
+          </Box>
         </Layout.Section>
 
         {/* Comparison Table */}
         <Layout.Section>
-          <Card>
-            <BlockStack gap="400">
-              <Text as="h3" variant="headingLg" alignment="center" fontWeight="bold">
-                Compare Plans
-              </Text>
+          <Box paddingBlockStart="800">
+            <Card>
+              <BlockStack gap="500">
+                <Text as="h2" variant="headingMd" alignment="center">
+                  {t("billing.comparePlans") || "Compare Plans"}
+                </Text>
 
-              {/* Table Header */}
-              <Box paddingBlockStart="400">
-                <InlineStack gap="0" blockAlign="center">
-                  <Box width="40%">
-                    {/* Empty space for feature names column */}
+                {/* Table Header */}
+                <Box paddingBlockStart="200">
+                  <InlineStack gap="0" blockAlign="center">
+                    <Box width="40%">
+                      {/* Empty space for feature names column */}
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodySm" alignment="center" fontWeight="semibold">
+                        BYOK
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodySm" alignment="center" fontWeight="semibold">
+                        Starter
+                      </Text>
+                    </Box>
+                    <Box width="20%">
+                      <Text as="p" variant="bodySm" alignment="center" fontWeight="semibold">
+                        Professional
+                      </Text>
+                    </Box>
+                  </InlineStack>
+                </Box>
+
+                <Divider />
+
+                {/* Table Rows */}
+                <BlockStack gap="0">
+                  {/* Row: Conversations */}
+                  <Box paddingBlock="200">
+                    <InlineStack gap="0" blockAlign="center">
+                      <Box width="40%">
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          Conversations mensuelles
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ∞
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          1,000
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center" fontWeight="semibold">
+                          ∞
+                        </Text>
+                      </Box>
+                    </InlineStack>
                   </Box>
-                  <Box width="20%">
-                    <Text as="p" variant="bodyMd" alignment="center" fontWeight="bold">
-                      BYOK
-                    </Text>
+                  <Divider />
+
+                  {/* Row: OpenAI Integration */}
+                  <Box paddingBlock="200">
+                    <InlineStack gap="0" blockAlign="center">
+                      <Box width="40%">
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          OpenAI integration
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          User
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                    </InlineStack>
                   </Box>
-                  <Box width="20%">
-                    <Text as="p" variant="bodyMd" alignment="center" fontWeight="bold">
-                      Starter
-                    </Text>
+                  <Divider />
+
+                  {/* Row: Analytics */}
+                  <Box paddingBlock="200">
+                    <InlineStack gap="0" blockAlign="center">
+                      <Box width="40%">
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          Advanced analytics
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                    </InlineStack>
                   </Box>
-                  <Box width="20%">
-                    <Text as="p" variant="bodyMd" alignment="center" fontWeight="bold">
-                      Professional
-                    </Text>
+                  <Divider />
+
+                  {/* Row: Webhook N8N */}
+                  <Box paddingBlock="200">
+                    <InlineStack gap="0" blockAlign="center">
+                      <Box width="40%">
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          Custom N8N webhook
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                    </InlineStack>
                   </Box>
-                </InlineStack>
-              </Box>
+                  <Divider />
 
-              <Divider />
+                  {/* Row: Sentiment Analysis */}
+                  <Box paddingBlock="200">
+                    <InlineStack gap="0" blockAlign="center">
+                      <Box width="40%">
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          Sentiment analysis
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                    </InlineStack>
+                  </Box>
+                  <Divider />
 
-              {/* Table Rows */}
-              <BlockStack gap="0">
-                {/* Row: Conversations */}
-                <Box paddingBlock="300">
-                  <InlineStack gap="0" blockAlign="center">
-                    <Box width="40%">
-                      <Text as="p" variant="bodyMd" tone="subdued">
-                        Conversations mensuelles
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ∞
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        1,000
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center" fontWeight="bold">
-                        ∞
-                      </Text>
-                    </Box>
-                  </InlineStack>
-                </Box>
-                <Divider />
+                  {/* Row: User Profiling */}
+                  <Box paddingBlock="200">
+                    <InlineStack gap="0" blockAlign="center">
+                      <Box width="40%">
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          User profiling
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                    </InlineStack>
+                  </Box>
+                  <Divider />
 
-                {/* Row: OpenAI Integration */}
-                <Box paddingBlock="300">
-                  <InlineStack gap="0" blockAlign="center">
-                    <Box width="40%">
-                      <Text as="p" variant="bodyMd" tone="subdued">
-                        OpenAI integration
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        User
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                  </InlineStack>
-                </Box>
-                <Divider />
+                  {/* Row: Product Tracking */}
+                  <Box paddingBlock="200">
+                    <InlineStack gap="0" blockAlign="center">
+                      <Box width="40%">
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          Product tracking
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          ✓
+                        </Text>
+                      </Box>
+                    </InlineStack>
+                  </Box>
+                  <Divider />
 
-                {/* Row: Analytics */}
-                <Box paddingBlock="300">
-                  <InlineStack gap="0" blockAlign="center">
-                    <Box width="40%">
-                      <Text as="p" variant="bodyMd" tone="subdued">
-                        Advanced analytics
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                  </InlineStack>
-                </Box>
-                <Divider />
-
-                {/* Row: Webhook N8N */}
-                <Box paddingBlock="300">
-                  <InlineStack gap="0" blockAlign="center">
-                    <Box width="40%">
-                      <Text as="p" variant="bodyMd" tone="subdued">
-                        Custom N8N webhook
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                  </InlineStack>
-                </Box>
-                <Divider />
-
-                {/* Row: Sentiment Analysis */}
-                <Box paddingBlock="300">
-                  <InlineStack gap="0" blockAlign="center">
-                    <Box width="40%">
-                      <Text as="p" variant="bodyMd" tone="subdued">
-                        Sentiment analysis
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                  </InlineStack>
-                </Box>
-                <Divider />
-
-                {/* Row: User Profiling */}
-                <Box paddingBlock="300">
-                  <InlineStack gap="0" blockAlign="center">
-                    <Box width="40%">
-                      <Text as="p" variant="bodyMd" tone="subdued">
-                        User profiling
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                  </InlineStack>
-                </Box>
-                <Divider />
-
-                {/* Row: Product Tracking */}
-                <Box paddingBlock="300">
-                  <InlineStack gap="0" blockAlign="center">
-                    <Box width="40%">
-                      <Text as="p" variant="bodyMd" tone="subdued">
-                        Product tracking
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        ✓
-                      </Text>
-                    </Box>
-                  </InlineStack>
-                </Box>
-                <Divider />
-
-                {/* Row: Support */}
-                <Box paddingBlock="300">
-                  <InlineStack gap="0" blockAlign="center">
-                    <Box width="40%">
-                      <Text as="p" variant="bodyMd" tone="subdued">
-                        Support
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        Email
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center">
-                        Email
-                      </Text>
-                    </Box>
-                    <Box width="20%">
-                      <Text as="p" variant="bodyMd" alignment="center" fontWeight="bold">
-                        24/7
-                      </Text>
-                    </Box>
-                  </InlineStack>
-                </Box>
+                  {/* Row: Support */}
+                  <Box paddingBlock="200">
+                    <InlineStack gap="0" blockAlign="center">
+                      <Box width="40%">
+                        <Text as="p" variant="bodySm" tone="subdued">
+                          Support
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          Email
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center">
+                          Email
+                        </Text>
+                      </Box>
+                      <Box width="20%">
+                        <Text as="p" variant="bodySm" alignment="center" fontWeight="semibold">
+                          24/7
+                        </Text>
+                      </Box>
+                    </InlineStack>
+                  </Box>
+                </BlockStack>
               </BlockStack>
-            </BlockStack>
-          </Card>
+            </Card>
+          </Box>
         </Layout.Section>
 
         {/* FAQ Section */}
         <Layout.Section>
-          <Card>
-            <BlockStack gap="500">
-              <Text as="h3" variant="headingLg" alignment="center">
-                {t("billing.faq")}
-              </Text>
+          <Box paddingBlockStart="800">
+            <Card>
+              <BlockStack gap="600">
+                <Text as="h2" variant="headingMd" alignment="center">
+                  {t("billing.faq")}
+                </Text>
 
-              <BlockStack gap="400">
-                <BlockStack gap="400">
-                  <Text as="p" variant="bodyLg" fontWeight="semibold">
-                    {t("billing.faqChangePlansQ")}
-                  </Text>
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    {t("billing.faqChangePlansA")}
-                  </Text>
-                </BlockStack>
+                <BlockStack gap="500">
+                  <BlockStack gap="200">
+                    <Text as="h3" variant="headingSm" fontWeight="semibold">
+                      {t("billing.faqChangePlansQ")}
+                    </Text>
+                    <Text as="p" variant="bodyMd" tone="subdued">
+                      {t("billing.faqChangePlansA")}
+                    </Text>
+                  </BlockStack>
 
-                <Divider />
+                  <Divider />
 
-                <BlockStack gap="400">
-                  <Text as="p" variant="bodyLg" fontWeight="semibold">
-                    {t("billing.faqTrialQ")}
-                  </Text>
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    {t("billing.faqTrialA")}
-                  </Text>
-                </BlockStack>
+                  <BlockStack gap="200">
+                    <Text as="h3" variant="headingSm" fontWeight="semibold">
+                      {t("billing.faqTrialQ")}
+                    </Text>
+                    <Text as="p" variant="bodyMd" tone="subdued">
+                      {t("billing.faqTrialA")}
+                    </Text>
+                  </BlockStack>
 
-                <Divider />
+                  <Divider />
 
-                <BlockStack gap="400">
-                  <Text as="p" variant="bodyLg" fontWeight="semibold">
-                    {t("billing.faqRefundQ")}
-                  </Text>
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    {t("billing.faqRefundA")}
-                  </Text>
-                </BlockStack>
+                  <BlockStack gap="200">
+                    <Text as="h3" variant="headingSm" fontWeight="semibold">
+                      {t("billing.faqRefundQ")}
+                    </Text>
+                    <Text as="p" variant="bodyMd" tone="subdued">
+                      {t("billing.faqRefundA")}
+                    </Text>
+                  </BlockStack>
 
-                <Divider />
+                  <Divider />
 
-                <BlockStack gap="400">
-                  <Text as="p" variant="bodyLg" fontWeight="semibold">
-                    {t("billing.faqConversationQ")}
-                  </Text>
-                  <Text as="p" variant="bodyMd" tone="subdued">
-                    {t("billing.faqConversationA")}
-                  </Text>
+                  <BlockStack gap="200">
+                    <Text as="h3" variant="headingSm" fontWeight="semibold">
+                      {t("billing.faqConversationQ")}
+                    </Text>
+                    <Text as="p" variant="bodyMd" tone="subdued">
+                      {t("billing.faqConversationA")}
+                    </Text>
+                  </BlockStack>
                 </BlockStack>
               </BlockStack>
-            </BlockStack>
-          </Card>
+            </Card>
+          </Box>
         </Layout.Section>
 
         {/* Trust Section
