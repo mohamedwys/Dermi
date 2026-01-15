@@ -325,6 +325,21 @@ export default function SettingsPage() {
   const [usageData, setUsageData] = useState<any>(null); // TODO: Type this properly when BYOK usage types are defined
   const [loadingUsage, setLoadingUsage] = useState(false);
 
+  // Helper functions for usage UI
+  const getUsageTone = (percent: number): "success" | "attention" | "warning" | "critical" => {
+    if (percent >= 100) return 'critical';
+    if (percent >= 90) return 'warning';
+    if (percent >= 75) return 'attention';
+    return 'success';
+  };
+
+  const getProgressColor = (percent: number) => {
+    if (percent >= 100) return 'bg-fill-critical-active';
+    if (percent >= 90) return 'bg-fill-warning-active';
+    if (percent >= 75) return 'bg-fill-caution-active';
+    return 'bg-fill-success-active';
+  };
+
   // Show success banner when settings are saved
   useEffect(() => {
     if (actionData?.success) {
@@ -488,110 +503,100 @@ export default function SettingsPage() {
         <Layout.Section>
           <Card>
             <BlockStack gap="500">
-              <InlineStack align="space-between" blockAlign="center">
-                <BlockStack gap="200">
-                  <Text variant="headingMd" as="h2">
-                    {t("settings.integration.title")}
-                  </Text>
-                  <Text variant="bodyMd" as="p" tone="subdued">
-                    {t("settings.integration.subtitle")}
-                  </Text>
-                </BlockStack>
-              </InlineStack>
+              <BlockStack gap="200">
+                <Text variant="headingMd" as="h2">
+                  {t("settings.integration.title")}
+                </Text>
+                <Text variant="bodyMd" as="p" tone="subdued">
+                  {t("settings.integration.subtitle")}
+                </Text>
+              </BlockStack>
 
               <Divider />
 
-              <BlockStack gap="400">
-                <Banner tone="info">
-                  <InlineStack gap="200" blockAlign="center">
+              <Banner tone="info">
+                <BlockStack gap="300">
+                  <InlineStack gap="200" blockAlign="start">
                     <Icon source={AlertCircleIcon} />
-                    <Text variant="bodyMd" as="p">
-                      <strong>{t("settings.integration.importantLabel")}</strong> {t("settings.integration.importantMessage")}
-                    </Text>
-                  </InlineStack>
-                </Banner>
-
-                <BlockStack gap="300">
-                  <Text variant="headingSm" as="h3">
-                    {t("settings.integration.guideTitle")}
-                  </Text>
-
-                  <List type="number">
-                    <List.Item>
-                      <BlockStack gap="100">
-                        <Text variant="bodyMd" as="p" fontWeight="semibold">
-                          {t("settings.integration.step1Title")}
-                        </Text>
-                        <Text variant="bodyMd" as="p" tone="subdued">
-                          {t("settings.integration.step1Description")}
-                        </Text>
-                      </BlockStack>
-                    </List.Item>
-
-                    <List.Item>
-                      <BlockStack gap="100">
-                        <Text variant="bodyMd" as="p" fontWeight="semibold">
-                          {t("settings.integration.step2Title")}
-                        </Text>
-                        <Text variant="bodyMd" as="p" tone="subdued">
-                          {t("settings.integration.step2Description")}
-                        </Text>
-                      </BlockStack>
-                    </List.Item>
-
-                    <List.Item>
-                      <BlockStack gap="100">
-                        <Text variant="bodyMd" as="p" fontWeight="semibold">
-                          {t("settings.integration.step3Title")}
-                        </Text>
-                        <Text variant="bodyMd" as="p" tone="subdued">
-                          {t("settings.integration.step3Description")}
-                        </Text>
-                      </BlockStack>
-                    </List.Item>
-                    
-                    <List.Item>
-                      <BlockStack gap="100">
-                        <Text variant="bodyMd" as="p" fontWeight="semibold">
-                          {t("settings.integration.step4Title")}
-                        </Text>
-                        <Text variant="bodyMd" as="p" tone="subdued">
-                          {t("settings.integration.step4Description")}
-                        </Text>
-                      </BlockStack>
-                    </List.Item>
-                  </List>
-                </BlockStack>
-
-                <Divider />
-
-                <BlockStack gap="300">
-                  <Text variant="headingSm" as="h3">
-                    {t("settings.integration.customizationTitle")}
-                  </Text>
-                  <Text variant="bodyMd" as="p">
-                    {t("settings.integration.customizationDescription")}
-                  </Text>
-                  <InlineStack gap="200" blockAlign="center">
-                    <Icon source={CheckCircleIcon} tone="success" />
-                    <Text variant="bodyMd" as="p" tone="success">
-                      {t("settings.integration.customizationNote")}
-                    </Text>
+                    <BlockStack gap="200">
+                      <Text variant="bodyMd" as="p">
+                        <strong>{t("settings.integration.importantLabel")}</strong> {t("settings.integration.importantMessage")}
+                      </Text>
+                      <Text variant="bodySm" as="p" tone="subdued">
+                        {t("settings.integration.helpTitle")} {t("settings.integration.helpDescription")}
+                      </Text>
+                    </BlockStack>
                   </InlineStack>
                 </BlockStack>
+              </Banner>
 
-                <Divider />
+              <BlockStack gap="400">
+                <Text variant="headingSm" as="h3">
+                  {t("settings.integration.guideTitle")}
+                </Text>
 
-                <Banner tone="warning">
-                  <BlockStack gap="200">
-                    <Text variant="bodyMd" as="p" fontWeight="semibold">
-                      {t("settings.integration.helpTitle")}
-                    </Text>
-                    <Text variant="bodyMd" as="p">
-                      {t("settings.integration.helpDescription")}
-                    </Text>
-                  </BlockStack>
-                </Banner>
+                <List type="number">
+                  <List.Item>
+                    <BlockStack gap="100">
+                      <Text variant="bodyMd" as="p" fontWeight="semibold">
+                        {t("settings.integration.step1Title")}
+                      </Text>
+                      <Text variant="bodySm" as="p" tone="subdued">
+                        {t("settings.integration.step1Description")}
+                      </Text>
+                    </BlockStack>
+                  </List.Item>
+
+                  <List.Item>
+                    <BlockStack gap="100">
+                      <Text variant="bodyMd" as="p" fontWeight="semibold">
+                        {t("settings.integration.step2Title")}
+                      </Text>
+                      <Text variant="bodySm" as="p" tone="subdued">
+                        {t("settings.integration.step2Description")}
+                      </Text>
+                    </BlockStack>
+                  </List.Item>
+
+                  <List.Item>
+                    <BlockStack gap="100">
+                      <Text variant="bodyMd" as="p" fontWeight="semibold">
+                        {t("settings.integration.step3Title")}
+                      </Text>
+                      <Text variant="bodySm" as="p" tone="subdued">
+                        {t("settings.integration.step3Description")}
+                      </Text>
+                    </BlockStack>
+                  </List.Item>
+
+                  <List.Item>
+                    <BlockStack gap="100">
+                      <Text variant="bodyMd" as="p" fontWeight="semibold">
+                        {t("settings.integration.step4Title")}
+                      </Text>
+                      <Text variant="bodySm" as="p" tone="subdued">
+                        {t("settings.integration.step4Description")}
+                      </Text>
+                    </BlockStack>
+                  </List.Item>
+                </List>
+              </BlockStack>
+
+              <Divider />
+
+              <BlockStack gap="200">
+                <Text variant="headingSm" as="h3">
+                  {t("settings.integration.customizationTitle")}
+                </Text>
+                <Text variant="bodyMd" as="p" tone="subdued">
+                  {t("settings.integration.customizationDescription")}
+                </Text>
+                <InlineStack gap="200" blockAlign="center">
+                  <Icon source={CheckCircleIcon} tone="success" />
+                  <Text variant="bodySm" as="p" tone="success">
+                    {t("settings.integration.customizationNote")}
+                  </Text>
+                </InlineStack>
               </BlockStack>
             </BlockStack>
           </Card>
@@ -600,54 +605,55 @@ export default function SettingsPage() {
         {/* Pricing Plan Settings */}
         <Layout.Section>
           <Card>
-            <BlockStack gap="400">
-              <Text variant="headingMd" as="h2">
-                {t("settings.pricingPlan")}
-              </Text>
-              <Text variant="bodyMd" as="p" tone="subdued">
-                {t("settings.pricingPlanDesc")}
-              </Text>
+            <BlockStack gap="500">
+              <BlockStack gap="200">
+                <Text variant="headingMd" as="h2">
+                  {t("settings.pricingPlan")}
+                </Text>
+                <Text variant="bodyMd" as="p" tone="subdued">
+                  {t("settings.pricingPlanDesc")}
+                </Text>
+              </BlockStack>
 
-              <FormLayout>
-                <Select
-                  label={t("settings.pricingPlan")}
-                  value={settings.plan}
-                  options={getPlanOptions().map(opt => ({
-                    label: opt.label,
-                    value: opt.value
-                  }))}
-                  onChange={(value) =>
-                    setSettings((prev) => ({
-                      ...prev,
-                      plan: normalizePlanCode(value),
-                      // Clear API key if switching away from BYOK
-                      openaiApiKey: value === PlanCode.BYOK ? prev.openaiApiKey : ""
-                    }))
-                  }
-                />
+              <Select
+                label={t("settings.pricingPlan")}
+                value={settings.plan}
+                options={getPlanOptions().map(opt => ({
+                  label: opt.label,
+                  value: opt.value
+                }))}
+                onChange={(value) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    plan: normalizePlanCode(value),
+                    // Clear API key if switching away from BYOK
+                    openaiApiKey: value === PlanCode.BYOK ? prev.openaiApiKey : ""
+                  }))
+                }
+              />
 
-                {settings.plan === PlanCode.BYOK && (
-                  <>
-                    <Banner tone="info">
+              {settings.plan === PlanCode.BYOK && (
+                <>
+                  <Divider />
+
+                  <BlockStack gap="400">
+                    <Box background="bg-surface-secondary" padding="400" borderRadius="200">
                       <BlockStack gap="200">
-                        <Text variant="bodyMd" as="p" fontWeight="semibold">
+                        <Text variant="headingSm" as="h3">
                           {t("settings.byokInfo")}
                         </Text>
-                        <Text variant="bodyMd" as="p">
+                        <Text variant="bodySm" as="p" tone="subdued">
                           {t("settings.byokInfoDesc")}
                         </Text>
-                        <Text variant="bodyMd" as="p">
-                          <a
-                            href="https://platform.openai.com/api-keys"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{ color: "#4c71d6", textDecoration: "underline" }}
-                          >
-                            {t("settings.getApiKeyLink")}
-                          </a>
-                        </Text>
+                        <Button
+                          variant="plain"
+                          url="https://platform.openai.com/api-keys"
+                          external
+                        >
+                          {t("settings.getApiKeyLink")} →
+                        </Button>
                       </BlockStack>
-                    </Banner>
+                    </Box>
 
                     <TextField
                       label={t("settings.openaiApiKey")}
@@ -672,15 +678,16 @@ export default function SettingsPage() {
                     />
 
                     {keyTestResult && (
-                      <Banner
-                        tone={keyTestResult.valid ? "success" : "critical"}
-                        onDismiss={() => setKeyTestResult(null)}
+                      <Box
+                        padding="300"
+                        background={keyTestResult.valid ? "bg-surface-success" : "bg-surface-critical"}
+                        borderRadius="200"
                       >
-                        <InlineStack gap="200" align="start">
+                        <InlineStack gap="200" blockAlign="center">
                           <Icon source={keyTestResult.valid ? CheckCircleIcon : AlertCircleIcon} />
-                          <Text as="p">{keyTestResult.message}</Text>
+                          <Text variant="bodyMd" as="p">{keyTestResult.message}</Text>
                         </InlineStack>
-                      </Banner>
+                      </Box>
                     )}
 
                     {settings.apiKeyLastTested && (
@@ -689,9 +696,9 @@ export default function SettingsPage() {
                         {settings.apiKeyStatus && ` • Status: ${settings.apiKeyStatus}`}
                       </Text>
                     )}
-                  </>
-                )}
-              </FormLayout>
+                  </BlockStack>
+                </>
+              )}
             </BlockStack>
           </Card>
         </Layout.Section>
@@ -700,28 +707,23 @@ export default function SettingsPage() {
         {conversationUsage && !conversationUsage.isUnlimited && (
           <Layout.Section>
             <Card>
-              <BlockStack gap="400">
-                <Text variant="headingMd" as="h2">
-                  {t("settings.conversationUsage")}
-                </Text>
-                <Text variant="bodyMd" as="p" tone="subdued">
-                  {t("settings.trackConversationUsage")}
-                </Text>
+              <BlockStack gap="500">
+                <BlockStack gap="200">
+                  <Text variant="headingMd" as="h2">
+                    {t("settings.conversationUsage")}
+                  </Text>
+                  <Text variant="bodyMd" as="p" tone="subdued">
+                    {t("settings.trackConversationUsage")}
+                  </Text>
+                </BlockStack>
 
-                <BlockStack gap="300">
+                <BlockStack gap="400">
                   {/* Usage Stats */}
-                  <InlineStack align="space-between" blockAlign="center">
+                  <InlineStack align="space-between" blockAlign="center" wrap={false}>
                     <Text variant="headingLg" as="p" fontWeight="bold">
                       {conversationUsage.used?.toLocaleString() ?? 0} / {conversationUsage.limit?.toLocaleString() ?? 0}
                     </Text>
-                    <Badge
-                      tone={
-                        (conversationUsage.percentUsed ?? 0) >= 100 ? "critical" :
-                        (conversationUsage.percentUsed ?? 0) >= 90 ? "warning" :
-                        (conversationUsage.percentUsed ?? 0) >= 75 ? "attention" :
-                        "success"
-                      }
-                    >
+                    <Badge tone={getUsageTone(conversationUsage.percentUsed ?? 0)}>
                       {`${conversationUsage.percentUsed ?? 0}% Used`}
                     </Badge>
                   </InlineStack>
@@ -730,17 +732,12 @@ export default function SettingsPage() {
                   <Box
                     background={(conversationUsage.percentUsed ?? 0) >= 100 ? "bg-fill-critical" : "bg-fill"}
                     borderRadius="100"
-                    paddingBlock="050"
+                    padding="050"
                   >
                     <Box
-                      background={
-                        (conversationUsage.percentUsed ?? 0) >= 100 ? "bg-fill-critical-active" :
-                        (conversationUsage.percentUsed ?? 0) >= 90 ? "bg-fill-warning-active" :
-                        (conversationUsage.percentUsed ?? 0) >= 75 ? "bg-fill-caution-active" :
-                        "bg-fill-success-active"
-                      }
+                      background={getProgressColor(conversationUsage.percentUsed ?? 0)}
                       borderRadius="100"
-                      paddingBlock="050"
+                      padding="050"
                       width={`${Math.min(conversationUsage.percentUsed ?? 0, 100)}%`}
                     />
                   </Box>
@@ -748,21 +745,22 @@ export default function SettingsPage() {
                   {/* Warning Messages */}
                   {(conversationUsage.percentUsed ?? 0) >= 100 && (
                     <Banner tone="critical">
-                      <BlockStack gap="200">
+                      <BlockStack gap="300">
                         <Text variant="bodyMd" as="p" fontWeight="semibold">
-                          🚫 Monthly limit reached!
+                          Monthly limit reached
                         </Text>
                         <Text variant="bodyMd" as="p">
                           You've reached your {conversationUsage.limit?.toLocaleString() ?? 0} conversation limit for this month.
                           Upgrade to Professional Plan for unlimited conversations.
                         </Text>
-                        <Button
-                          variant="primary"
-                          tone="critical"
-                          onClick={() => navigate('/app/billing')}
-                        >
-                          Upgrade Now
-                        </Button>
+                        <InlineStack gap="200">
+                          <Button
+                            variant="primary"
+                            onClick={() => navigate('/app/billing')}
+                          >
+                            Upgrade Now
+                          </Button>
+                        </InlineStack>
                       </BlockStack>
                     </Banner>
                   )}
@@ -770,7 +768,7 @@ export default function SettingsPage() {
                   {(conversationUsage.percentUsed ?? 0) >= 90 && (conversationUsage.percentUsed ?? 0) < 100 && (
                     <Banner tone="warning">
                       <Text variant="bodyMd" as="p">
-                        ⚠️ You're approaching your monthly limit ({conversationUsage.percentUsed ?? 0}% used).
+                        You're approaching your monthly limit ({conversationUsage.percentUsed ?? 0}% used).
                         Consider upgrading to avoid service interruption.
                       </Text>
                     </Banner>
@@ -791,23 +789,26 @@ export default function SettingsPage() {
         {conversationUsage && conversationUsage.isUnlimited && (
           <Layout.Section>
             <Card>
-              <BlockStack gap="300">
-                <InlineStack align="space-between" blockAlign="center">
+              <Box
+                background="bg-surface-success"
+                padding="400"
+                borderRadius="200"
+              >
+                <InlineStack align="space-between" blockAlign="center" wrap={false}>
                   <BlockStack gap="200">
-                    <Text variant="headingMd" as="h2">
-                      Conversation Usage
-                    </Text>
+                    <InlineStack gap="200" blockAlign="center">
+                      <Text variant="headingMd" as="h2">
+                        Unlimited Conversations
+                      </Text>
+                      <Badge tone="success">Active</Badge>
+                    </InlineStack>
                     <Text variant="bodyMd" as="p" tone="subdued">
-                      You have unlimited conversations with your current plan.
+                      {conversationUsage.used.toLocaleString()} conversations this month — no limits with your current plan
                     </Text>
                   </BlockStack>
-                  <Badge tone="success" size="large">✓ Unlimited</Badge>
+                  <Icon source={CheckCircleIcon} tone="success" />
                 </InlineStack>
-
-                <Text variant="bodySm" as="p" tone="subdued">
-                  This month: {conversationUsage.used.toLocaleString()} conversations (no limit)
-                </Text>
-              </BlockStack>
+              </Box>
             </Card>
           </Layout.Section>
         )}
@@ -816,28 +817,32 @@ export default function SettingsPage() {
         {settings.plan === PlanCode.BYOK && (
           <Layout.Section>
             <Card>
-              <BlockStack gap="400">
-                <Text variant="headingMd" as="h2">
-                  {t("settings.usageTracking")}
-                </Text>
-                <Text variant="bodyMd" as="p" tone="subdued">
-                  {t("settings.usageTrackingDesc")}
-                </Text>
+              <BlockStack gap="500">
+                <BlockStack gap="200">
+                  <Text variant="headingMd" as="h2">
+                    {t("settings.usageTracking")}
+                  </Text>
+                  <Text variant="bodyMd" as="p" tone="subdued">
+                    {t("settings.usageTrackingDesc")}
+                  </Text>
+                </BlockStack>
 
                 {loadingUsage ? (
-                  <InlineStack align="center">
+                  <InlineStack align="center" gap="200">
                     <Spinner size="small" />
-                    <Text as="p">Loading usage data...</Text>
+                    <Text as="p" tone="subdued">Loading usage data...</Text>
                   </InlineStack>
                 ) : usageData ? (
-                  <BlockStack gap="400">
+                  <>
+                    <Divider />
+
                     {/* Today's Usage */}
-                    <Card>
-                      <BlockStack gap="300">
-                        <Text variant="headingSm" as="h3">
-                          {t("settings.todayUsage")}
-                        </Text>
-                        <InlineStack gap="600">
+                    <BlockStack gap="300">
+                      <Text variant="headingSm" as="h3">
+                        {t("settings.todayUsage")}
+                      </Text>
+                      <InlineStack gap="400" wrap>
+                        <Box minWidth="120px">
                           <BlockStack gap="100">
                             <Text variant="bodySm" as="p" tone="subdued">
                               {t("settings.totalApiCalls")}
@@ -846,6 +851,8 @@ export default function SettingsPage() {
                               {usageData.today.totalApiCalls.toLocaleString()}
                             </Text>
                           </BlockStack>
+                        </Box>
+                        <Box minWidth="120px">
                           <BlockStack gap="100">
                             <Text variant="bodySm" as="p" tone="subdued">
                               {t("settings.totalTokensUsed")}
@@ -854,6 +861,8 @@ export default function SettingsPage() {
                               {usageData.today.totalTokensUsed.toLocaleString()}
                             </Text>
                           </BlockStack>
+                        </Box>
+                        <Box minWidth="120px">
                           <BlockStack gap="100">
                             <Text variant="bodySm" as="p" tone="subdued">
                               {t("settings.estimatedCost")}
@@ -862,17 +871,19 @@ export default function SettingsPage() {
                               ${usageData.today.estimatedCost.toFixed(4)}
                             </Text>
                           </BlockStack>
-                        </InlineStack>
-                      </BlockStack>
-                    </Card>
+                        </Box>
+                      </InlineStack>
+                    </BlockStack>
+
+                    <Divider />
 
                     {/* This Month's Usage */}
-                    <Card>
-                      <BlockStack gap="300">
-                        <Text variant="headingSm" as="h3">
-                          {t("settings.thisMonthUsage")}
-                        </Text>
-                        <InlineStack gap="600">
+                    <BlockStack gap="300">
+                      <Text variant="headingSm" as="h3">
+                        {t("settings.thisMonthUsage")}
+                      </Text>
+                      <InlineStack gap="400" wrap>
+                        <Box minWidth="120px">
                           <BlockStack gap="100">
                             <Text variant="bodySm" as="p" tone="subdued">
                               {t("settings.totalApiCalls")}
@@ -881,6 +892,8 @@ export default function SettingsPage() {
                               {usageData.thisMonth.totalApiCalls.toLocaleString()}
                             </Text>
                           </BlockStack>
+                        </Box>
+                        <Box minWidth="120px">
                           <BlockStack gap="100">
                             <Text variant="bodySm" as="p" tone="subdued">
                               {t("settings.totalTokensUsed")}
@@ -889,6 +902,8 @@ export default function SettingsPage() {
                               {usageData.thisMonth.totalTokensUsed.toLocaleString()}
                             </Text>
                           </BlockStack>
+                        </Box>
+                        <Box minWidth="120px">
                           <BlockStack gap="100">
                             <Text variant="bodySm" as="p" tone="subdued">
                               {t("settings.estimatedCost")}
@@ -897,14 +912,14 @@ export default function SettingsPage() {
                               ${usageData.thisMonth.estimatedCost.toFixed(4)}
                             </Text>
                           </BlockStack>
-                        </InlineStack>
-                      </BlockStack>
-                    </Card>
-                  </BlockStack>
+                        </Box>
+                      </InlineStack>
+                    </BlockStack>
+                  </>
                 ) : (
-                  <Banner tone="info">
-                    <Text as="p">{t("settings.noUsageData")}</Text>
-                  </Banner>
+                  <Box background="bg-surface-secondary" padding="400" borderRadius="200">
+                    <Text as="p" tone="subdued">{t("settings.noUsageData")}</Text>
+                  </Box>
                 )}
               </BlockStack>
             </Card>
@@ -915,15 +930,16 @@ export default function SettingsPage() {
         {planLimits && planLimits.hasCustomWebhook && (
           <Layout.Section>
             <Card>
-              <BlockStack gap="400">
-                <Text variant="headingMd" as="h2">
-                  {t("settings.aiWorkflow")}
-                </Text>
-                <Text variant="bodyMd" as="p" tone="subdued">
-                  {t("settings.aiWorkflowDesc")}
-                </Text>
+              <BlockStack gap="500">
+                <BlockStack gap="200">
+                  <Text variant="headingMd" as="h2">
+                    {t("settings.aiWorkflow")}
+                  </Text>
+                  <Text variant="bodyMd" as="p" tone="subdued">
+                    {t("settings.aiWorkflowDesc")}
+                  </Text>
+                </BlockStack>
 
-              <FormLayout>
                 <Select
                   label={t("settings.workflowType")}
                   value={(() => {
@@ -984,34 +1000,39 @@ export default function SettingsPage() {
                   type="url"
                 />
 
-                <Banner tone="info">
-                  <Text variant="bodyMd" as="p">
-                    <strong>{t("settings.workflowInfoDefault").split(':')[0]}:</strong> {t("settings.workflowInfoDefault").split(':')[1]}
-                  </Text>
-                  <Text variant="bodyMd" as="p">
-                    <strong>{t("settings.workflowInfoCustom").split(':')[0]}:</strong> {t("settings.workflowInfoCustom").split(':')[1]}
-                  </Text>
-                </Banner>
-              </FormLayout>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
+                <Divider />
+
+                <Box background="bg-surface-secondary" padding="400" borderRadius="200">
+                  <BlockStack gap="200">
+                    <Text variant="bodySm" as="p">
+                      <strong>{t("settings.workflowInfoDefault").split(':')[0]}:</strong> {t("settings.workflowInfoDefault").split(':')[1]}
+                    </Text>
+                    <Text variant="bodySm" as="p">
+                      <strong>{t("settings.workflowInfoCustom").split(':')[0]}:</strong> {t("settings.workflowInfoCustom").split(':')[1]}
+                    </Text>
+                  </BlockStack>
+                </Box>
+              </BlockStack>
+            </Card>
+          </Layout.Section>
         )}
 
         {/* Upgrade Banner for BYOK/Starter Plans */}
         {planLimits && !planLimits.hasCustomWebhook && (
           <Layout.Section>
             <Banner tone="info">
-              <BlockStack gap="200">
+              <BlockStack gap="300">
                 <Text variant="bodyMd" as="p" fontWeight="semibold">
                   Custom AI workflows available on Professional Plan
                 </Text>
-                <Text variant="bodyMd" as="p">
+                <Text variant="bodyMd" as="p" tone="subdued">
                   Connect your own n8n workflow or custom AI endpoint to fully customize the chatbot behavior.
                 </Text>
-                <Button onClick={() => navigate('/app/billing')}>
-                  Upgrade to Professional
-                </Button>
+                <InlineStack gap="200">
+                  <Button onClick={() => navigate('/app/billing')}>
+                    Upgrade to Professional
+                  </Button>
+                </InlineStack>
               </BlockStack>
             </Banner>
           </Layout.Section>
