@@ -94,11 +94,13 @@ export class PersonalizationService {
    */
   async getOrCreateChatSession(shop: string, userProfileId: string): Promise<any> {
     try {
-      // Get most recent session
+      // Get most recent session that hasn't been rated yet
+      // FIX: Don't reuse rated sessions to ensure accurate rating counts
       const recentSession = await db.chatSession.findFirst({
         where: {
           shop,
           userProfileId,
+          rating: null, // ✅ Only reuse sessions that haven't been rated
         },
         orderBy: { lastMessageAt: 'desc' },
         include: {

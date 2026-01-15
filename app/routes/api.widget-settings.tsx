@@ -1372,10 +1372,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       }
 
       // Step 2: Get or create ChatSession
+      // FIX: Don't reuse sessions that have already been rated (to enable accurate rating counts)
       chatSession = await db.chatSession.findFirst({
         where: {
           shop: shopDomain,
           userProfileId: userProfile.id,
+          rating: null, // ✅ Only reuse sessions that haven't been rated yet
           // Find sessions from the last 24 hours (consider them active)
           lastMessageAt: {
             gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
