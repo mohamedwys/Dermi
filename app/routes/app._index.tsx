@@ -151,7 +151,9 @@ export default function Index() {
                 url: "/app/billing",
               }}
             >
-              <p>{t("dashboard.freeTierMessage")}</p>
+              <Text as="p" variant="bodyMd">
+                {t("dashboard.freeTierMessage")}
+              </Text>
             </Banner>
           </Layout.Section>
         )}
@@ -159,28 +161,26 @@ export default function Index() {
         {billingStatus.hasActivePayment && billingStatus.activePlan && (
           <Layout.Section>
             <Banner
-              title={`✓ ${billingStatus.activePlan} ${t("dashboard.planActive")}`}
+              title={`${billingStatus.activePlan} ${t("dashboard.planActive")}`}
               tone={billingStatus.appSubscriptions[0]?.trialDays && billingStatus.appSubscriptions[0]?.trialDays > 0 ? "info" : "success"}
               action={{
                 content: t("dashboard.manageBilling"),
                 url: "/app/billing",
               }}
             >
-              <BlockStack gap="200">
-                <p>
-                  {billingStatus.appSubscriptions[0]?.trialDays && billingStatus.appSubscriptions[0]?.trialDays > 0 ? (
-                    <>
-                      🎉 <strong>Free Trial Active!</strong> You have {billingStatus.appSubscriptions[0].trialDays} days remaining in your trial.
-                      {billingStatus.appSubscriptions[0]?.test && <> {t("dashboard.testModeNote")}</>}
-                    </>
-                  ) : (
-                    <>
-                      {t("dashboard.subscriptionActive")}
-                      {billingStatus.appSubscriptions[0]?.test && <> {t("dashboard.testModeNote")}</>}
-                    </>
-                  )}
-                </p>
-              </BlockStack>
+              <Text as="p" variant="bodyMd">
+                {billingStatus.appSubscriptions[0]?.trialDays && billingStatus.appSubscriptions[0]?.trialDays > 0 ? (
+                  <>
+                    Free trial active with {billingStatus.appSubscriptions[0].trialDays} days remaining.
+                    {billingStatus.appSubscriptions[0]?.test && <> {t("dashboard.testModeNote")}</>}
+                  </>
+                ) : (
+                  <>
+                    {t("dashboard.subscriptionActive")}
+                    {billingStatus.appSubscriptions[0]?.test && <> {t("dashboard.testModeNote")}</>}
+                  </>
+                )}
+              </Text>
             </Banner>
           </Layout.Section>
         )}
@@ -192,7 +192,7 @@ export default function Index() {
               {t("dashboard.performanceOverview")}
             </Text>
 
-            <InlineStack gap="400" wrap={false}>
+            <InlineGrid columns={{ xs: 1, sm: 2, lg: 4 }} gap="400">
               {[
                 {
                   label: t("dashboard.totalConversations"),
@@ -222,35 +222,31 @@ export default function Index() {
                   suffix: t("dashboard.outOf5"),
                 },
               ].map((metric, idx) => (
-                <Box width="25%" key={idx}>
-                  <Card>
-                    <BlockStack gap="300">
-                      <InlineStack align="space-between" blockAlign="start">
-                        <Text variant="bodyMd" as="p" tone="subdued">
-                          {metric.label}
-                        </Text>
-                        <Badge tone="info">{metric.badge}</Badge>
-                      </InlineStack>
-                      <InlineStack gap="200" blockAlign="center">
-                        <Text variant="heading2xl" as="p" fontWeight="bold">
-                          {metric.value}
-                        </Text>
-                        {metric.suffix && (
-                          <Text variant="bodyMd" as="p" tone="subdued">
-                            {metric.suffix}
-                          </Text>
-                        )}
-                      </InlineStack>
-                      <Box>
-                        <Text variant="bodySm" as="p" tone="subdued">
-                          {metric.note}
-                        </Text>
-                      </Box>
+                <Card key={idx}>
+                  <BlockStack gap="400">
+                    <BlockStack gap="200">
+                      <Text variant="bodyMd" as="p" tone="subdued">
+                        {metric.label}
+                      </Text>
+                      <Badge tone="info-strong">{metric.badge}</Badge>
                     </BlockStack>
-                  </Card>
-                </Box>
+                    <InlineStack gap="200" blockAlign="baseline" wrap={false}>
+                      <Text variant="heading2xl" as="p">
+                        {metric.value}
+                      </Text>
+                      {metric.suffix && (
+                        <Text variant="bodyMd" as="p" tone="subdued">
+                          {metric.suffix}
+                        </Text>
+                      )}
+                    </InlineStack>
+                    <Text variant="bodySm" as="p" tone="subdued">
+                      {metric.note}
+                    </Text>
+                  </BlockStack>
+                </Card>
               ))}
-            </InlineStack>
+            </InlineGrid>
           </BlockStack>
         </Layout.Section>
 
@@ -263,9 +259,9 @@ export default function Index() {
           >
             {/* System Status Card */}
             <Card>
-              <BlockStack gap="500">
+              <BlockStack gap="400">
                 <BlockStack gap="200">
-                  <Text variant="headingLg" as="h3" fontWeight="bold">
+                  <Text variant="headingMd" as="h3">
                     {t("dashboard.systemStatus")}
                   </Text>
                   <Text variant="bodyMd" as="p" tone="subdued">
@@ -273,7 +269,7 @@ export default function Index() {
                   </Text>
                 </BlockStack>
 
-                <BlockStack gap="400">
+                <BlockStack gap="300">
                   {([
                     {
                       title: t("dashboard.aiAssistant"),
@@ -299,21 +295,21 @@ export default function Index() {
                       badge: t("dashboard.running"),
                       tone: "success",
                     },
-                  ] as const).map((item, i) => (
-                    <Box key={i}>
+                  ] as const).map((item, i, arr) => (
+                    <BlockStack gap="300" key={i}>
                       <InlineStack align="space-between" blockAlign="center">
                         <BlockStack gap="100">
-                          <Text variant="bodyMd" fontWeight="semibold" as="dd">
+                          <Text variant="bodyMd" fontWeight="semibold" as="p">
                             {item.title}
                           </Text>
-                          <Text variant="bodySm" tone="subdued" as={"dd"}>
+                          <Text variant="bodySm" tone="subdued" as="p">
                             {item.desc}
                           </Text>
                         </BlockStack>
                         <Badge tone={item.tone}>{item.badge}</Badge>
                       </InlineStack>
-                      {i < 3 && <Divider />}
-                    </Box>
+                      {i < arr.length - 1 && <Divider />}
+                    </BlockStack>
                   ))}
                 </BlockStack>
 
@@ -325,18 +321,18 @@ export default function Index() {
 
             {/* Top Questions Card */}
             <Card>
-              <BlockStack gap="500">
-                <InlineStack align="space-between">
-                  <BlockStack gap="100">
-                    <Text variant="headingLg" as="h3" fontWeight="bold">
+              <BlockStack gap="400">
+                <BlockStack gap="200">
+                  <InlineStack align="space-between" blockAlign="start">
+                    <Text variant="headingMd" as="h3">
                       {t("dashboard.topQuestions")}
                     </Text>
-                    <Text variant="bodyMd" tone="subdued" as={"dd"}>
-                      {t("dashboard.mostAsked")}
-                    </Text>
-                  </BlockStack>
-                  <Badge>{t("dashboard.last7Days")}</Badge>
-                </InlineStack>
+                    <Badge tone="info">{t("dashboard.last7Days")}</Badge>
+                  </InlineStack>
+                  <Text variant="bodyMd" tone="subdued" as="p">
+                    {t("dashboard.mostAsked")}
+                  </Text>
+                </BlockStack>
 
                 <BlockStack gap="300">
                   {stats.topQuestions.map((item, index) => {
@@ -348,11 +344,11 @@ export default function Index() {
 
                     return (
                       <BlockStack key={index} gap="200">
-                        <InlineStack align="space-between">
-                          <Text as={"dd"}>
+                        <InlineStack align="space-between" wrap={false}>
+                          <Text as="p" breakWord>
                             {index + 1}. {item.question}
                           </Text>
-                          <Badge tone="info">
+                          <Badge tone="info-strong">
                             {item.count > 0
                               ? `${item.count}${t("dashboard.timesAsked")}`
                               : t("dashboard.new")}
@@ -373,89 +369,83 @@ export default function Index() {
         </Layout.Section>
 
         <Layout.Section>
-          <InlineStack gap="400" align="start">
-            {/* Setup Progress Card */}
-            <Box width="100%">
-              <Card>
-                <BlockStack gap="500">
-                  <InlineStack align="space-between" blockAlign="center">
-                    <Text variant="headingLg" as="h3" fontWeight="bold">
-                      {t("dashboard.setupProgress")}
-                    </Text>
-                    <Badge tone="success">{t("dashboard.stepsCompleted")}</Badge>
-                  </InlineStack>
-                  <Text variant="bodyMd" as="p" tone="subdued">
-                    {t("dashboard.completeSteps")}
+          <Card>
+            <BlockStack gap="400">
+              <BlockStack gap="200">
+                <InlineStack align="space-between" blockAlign="start">
+                  <Text variant="headingMd" as="h3">
+                    {t("dashboard.setupProgress")}
                   </Text>
+                  <Badge tone="success">{t("dashboard.stepsCompleted")}</Badge>
+                </InlineStack>
+                <Text variant="bodyMd" as="p" tone="subdued">
+                  {t("dashboard.completeSteps")}
+                </Text>
+              </BlockStack>
 
-                  <Box paddingBlock="200">
-                    <ProgressBar progress={100} size="medium" tone="success" />
+              <ProgressBar progress={100} size="medium" tone="success" />
+
+              <BlockStack gap="300">
+                {[
+                  {
+                    title: t("dashboard.step1Title"),
+                    desc: t("dashboard.step1Desc"),
+                    completed: true,
+                    optional: false,
+                  },
+                  {
+                    title: t("dashboard.step2Title"),
+                    desc: t("dashboard.step2Desc"),
+                    completed: true,
+                    optional: false,
+                  },
+                  {
+                    title: t("dashboard.step3Title"),
+                    desc: t("dashboard.step3Desc"),
+                    completed: true,
+                    optional: false,
+                  },
+                ].map((step, i) => (
+                  <Box
+                    key={i}
+                    padding="400"
+                    background={step.completed ? "bg-surface-secondary" : "bg-surface"}
+                    borderRadius="200"
+                  >
+                    <InlineStack gap="300" align="space-between" blockAlign="start">
+                      <InlineStack gap="300" blockAlign="start">
+                        <Box paddingBlockStart="050">
+                          <Badge tone={step.completed ? "success" : "attention"}>
+                            {step.completed ? "✓" : "○"}
+                          </Badge>
+                        </Box>
+                        <BlockStack gap="100">
+                          <InlineStack gap="200" blockAlign="center" wrap={false}>
+                            <Text variant="bodyMd" as="p" fontWeight="semibold">
+                              {step.title}
+                            </Text>
+                            {step.optional && (
+                              <Badge tone="info">{t("dashboard.optional")}</Badge>
+                            )}
+                          </InlineStack>
+                          <Text variant="bodySm" as="p" tone="subdued">
+                            {step.desc}
+                          </Text>
+                        </BlockStack>
+                      </InlineStack>
+                      {!step.completed && (
+                        <Button url="/app/settings">{t("dashboard.connectNow")}</Button>
+                      )}
+                    </InlineStack>
                   </Box>
+                ))}
+              </BlockStack>
 
-                  <BlockStack gap="400">
-                    {[
-                      {
-                        title: t("dashboard.step1Title"),
-                        desc: t("dashboard.step1Desc"),
-                        completed: true,
-                        optional: false,
-                      },
-                      {
-                        title: t("dashboard.step2Title"),
-                        desc: t("dashboard.step2Desc"),
-                        completed: true,
-                        optional: false,
-                      },
-                      {
-                        title: t("dashboard.step3Title"),
-                        desc: t("dashboard.step3Desc"),
-                        completed: true,
-                        optional: false,
-                      },
-                    ].map((step, i) => (
-                      <Card key={i} background={step.completed ? "bg-surface-secondary" : undefined}>
-                        <InlineStack gap="400" align="start" blockAlign="center">
-                          <Box>
-                            <Badge tone={step.completed ? "success" : "attention"} size="large">
-                              {step.completed ? "✓" : "○"}
-                            </Badge>
-                          </Box>
-                          <Box width="100%">
-                            <InlineStack align="space-between" blockAlign="center">
-                              <BlockStack gap="200">
-                                <InlineStack gap="200" blockAlign="center">
-                                  <Text variant="bodyLg" as="p" fontWeight="semibold">
-                                    {step.title}
-                                  </Text>
-                                  {step.optional && (
-                                    <Badge tone="info">{t("dashboard.optional")}</Badge>
-                                  )}
-                                </InlineStack>
-                                <Text variant="bodyMd" as="p" tone="subdued">
-                                  {step.desc}
-                                </Text>
-                              </BlockStack>
-                              {!step.completed && (
-                                <Button url="/app/settings">{t("dashboard.connectNow")}</Button>
-                              )}
-                            </InlineStack>
-                          </Box>
-                        </InlineStack>
-                      </Card>
-                    ))}
-                  </BlockStack>
-
-                  <Divider />
-
-                  <InlineStack gap="300">
-                    <Button variant="primary" url="/app/settings">
-                      {t("dashboard.customizeWidget")}
-                    </Button>
-                  </InlineStack>
-                </BlockStack>
-              </Card>
-            </Box>
-          </InlineStack>
+              <Button variant="primary" url="/app/settings">
+                {t("dashboard.customizeWidget")}
+              </Button>
+            </BlockStack>
+          </Card>
         </Layout.Section>
 
         {/* Quick Actions */}
@@ -465,7 +455,7 @@ export default function Index() {
               {t("dashboard.quickActions")}
             </Text>
 
-            <InlineStack gap="400" wrap={false}>
+            <InlineGrid columns={{ xs: 1, sm: 3 }} gap="400">
               {[
                 {
                   title: t("dashboard.viewAnalyticsTitle"),
@@ -484,28 +474,25 @@ export default function Index() {
                   desc: t("dashboard.upgradePlanDesc"),
                   url: "/app/billing",
                   label: t("dashboard.viewPlansAction"),
-                  tone: "success" as const,
                 },
               ].map((action, i) => (
-                <Box width="33.33%" key={i}>
-                  <Card>
-                    <BlockStack gap="300">
-                      <Text variant="headingMd" as="h3" fontWeight="semibold">
+                <Card key={i}>
+                  <BlockStack gap="400">
+                    <BlockStack gap="200">
+                      <Text variant="headingMd" as="h3">
                         {action.title}
                       </Text>
                       <Text variant="bodyMd" as="p" tone="subdued">
                         {action.desc}
                       </Text>
-                      <Box paddingBlockStart="200">
-                        <Button fullWidth tone={action.tone} url={action.url}>
-                          {action.label}
-                        </Button>
-                      </Box>
                     </BlockStack>
-                  </Card>
-                </Box>
+                    <Button fullWidth url={action.url}>
+                      {action.label}
+                    </Button>
+                  </BlockStack>
+                </Card>
               ))}
-            </InlineStack>
+            </InlineGrid>
           </BlockStack>
         </Layout.Section>
       </Layout>
