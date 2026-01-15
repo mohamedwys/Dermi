@@ -340,37 +340,43 @@ function showRatingModal() {
     // Ignore if sessionStorage unavailable
   }
 
-  // Create modal overlay
+  // Create modal overlay - softer blur matching welcome popup
   const overlay = document.createElement('div');
   overlay.id = 'ai-rating-modal-overlay';
-  overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center; z-index: 999999; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);';
+  overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.3); display: flex; align-items: center; justify-content: center; z-index: 999999; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
   overlay.setAttribute('aria-labelledby', 'rating-modal-title');
 
-  // Create modal popup
+  // Create modal popup - matching welcome popup visual language
   const modal = document.createElement('div');
   modal.id = 'ai-rating-modal';
-  modal.style.cssText = 'background: #ffffff; border-radius: 16px; padding: 36px 32px 32px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08); max-width: 400px; width: calc(100% - 48px); box-sizing: border-box; position: relative;';
+  modal.style.cssText = 'background: #ffffff; border-radius: 12px; padding: 24px 20px 20px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08); max-width: 340px; width: calc(100% - 48px); box-sizing: border-box; position: relative; border: 1px solid rgba(0, 0, 0, 0.08);';
   modal.setAttribute('tabindex', '-1');
 
-  // Title - use custom text if provided, otherwise use translation
+  // Icon at the top - subtle and centered (matching welcome popup style)
+  const iconDiv = document.createElement('div');
+  iconDiv.style.cssText = 'display: flex; align-items: center; justify-content: center; margin-bottom: 16px;';
+  iconDiv.innerHTML = '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+  modal.appendChild(iconDiv);
+
+  // Title - more compact, matching welcome popup typography
   const title = document.createElement('h2');
   title.id = 'rating-modal-title';
   title.textContent = (widgetSettings && widgetSettings.ratingCustomTitle)
     ? widgetSettings.ratingCustomTitle
     : t('ratingTitle');
-  title.style.cssText = 'margin: 0 0 28px 0; font-size: 19px; font-weight: 500; color: #1f2937; text-align: center; line-height: 1.4; letter-spacing: -0.01em;';
+  title.style.cssText = 'margin: 0 0 20px 0; font-size: 17px; font-weight: 500; color: #1f2937; text-align: center; line-height: 1.4; letter-spacing: -0.01em;';
   modal.appendChild(title);
 
-  // Stars container
+  // Stars container - smaller, softer, secondary to buttons
   const starsContainer = document.createElement('div');
-  starsContainer.style.cssText = 'display: flex; gap: 6px; justify-content: center; align-items: center; margin-bottom: 0;';
+  starsContainer.style.cssText = 'display: flex; gap: 4px; justify-content: center; align-items: center; margin-bottom: 20px;';
   starsContainer.setAttribute('role', 'radiogroup');
   starsContainer.setAttribute('aria-label', 'Rate your experience from 1 to 5 stars');
 
-  // SVG star helper - refined colors for premium look
-  const starSVG = (filled) => `<svg width="40" height="40" viewBox="0 0 24 24" fill="${filled ? '#FBBF24' : 'none'}" stroke="${filled ? '#F59E0B' : '#E5E7EB'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+  // SVG star helper - smaller and softer
+  const starSVG = (filled) => `<svg width="28" height="28" viewBox="0 0 24 24" fill="${filled ? '#FBBF24' : 'none'}" stroke="${filled ? '#F59E0B' : '#D1D5DB'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events: none; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
 
   let selectedRating = 0;
   let isSubmitting = false;
@@ -379,7 +385,7 @@ function showRatingModal() {
   for (let i = 1; i <= 5; i++) {
     const starBtn = document.createElement('button');
     starBtn.innerHTML = starSVG(false);
-    starBtn.style.cssText = 'background: transparent; border: none; cursor: pointer; padding: 6px; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease; flex-shrink: 0; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 10px;';
+    starBtn.style.cssText = 'background: transparent; border: none; cursor: pointer; padding: 4px; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease; flex-shrink: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px;';
     starBtn.setAttribute('aria-label', t('ratingAriaLabel').replace('{{stars}}', i));
     starBtn.setAttribute('role', 'radio');
     starBtn.setAttribute('aria-checked', 'false');
@@ -390,8 +396,8 @@ function showRatingModal() {
     starBtn.addEventListener('mouseenter', function() {
       if (isSubmitting) return;
       const rating = parseInt(this.dataset.rating);
-      this.style.transform = 'scale(1.08)';
-      this.style.backgroundColor = 'rgba(251, 191, 36, 0.08)';
+      this.style.transform = 'scale(1.1)';
+      this.style.backgroundColor = 'rgba(251, 191, 36, 0.1)';
       for (let j = 1; j <= 5; j++) {
         const btn = starsContainer.children[j - 1];
         btn.innerHTML = j <= rating ? starSVG(true) : starSVG(false);
@@ -412,44 +418,120 @@ function showRatingModal() {
       }
     });
 
-    // Click handler - submit immediately
-    starBtn.addEventListener('click', async function() {
+    // Click handler - only select, don't submit
+    starBtn.addEventListener('click', function() {
       if (isSubmitting) return;
-      isSubmitting = true;
       selectedRating = parseInt(this.dataset.rating);
 
       // Update ARIA and visual state
       for (let j = 1; j <= 5; j++) {
         const btn = starsContainer.children[j - 1];
         btn.innerHTML = j <= selectedRating ? starSVG(true) : starSVG(false);
-        btn.style.cursor = 'default';
-        btn.style.transform = 'scale(1)';
-        btn.style.backgroundColor = 'transparent';
-        btn.disabled = true;
         btn.setAttribute('aria-checked', j <= selectedRating ? 'true' : 'false');
       }
 
-      // Submit rating
-      await submitRatingToBackend(selectedRating, overlay);
+      // Enable submit button
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
+      }
     });
 
     starsContainer.appendChild(starBtn);
   }
 
   modal.appendChild(starsContainer);
+
+  // Buttons container
+  const buttonsContainer = document.createElement('div');
+  buttonsContainer.style.cssText = 'display: flex; gap: 8px; flex-direction: column;';
+
+  // Submit button (primary action) - matching welcome popup button style
+  const submitBtn = document.createElement('button');
+  submitBtn.textContent = 'Submit';
+  submitBtn.disabled = true;
+  submitBtn.style.cssText = `background: ${widgetSettings.primaryColor || '#3b82f6'}; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-size: 15px; font-weight: 500; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); opacity: 0.5; width: 100%;`;
+  submitBtn.setAttribute('aria-label', 'Submit rating');
+  submitBtn.type = 'button';
+
+  submitBtn.addEventListener('click', async function() {
+    if (isSubmitting || selectedRating === 0) return;
+    isSubmitting = true;
+
+    // Disable all interactive elements
+    submitBtn.disabled = true;
+    submitBtn.style.opacity = '0.7';
+    maybeLaterBtn.disabled = true;
+    maybeLaterBtn.style.opacity = '0.7';
+    for (let j = 1; j <= 5; j++) {
+      const btn = starsContainer.children[j - 1];
+      btn.disabled = true;
+      btn.style.cursor = 'default';
+    }
+
+    // Submit rating
+    await submitRatingToBackend(selectedRating, overlay);
+  });
+
+  submitBtn.addEventListener('mouseenter', function() {
+    if (!this.disabled) {
+      this.style.transform = 'translateY(-1px)';
+      this.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+    }
+  });
+
+  submitBtn.addEventListener('mouseleave', function() {
+    if (!this.disabled) {
+      this.style.transform = 'translateY(0)';
+      this.style.boxShadow = 'none';
+    }
+  });
+
+  buttonsContainer.appendChild(submitBtn);
+
+  // Maybe later button (secondary action) - subtle style
+  const maybeLaterBtn = document.createElement('button');
+  maybeLaterBtn.textContent = 'Maybe later';
+  maybeLaterBtn.style.cssText = 'background: transparent; color: #6b7280; border: none; padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); width: 100%;';
+  maybeLaterBtn.setAttribute('aria-label', 'Close rating modal');
+  maybeLaterBtn.type = 'button';
+
+  maybeLaterBtn.addEventListener('click', function() {
+    if (!isSubmitting) {
+      closeRatingModal(overlay);
+    }
+  });
+
+  maybeLaterBtn.addEventListener('mouseenter', function() {
+    if (!this.disabled) {
+      this.style.backgroundColor = '#f3f4f6';
+      this.style.color = '#1f2937';
+    }
+  });
+
+  maybeLaterBtn.addEventListener('mouseleave', function() {
+    if (!this.disabled) {
+      this.style.backgroundColor = 'transparent';
+      this.style.color = '#6b7280';
+    }
+  });
+
+  buttonsContainer.appendChild(maybeLaterBtn);
+  modal.appendChild(buttonsContainer);
   overlay.appendChild(modal);
 
   // Add to body (outside chat container)
   document.body.appendChild(overlay);
 
-  // Improved fade in + slide up animation
+  // Fade in + slide up animation (matching welcome popup)
   overlay.style.opacity = '0';
-  modal.style.transform = 'translateY(20px) scale(0.96)';
+  modal.style.transform = 'translateY(10px)';
   requestAnimationFrame(() => {
     overlay.style.transition = 'opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
-    modal.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    modal.style.transition = 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)';
     overlay.style.opacity = '1';
-    modal.style.transform = 'translateY(0) scale(1)';
+    modal.style.transform = 'translateY(0)';
   });
 
   // Focus management and keyboard navigation
@@ -473,6 +555,9 @@ function showRatingModal() {
       e.preventDefault();
       const prevIndex = Math.max(currentIndex - 1, 0);
       stars[prevIndex].focus();
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      stars[currentIndex].click();
     } else if (e.key === 'Escape' && !isSubmitting) {
       closeRatingModal(overlay);
     }
@@ -492,10 +577,12 @@ function showRatingModal() {
         e.preventDefault();
         firstElement.focus();
       }
+    } else if (e.key === 'Escape' && !isSubmitting) {
+      closeRatingModal(overlay);
     }
   });
 
-  // Close on overlay click (optional - user requested no skip, but this doesn't block)
+  // Close on overlay click
   overlay.addEventListener('click', function(e) {
     if (e.target === overlay && !isSubmitting) {
       closeRatingModal(overlay);
@@ -547,13 +634,13 @@ function showSuccessConfirmation(overlay) {
     console.warn('Could not mark conversation as rated:', e);
   }
 
-  // Replace content with success message - refined, calmer design
+  // Replace content with success message - matching welcome popup style
   modal.innerHTML = '';
-  modal.style.cssText = 'background: #ffffff; border: 1px solid #d1fae5; border-radius: 16px; padding: 40px 32px 36px; box-shadow: 0 8px 32px rgba(16, 185, 129, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06); max-width: 400px; width: calc(100% - 48px); box-sizing: border-box;';
+  modal.style.cssText = 'background: #ffffff; border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 24px 20px 20px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.08); max-width: 340px; width: calc(100% - 48px); box-sizing: border-box;';
 
-  // Success icon - smaller, more subtle
+  // Success icon - smaller, more subtle, matching the modal icon style
   const icon = document.createElement('div');
-  icon.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 20px; display: block;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+  icon.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 16px; display: block;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
   modal.appendChild(icon);
 
   // Thank you message - use custom text if provided, otherwise use translation
@@ -561,7 +648,7 @@ function showSuccessConfirmation(overlay) {
   message.textContent = (widgetSettings && widgetSettings.ratingCustomThankYou)
     ? widgetSettings.ratingCustomThankYou
     : t('ratingThankYou');
-  message.style.cssText = 'font-size: 17px; font-weight: 500; color: #065f46; text-align: center; line-height: 1.5; letter-spacing: -0.01em;';
+  message.style.cssText = 'font-size: 15px; font-weight: 500; color: #065f46; text-align: center; line-height: 1.5;';
   modal.appendChild(message);
 
   // Auto-close after 2 seconds
@@ -583,7 +670,7 @@ function closeRatingModal(overlay) {
     if (overlay.parentNode) {
       overlay.remove();
     }
-  }, 300);
+  }, 250);
 }
 
 // ======================
