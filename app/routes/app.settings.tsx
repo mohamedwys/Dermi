@@ -515,18 +515,18 @@ export default function SettingsPage() {
               <Divider />
 
               <Banner tone="info">
-                <BlockStack gap="300">
-                  <InlineStack gap="200" blockAlign="start">
-                    <Icon source={AlertCircleIcon} />
-                    <BlockStack gap="200">
-                      <Text variant="bodyMd" as="p">
-                        <strong>{t("settings.integration.importantLabel")}</strong> {t("settings.integration.importantMessage")}
-                      </Text>
-                      <Text variant="bodySm" as="p" tone="subdued">
-                        {t("settings.integration.helpTitle")} {t("settings.integration.helpDescription")}
-                      </Text>
-                    </BlockStack>
-                  </InlineStack>
+                <BlockStack gap="100">
+                  <Text variant="bodyMd" as="p">
+                    <Text as="span" fontWeight="semibold">
+                      {t("settings.integration.importantLabel")}
+                    </Text>{" "}
+                    {t("settings.integration.importantMessage")}
+                  </Text>
+
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    {t("settings.integration.helpTitle")}{" "}
+                    {t("settings.integration.helpDescription")}
+                  </Text>
                 </BlockStack>
               </Banner>
 
@@ -593,7 +593,7 @@ export default function SettingsPage() {
                 </Text>
                 <InlineStack gap="200" blockAlign="center">
                   <Icon source={CheckCircleIcon} tone="success" />
-                  <Text variant="bodySm" as="p" tone="success">
+                  <Text variant="bodySm" as="p" tone="subdued">
                     {t("settings.integration.customizationNote")}
                   </Text>
                 </InlineStack>
