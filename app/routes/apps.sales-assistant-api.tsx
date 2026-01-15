@@ -432,6 +432,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         // Session info
         timestamp: new Date().toISOString(),
         sessionId: sessionId,
+        chatSessionId: chatSession.id, // FIX: Include database ChatSession ID for accurate rating tracking
 
         // Analytics
         analytics: {
