@@ -51,10 +51,6 @@ model WidgetSettings {
   ratingEnabled       Boolean  @default(true)
   ratingCustomTitle   String?
   ratingCustomThankYou String?
-
-  // Welcome popup customization
-  welcomePopupEnabled  Boolean  @default(true)
-  welcomePopupMessage  String?
 }
 
 model ProductEmbedding {
