@@ -13,6 +13,9 @@ let translations = null; // Store loaded translations
 let currentChatSessionId = null; // Track current chat session for rating
 let conversationId = null; // Unique ID per conversation for rating tracking (resets on chat open)
 
+// Track page load time for welcome popup timing
+const pageLoadTime = Date.now();
+
 // ✅ FIX: Persist sessionId in localStorage to prevent repeated greetings
 // Try to retrieve existing sessionId from localStorage, or create a new one
 let sessionId = null;
@@ -680,12 +683,14 @@ function closeRatingModal(overlay) {
 function shouldShowWelcomePopup() {
   // Check if welcome popup is enabled (default: true)
   if (widgetSettings && widgetSettings.welcomePopupEnabled === false) {
+    console.log('[Welcome Popup] Disabled in settings');
     return false;
   }
 
   // Never show if chat has been opened already this session
   try {
     if (sessionStorage.getItem('ai_chat_opened')) {
+      console.log('[Welcome Popup] Chat already opened this session');
       return false;
     }
   } catch (e) {
@@ -695,28 +700,38 @@ function shouldShowWelcomePopup() {
   // Never show if welcome popup was already shown this session
   try {
     if (sessionStorage.getItem('ai_welcome_shown')) {
+      console.log('[Welcome Popup] Already shown this session');
       return false;
     }
   } catch (e) {
     // Ignore if sessionStorage unavailable
   }
 
+  console.log('[Welcome Popup] All conditions passed - should show');
   return true;
 }
 
 function showWelcomePopup() {
-  if (!shouldShowWelcomePopup()) return;
+  if (!shouldShowWelcomePopup()) {
+    console.log('[Welcome Popup] Not showing - conditions not met');
+    return;
+  }
+
+  // Get the chat toggle button position to position popup near it
+  const toggleBtn = elements.toggleBtn;
+  if (!toggleBtn) {
+    console.warn('[Welcome Popup] Cannot show - toggle button not found. Elements:', elements);
+    return;
+  }
+
+  console.log('[Welcome Popup] Showing popup');
 
   // Mark as shown in sessionStorage
   try {
     sessionStorage.setItem('ai_welcome_shown', 'true');
   } catch (e) {
-    // Ignore if sessionStorage unavailable
+    console.warn('[Welcome Popup] Could not set sessionStorage:', e);
   }
-
-  // Get the chat toggle button position to position popup near it
-  const toggleBtn = elements.toggleBtn;
-  if (!toggleBtn) return;
 
   // Create popup container
   const popup = document.createElement('div');
@@ -871,10 +886,18 @@ function closeWelcomePopup(popup) {
 }
 
 function initWelcomePopup() {
-  // Show welcome popup 3 seconds after page load
+  // Calculate time elapsed since page load
+  const timeElapsed = Date.now() - pageLoadTime;
+  const targetDelay = 3000; // 3 seconds after page load
+
+  // Calculate remaining delay to ensure popup shows 3 seconds from page load
+  const remainingDelay = Math.max(0, targetDelay - timeElapsed);
+
+  console.log('[Welcome Popup] Initializing - Time since page load:', timeElapsed + 'ms', '| Remaining delay:', remainingDelay + 'ms');
+
   setTimeout(() => {
     showWelcomePopup();
-  }, 3000);
+  }, remainingDelay);
 }
 
 function showLoading(show) {
