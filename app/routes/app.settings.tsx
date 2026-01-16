@@ -7,7 +7,6 @@ import {
   Page,
   Layout,
   Card,
-  FormLayout,
   TextField,
   Select,
   Banner,
@@ -28,7 +27,7 @@ import { requireBilling, getPlanLimits, checkBillingStatus } from "../lib/billin
 import { prisma as db } from "../db.server";
 import { useTranslation } from "react-i18next";
 import { encryptApiKey, decryptApiKey, isValidOpenAIKey } from "../lib/encryption.server";
-import { getConversationUsage, formatResetDate } from "../lib/conversation-usage.server";
+import { getConversationUsage } from "../lib/conversation-usage.server";
 import { PlanCode, getPlanOptions, normalizePlanCode } from "../lib/plans.config";
 import type { WidgetSettings, ConversationUsage, SettingsLoaderData, ActionData } from "../lib/types";
 
@@ -592,7 +591,6 @@ export default function SettingsPage() {
                   {t("settings.integration.customizationDescription")}
                 </Text>
                 <InlineStack gap="200" blockAlign="center">
-                  <Icon source={CheckCircleIcon} tone="success" />
                   <Text variant="bodySm" as="p" tone="subdued">
                     {t("settings.integration.customizationNote")}
                   </Text>
