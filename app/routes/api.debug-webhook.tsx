@@ -13,8 +13,8 @@
 
 import { json } from "@remix-run/node";
 import type { LoaderFunctionArgs } from "@remix-run/node";
-import db from "../db.server";
-import { cors } from "../lib/cors.server";
+import { prisma as db } from "../db.server";
+import { getSecureCorsHeaders, createCorsPreflightResponse } from "../lib/cors.server";
 import { createLogger } from '../lib/logger.server';
 
 const routeLogger = createLogger({ route: '/api/debug-webhook' });
@@ -22,8 +22,10 @@ const routeLogger = createLogger({ route: '/api/debug-webhook' });
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   // Apply CORS
   if (request.method === "OPTIONS") {
-    return new Response(null, { headers: cors.headers });
+    return createCorsPreflightResponse(request);
   }
+
+  const corsHeaders = getSecureCorsHeaders(request);
 
   try {
     const url = new URL(request.url);
@@ -33,7 +35,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       return json({
         error: "Missing required parameter: shop",
         usage: "GET /api/debug-webhook?shop=mystore.myshopify.com"
-      }, { status: 400, headers: cors.headers });
+      }, { status: 400, headers: corsHeaders });
     }
 
     // Check environment variables
@@ -59,7 +61,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
           N8N_WEBHOOK_URL: envWebhookUrl ? maskWebhookUrl(envWebhookUrl) : 'NOT SET',
           N8N_WEBHOOK_BYOK: envByokUrl ? maskWebhookUrl(envByokUrl) : 'NOT SET',
         }
-      }, { status: 404, headers: cors.headers });
+      }, { status: 404, headers: corsHeaders });
     }
 
     // Determine which webhook URL will be used (replicate logic from api.widget-settings.tsx)
@@ -153,14 +155,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         !effectiveWebhookUrl ? 'Set N8N_WEBHOOK_URL environment variable in Vercel' : null,
         settings.webhookUrl && workflowType === 'CUSTOM' ? 'To use environment variables instead, clear the custom webhook in database or change workflow type to DEFAULT' : null,
       ].filter(Boolean)
-    }, { headers: cors.headers });
+    }, { headers: corsHeaders });
 
   } catch (error) {
     routeLogger.error({ error }, 'Error in debug webhook endpoint');
     return json({
       error: "Internal server error",
       message: error instanceof Error ? error.message : String(error)
-    }, { status: 500, headers: cors.headers });
+    }, { status: 500, headers: corsHeaders });
   }
 };
 
