@@ -46,6 +46,12 @@ if ! npx prisma generate --no-engine; then
   exit 1
 fi
 
+# Copy translation files to public directory
+echo "🌍 Copying translation files..."
+mkdir -p public/locales
+cp -r app/i18n/locales/* public/locales/
+echo "✅ Translation files copied"
+
 # Build the app
 echo "🏗️  Building application..."
 if ! npm run build; then
