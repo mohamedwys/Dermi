@@ -281,9 +281,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
               <textarea id="ai-input" placeholder="\${escapeHTML(settings.inputPlaceholder)}" rows="1" maxlength="2000"></textarea>
               <button id="ai-send" aria-label="Send" disabled><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
             </div>
-            <button id="ai-upload-btn" aria-label="Upload image">
+            <button id="ai-upload-btn" aria-label="Analyse Cutanée">
               <svg viewBox="0 0 24 24" width="20" height="20"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
-              Upload a file
+              Analyse Cutanée
             </button>
             <input type="file" id="ai-file-input" accept="image/*" style="display: none;" />
           </div>
