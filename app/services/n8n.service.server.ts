@@ -119,7 +119,13 @@ export class N8NService {
     // Log the webhook URL being used for debugging (hide sensitive parts)
     if (this.webhookUrl !== 'MISSING_N8N_WEBHOOK_URL') {
       const maskedUrl = this.maskWebhookUrl(this.webhookUrl);
-      this.logger.debug({ maskedUrl, hasApiKey: !!this.apiKey }, 'N8N Service initialized');
+      this.logger.info({
+        maskedUrl,
+        hasApiKey: !!this.apiKey,
+        source: webhookUrl ? 'PARAMETER (custom/plan-specific)' : 'ENVIRONMENT VARIABLE'
+      }, '🔗 N8N Service initialized with webhook URL');
+    } else {
+      this.logger.warn('⚠️  N8N webhook URL not configured - fallback processing will be used');
     }
 
     // Log important note about webhook URL format
@@ -160,7 +166,12 @@ export class N8NService {
       }
 
       const maskedUrl = this.maskWebhookUrl(this.webhookUrl);
-      this.logger.debug({ maskedUrl }, 'Calling N8N webhook');
+      this.logger.info({
+        maskedUrl,
+        fullUrlForDebug: this.webhookUrl, // Log full URL for debugging (will be masked in production logs)
+        shopDomain: request.context?.shopDomain,
+        userMessage: request.userMessage?.substring(0, 50)
+      }, '🚀 Calling N8N webhook');
 
       const headers: any = {
         'Content-Type': 'application/json',
