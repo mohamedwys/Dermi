@@ -989,6 +989,74 @@ function getProductIdFromPage() {
   return match ? match[1] : null;
 }
 
+async function handleFileUpload(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    addMessageToChat('assistant', 'Please upload an image file.');
+    return;
+  }
+
+  // Show image preview in chat
+  const messagesContainer = document.getElementById('ai-chat-messages');
+  if (!messagesContainer) return;
+
+  const imgPreviewDiv = document.createElement('div');
+  imgPreviewDiv.className = 'ai-message user-message';
+  imgPreviewDiv.style.cssText = 'display: flex; flex-direction: column; gap: 8px; max-width: 80%;';
+  
+  const img = document.createElement('img');
+  img.src = URL.createObjectURL(file);
+  img.style.cssText = 'max-width: 200px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);';
+  
+  const text = document.createElement('div');
+  text.textContent = 'Analyzing image...';
+  text.style.fontSize = '14px';
+  
+  imgPreviewDiv.appendChild(img);
+  imgPreviewDiv.appendChild(text);
+  messagesContainer.appendChild(imgPreviewDiv);
+  scrollToBottom();
+
+  showLoading(true);
+
+  try {
+    // Convert image to base64
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+      const base64Image = e.target.result;
+      
+      // Send to your n8n workflow via backend
+      const response = await fetch('https://dermi.vercel.app/api/analyze-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          shop: widgetSettings.shopDomain,
+          sessionId: sessionId,
+          image: base64Image,
+          fileName: file.name
+        })
+      });
+
+      const result = await response.json();
+      showLoading(false);
+      
+      const reply = result.analysis || result.response || 'Image analyzed successfully.';
+      addMessageToChat('assistant', reply);
+      
+      conversationHistory.push({ role: 'assistant', content: reply });
+      saveConversationHistory();
+      
+      if (result.recommendations?.length) {
+        displayProductRecommendations(result.recommendations);
+      }
+    };
+    reader.readAsDataURL(file);
+  } catch (error) {
+    showLoading(false);
+    addMessageToChat('assistant', 'Sorry, I couldn\'t analyze the image. Please try again.');
+    console.error('Image upload error:', error);
+  }
+}
+
 async function sendMessageToServer(message) {
   showLoading(true);
   try {
@@ -1959,6 +2027,13 @@ function createWidget() {
               </svg>
             </button>
           </div>
+          <button id="ai-upload-btn" class="ai-upload-btn" aria-label="Upload image">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+            </svg>
+            Upload a file
+          </button>
+          <input type="file" id="ai-file-input" accept="image/*" style="display: none;" />
           <div class="ai-powered-footer">${escapeHTML(t('poweredByAI'))}</div>
         </div>
       </div>
@@ -1981,7 +2056,7 @@ function cacheDOMElements() {
 function setupEventListeners() {
   if (elements.toggleBtn) elements.toggleBtn.addEventListener('click', toggleAIChat);
   if (elements.closeBtn) elements.closeBtn.addEventListener('click', toggleAIChat);
-  if (elements.sendBtn) elements.sendBtn.addEventListener('click', sendAIMessage);  // ✅ Correct!
+  if (elements.sendBtn) elements.sendBtn.addEventListener('click', sendAIMessage);
   if (elements.inputField) elements.inputField.addEventListener('keypress', handleChatKeyPress);
 
   document.querySelectorAll('.quick-action-btn').forEach(btn => {
@@ -1993,6 +2068,25 @@ function setupEventListeners() {
       }
     });
   });
+
+  // 🆕 Image upload event listeners
+  const uploadBtn = document.getElementById('ai-upload-btn');
+  const fileInput = document.getElementById('ai-file-input');
+  
+  if (uploadBtn) {
+    uploadBtn.addEventListener('click', function() {
+      if (fileInput) fileInput.click();
+    });
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files && e.target.files[0]) {
+        handleFileUpload(e.target.files[0]);
+        e.target.value = ''; // Reset input
+      }
+    });
+  }
 
   window.addEventListener('online', () => {
     isOnline = true;
