@@ -284,7 +284,7 @@
   bottom: 80px;
   right: 0;
   width: 400px;
-  height: 600px;
+  height: 650px; /* Increased from 600px to accommodate upload button */
   background: var(--glass-bg);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -298,8 +298,8 @@
     "messages"
     "input";
   overflow: hidden;
-  max-height: 600px;
-  min-height: 600px;
+  max-height: 650px; /* Increased from 600px */
+  min-height: 650px; /* Increased from 600px */
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -651,7 +651,7 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   z-index: 10;
-  min-height: 80px;
+  min-height: 150px; /* Increased from 80px to accommodate upload button */
   box-sizing: border-box !important;
   border-radius: 0 0 var(--radius-xl) var(--radius-xl);
   grid-area: input !important;
@@ -1286,7 +1286,7 @@
   .ai-chat-input {
     padding: 12px 16px;
     padding-bottom: max(12px, env(safe-area-inset-bottom));
-    min-height: 80px;
+    min-height: 150px; /* Increased to accommodate upload button */
   }
 
   .ai-chat-input input {
@@ -1425,7 +1425,7 @@
 @media (min-width: 1025px) {
   .ai-chat-window {
     width: 400px;
-    height: 600px;
+    height: 650px; /* Increased to accommodate upload button */
   }
 }
 
