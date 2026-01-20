@@ -1,7 +1,14 @@
-import { json, type ActionFunctionArgs } from "@remix-run/node";
+import { json, type ActionFunctionArgs, type LoaderFunctionArgs } from "@remix-run/node";
 import { logger } from "../lib/logger.server";
 import { prisma as db } from "../db.server";
 import { isValidOpenAIKey } from "../lib/encryption.server";
+
+/**
+ * Handle GET/OPTIONS requests
+ */
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  return json({ error: "Method not allowed. Use POST." }, { status: 405 });
+};
 
 /**
  * API endpoint to test OpenAI API key validity

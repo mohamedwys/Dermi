@@ -7,7 +7,7 @@
  * Requires X-API-Key header for authentication
  */
 
-import type { ActionFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { prisma as db } from "../db.server";
 import { logger } from "../lib/logger.server";
@@ -26,6 +26,13 @@ function verifyApiKey(request: Request): boolean {
 
   return apiKey === internalApiKey;
 }
+
+/**
+ * Handle GET/OPTIONS requests
+ */
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  return json({ error: "Method not allowed. Use POST." }, { status: 405 });
+};
 
 /**
  * POST /api/log-conversation

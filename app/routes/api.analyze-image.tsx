@@ -1,4 +1,4 @@
-import type { ActionFunctionArgs } from "@remix-run/node";
+import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { prisma as db } from "../db.server";
 import { getSecureCorsHeaders, createCorsPreflightResponse, isOriginAllowed } from "../lib/cors.server";
@@ -8,7 +8,7 @@ import { logError, createLogger } from "../lib/logger.server";
 
 /**
  * Image Analysis API Route
- * 
+ *
  * This endpoint receives images from the chatbot widget and sends them to
  * your n8n workflow for analysis. The workflow can:
  * - Identify products in the image
@@ -17,13 +17,18 @@ import { logError, createLogger } from "../lib/logger.server";
  * - Any custom image processing you configure in n8n
  */
 
-export const action = async ({ request }: ActionFunctionArgs) => {
-  const routeLogger = createLogger({ route: '/api/analyze-image' });
-
-  // Handle CORS preflight
+// Handle CORS preflight (OPTIONS requests)
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   if (request.method === 'OPTIONS') {
     return createCorsPreflightResponse(request);
   }
+
+  // For non-OPTIONS GET requests, return method not allowed
+  return json({ error: 'Method not allowed' }, { status: 405 });
+};
+
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const routeLogger = createLogger({ route: '/api/analyze-image' });
 
   // Verify origin (defense in depth)
   const origin = request.headers.get('origin');
