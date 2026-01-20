@@ -1133,7 +1133,7 @@
   transition: color var(--transition-smooth);
   word-wrap: normal;
   max-width: none;
-  color: var(--ai-primary-color);
+  color: var(--color-text-primary);
   font-weight: 500;
 }
 
