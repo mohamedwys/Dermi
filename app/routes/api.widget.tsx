@@ -281,6 +281,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
               <textarea id="ai-input" placeholder="\${escapeHTML(settings.inputPlaceholder)}" rows="1" maxlength="2000"></textarea>
               <button id="ai-send" aria-label="Send" disabled><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
             </div>
+            <button id="ai-upload-btn" aria-label="Upload image">
+              <svg viewBox="0 0 24 24" width="20" height="20"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+              Upload a file
+            </button>
+            <input type="file" id="ai-file-input" accept="image/*" style="display: none;" />
           </div>
         </div>
       </div>
@@ -397,6 +402,59 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     }
   }
 
+  async function handleFileUpload(file) {
+    if (!file || !file.type.startsWith('image/')) {
+      addMessage('Please upload an image file.', 'assistant');
+      return;
+    }
+
+    // Show image preview
+    const msgs = document.getElementById('ai-messages');
+    const imgPreview = document.createElement('div');
+    imgPreview.className = 'ai-msg user';
+    imgPreview.innerHTML = '<img src="' + URL.createObjectURL(file) + '" style="max-width: 200px; border-radius: 8px; margin-bottom: 8px;"/><div>Analyzing image...</div><div class="ai-msg-time">' + formatTimestamp() + '</div>';
+    msgs.appendChild(imgPreview);
+    msgs.scrollTop = msgs.scrollHeight;
+
+    isLoading = true;
+    showTyping();
+
+    try {
+      // Convert image to base64
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        const base64Image = e.target.result;
+        
+        // Send to n8n workflow
+        const response = await fetch(API_BASE_URL + '/api/analyze-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            shop: SHOP_DOMAIN,
+            sessionId: sessionId,
+            image: base64Image,
+            fileName: file.name
+          })
+        });
+
+        const result = await response.json();
+        hideTyping();
+        
+        const reply = result.analysis || result.response || 'Image analyzed successfully.';
+        addMessage(reply, 'assistant');
+        conversationHistory.push({ role: 'assistant', content: reply });
+        
+        if (result.recommendations) addProducts(result.recommendations);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      hideTyping();
+      addMessage('Sorry, I couldn\\'t analyze the image. Please try again.', 'assistant');
+    } finally {
+      isLoading = false;
+    }
+  }
+
   // ============================================================================
   // Initialization
   // ============================================================================
@@ -425,6 +483,18 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     });
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape' && chatOpen) toggleChat();
+    });
+
+    // Image upload event listeners
+    document.getElementById('ai-upload-btn').addEventListener('click', function() {
+      document.getElementById('ai-file-input').click();
+    });
+
+    document.getElementById('ai-file-input').addEventListener('change', function(e) {
+      if (e.target.files && e.target.files[0]) {
+        handleFileUpload(e.target.files[0]);
+        e.target.value = ''; // Reset input
+      }
     });
   }
 
