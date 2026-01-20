@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { logger } from "../lib/logger.server";
 import { json } from "@remix-run/node";
@@ -13,6 +13,9 @@ import {
   InlineStack,
   Text,
   Badge,
+  DropZone,
+  Thumbnail,
+  InlineError,
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
@@ -83,9 +86,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
   const formData = await request.formData();
   const userMessage = formData.get("message") as string;
-  
-  if (!userMessage) {
-    return json({ error: "Message is required" }, { status: 400 });
+  const imageData = formData.get("image") as string;
+
+  if (!userMessage && !imageData) {
+    return json({ error: "Message or image is required" }, { status: 400 });
   }
 
   try {
@@ -129,7 +133,36 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       price: edge.node.variants.edges[0]?.node.price || "0.00"
     })) || [];
 
-    // Process message through N8N service
+    // If image is provided, analyze it
+    if (imageData) {
+      try {
+        const analyzeResponse = await fetch('https://dermi.vercel.app/api/analyze-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            shop: 'admin-interface',
+            sessionId: Date.now().toString(),
+            image: imageData,
+            fileName: 'uploaded-image.jpg'
+          })
+        });
+
+        const result = await analyzeResponse.json();
+        const analysisMessage = result.analysis || result.response || 'Image analyzed successfully.';
+
+        return json({
+          response: analysisMessage,
+          recommendations: result.recommendations || [],
+          confidence: result.confidence || 0.7,
+          imageAnalysis: true
+        });
+      } catch (error) {
+        logger.error("Error analyzing image:", error);
+        return json({ error: "Failed to analyze image" }, { status: 500 });
+      }
+    }
+
+    // Process text message through N8N service
     const { n8nService } = await import("../services/n8n.service.server");
     const n8nResponse = await n8nService.processUserMessage({
       userMessage,
@@ -138,8 +171,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         previousMessages: []
       }
     });
-    
-    return json({ 
+
+    return json({
       response: n8nResponse.message,
       recommendations: n8nResponse.recommendations || [],
       confidence: n8nResponse.confidence || 0.7
@@ -157,12 +190,15 @@ export default function SalesAssistantSimple() {
     {
       id: "1",
       role: "assistant",
-      content: "Hello! I'm your AI sales assistant. I can help you find products, answer questions about pricing, shipping, and provide personalized recommendations. How can I assist you today?",
+      content: "Hello! I'm your AI sales assistant. I can help you find products, answer questions about pricing, shipping, and provide personalized recommendations. Upload an image or type a message to get started!",
       timestamp: new Date(),
     },
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [recommendations, setRecommendations] = useState<ProductInfo[]>([]);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [fileError, setFileError] = useState<string>("");
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   // Inject keyframes once
   useEffect(() => {
@@ -187,10 +223,72 @@ export default function SalesAssistantSimple() {
       if (fetcher.data.recommendations) {
         setRecommendations(fetcher.data.recommendations);
       }
+
+      // Clear upload after processing
+      setUploadedFile(null);
+      setImagePreview("");
     }
   }, [fetcher.data]);
 
-  const handleSendMessage = () => {
+  const handleDropZoneDrop = useCallback(
+    (_dropFiles: File[], acceptedFiles: File[], _rejectedFiles: File[]) => {
+      setFileError("");
+
+      if (acceptedFiles.length === 0) {
+        setFileError("Please upload a valid image file (PNG, JPG, GIF, or WebP)");
+        return;
+      }
+
+      const file = acceptedFiles[0];
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setFileError("File size must be less than 5MB");
+        return;
+      }
+
+      setUploadedFile(file);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setImagePreview(e.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    },
+    []
+  );
+
+  const handleSendMessage = async () => {
+    // Handle image upload
+    if (uploadedFile) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          const base64Image = e.target.result as string;
+
+          const userMessage: Message = {
+            id: Date.now().toString(),
+            role: "user",
+            content: `[Uploaded image: ${uploadedFile.name}]`,
+            timestamp: new Date(),
+          };
+
+          setMessages(prev => [...prev, userMessage]);
+
+          fetcher.submit(
+            { message: "", image: base64Image },
+            { method: "POST" }
+          );
+        }
+      };
+      reader.readAsDataURL(uploadedFile);
+      return;
+    }
+
+    // Handle text message
     if (!inputMessage.trim()) return;
 
     const userMessage: Message = {
@@ -201,7 +299,7 @@ export default function SalesAssistantSimple() {
     };
 
     setMessages(prev => [...prev, userMessage]);
-    
+
     fetcher.submit(
       { message: inputMessage },
       { method: "POST" }
@@ -209,6 +307,12 @@ export default function SalesAssistantSimple() {
 
     setInputMessage("");
   };
+
+  const handleRemoveFile = useCallback(() => {
+    setUploadedFile(null);
+    setImagePreview("");
+    setFileError("");
+  }, []);
 
   return (
     <Page>
@@ -321,24 +425,87 @@ export default function SalesAssistantSimple() {
                 </BlockStack>
               </div>
 
-              <InlineStack gap="200">
-                <div style={{ flex: 1 }}>
-                  <TextField
-                    label=""
-                    value={inputMessage}
-                    onChange={setInputMessage}
-                    placeholder="Ask me about products, pricing, shipping, or anything else..."
-                    autoComplete="off"
-                  />
-                </div>
-                <Button 
-                  variant="primary"
-                  onClick={handleSendMessage}
-                  disabled={!inputMessage.trim() || fetcher.state === "submitting"}
-                >
-                  Send
-                </Button>
-              </InlineStack>
+              <BlockStack gap="300">
+                {/* File Upload Section */}
+                <BlockStack gap="200">
+                  <Text variant="bodyMd" as="p" fontWeight="semibold">
+                    Upload an Image (Optional)
+                  </Text>
+                  {!uploadedFile ? (
+                    <DropZone
+                      accept="image/*"
+                      type="image"
+                      onDrop={handleDropZoneDrop}
+                      allowMultiple={false}
+                    >
+                      <DropZone.FileUpload
+                        actionTitle="Upload image"
+                        actionHint="or drop image to upload"
+                      />
+                    </DropZone>
+                  ) : (
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "12px",
+                      padding: "12px",
+                      border: "1px solid #e1e3e5",
+                      borderRadius: "8px",
+                      backgroundColor: "#fafbfb"
+                    }}>
+                      {imagePreview && (
+                        <Thumbnail
+                          source={imagePreview}
+                          alt={uploadedFile.name}
+                          size="large"
+                        />
+                      )}
+                      <div style={{ flex: 1 }}>
+                        <Text variant="bodyMd" as="p" fontWeight="semibold">
+                          {uploadedFile.name}
+                        </Text>
+                        <Text variant="bodySm" as="p" tone="subdued">
+                          {(uploadedFile.size / 1024).toFixed(2)} KB
+                        </Text>
+                      </div>
+                      <Button
+                        variant="plain"
+                        onClick={handleRemoveFile}
+                        tone="critical"
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  )}
+                  {fileError && <InlineError message={fileError} fieldID="file-upload" />}
+                </BlockStack>
+
+                {/* Text Input Section */}
+                <InlineStack gap="200" align="end">
+                  <div style={{ flex: 1 }}>
+                    <TextField
+                      label=""
+                      value={inputMessage}
+                      onChange={setInputMessage}
+                      placeholder="Ask me about products, pricing, shipping, or upload an image..."
+                      autoComplete="off"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSendMessage();
+                        }
+                      }}
+                    />
+                  </div>
+                  <Button
+                    variant="primary"
+                    onClick={handleSendMessage}
+                    disabled={(!inputMessage.trim() && !uploadedFile) || fetcher.state === "submitting"}
+                  >
+                    {uploadedFile ? "Analyze Image" : "Send"}
+                  </Button>
+                </InlineStack>
+              </BlockStack>
             </BlockStack>
           </Card>
         </Layout.Section>
