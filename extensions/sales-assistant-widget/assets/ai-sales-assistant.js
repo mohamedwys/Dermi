@@ -2027,11 +2027,11 @@ function createWidget() {
               </svg>
             </button>
           </div>
-          <button id="ai-upload-btn" class="ai-upload-btn" aria-label="Upload image">
+          <button id="ai-upload-btn" class="ai-upload-btn" aria-label="Upload image" style="display: flex !important; width: 100% !important; margin-top: 12px !important; padding: 12px 16px !important; background: var(--ai-primary-color, #4c71d6) !important; color: white !important; border: none !important; border-radius: 12px !important; cursor: pointer !important; align-items: center !important; justify-content: center !important; gap: 8px !important; font-size: 14px !important; font-weight: 500 !important; opacity: 1 !important; visibility: visible !important; position: relative !important; z-index: 9999 !important;">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
               <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
             </svg>
-            Upload a file
+            📤 Upload Image
           </button>
           <input type="file" id="ai-file-input" accept="image/*" style="display: none;" />
           <div class="ai-powered-footer">${escapeHTML(t('poweredByAI'))}</div>
@@ -2043,6 +2043,25 @@ function createWidget() {
   // Cache DOM elements and attach event listeners
   cacheDOMElements();
   setupEventListeners();
+
+  // 🐛 DEBUG: Verify upload button exists and is visible
+  setTimeout(() => {
+    const uploadBtn = document.getElementById('ai-upload-btn');
+    if (uploadBtn) {
+      const styles = window.getComputedStyle(uploadBtn);
+      console.log('✅ Upload button found:', {
+        exists: true,
+        display: styles.display,
+        visibility: styles.visibility,
+        opacity: styles.opacity,
+        width: styles.width,
+        height: styles.height,
+        position: uploadBtn.getBoundingClientRect()
+      });
+    } else {
+      console.error('❌ Upload button NOT found in DOM!');
+    }
+  }, 100);
 }
 function cacheDOMElements() {
   elements.toggleBtn = document.getElementById('ai-chat-toggle-btn');
