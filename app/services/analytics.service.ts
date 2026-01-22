@@ -47,6 +47,12 @@ export interface TopProduct {
   title?: string;
 }
 
+export interface TopQuestion {
+  question: string;
+  count: number;
+  intent?: string;
+}
+
 export interface DailyTrend {
   date: string;
   messages: number;
@@ -660,6 +666,75 @@ export class AnalyticsService {
   }
 
   /**
+   * Get top customer questions
+   * Returns the most frequently asked questions by users
+   */
+  async getTopQuestions(shop: string, period: AnalyticsPeriod, limit: number = 10): Promise<TopQuestion[]> {
+    try {
+      // Get all user messages (role: "user") in the period
+      const userMessages = await db.chatMessage.findMany({
+        where: {
+          session: { shop },
+          role: 'user',
+          timestamp: {
+            gte: period.startDate,
+            lte: period.endDate,
+          },
+        },
+        select: {
+          content: true,
+          intent: true,
+        },
+      });
+
+      this.logger.debug({
+        shop,
+        periodStart: period.startDate.toISOString(),
+        periodEnd: period.endDate.toISOString(),
+        userMessagesFound: userMessages.length,
+      }, 'Fetching top customer questions');
+
+      // Group by question content and count frequency
+      const questionCounts: Record<string, { count: number; intent?: string }> = {};
+
+      userMessages.forEach((msg) => {
+        const question = msg.content.trim();
+        if (question) {
+          if (questionCounts[question]) {
+            questionCounts[question].count++;
+          } else {
+            questionCounts[question] = {
+              count: 1,
+              intent: msg.intent || undefined,
+            };
+          }
+        }
+      });
+
+      // Convert to array, sort by frequency, and take top N
+      const topQuestions = Object.entries(questionCounts)
+        .map(([question, data]) => ({
+          question,
+          count: data.count,
+          intent: data.intent,
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, limit);
+
+      this.logger.debug({
+        shop,
+        uniqueQuestions: Object.keys(questionCounts).length,
+        topQuestionsCount: topQuestions.length,
+      }, 'Top customer questions calculated');
+
+      return topQuestions;
+    } catch (error: any) {
+      logError(error, 'Error getting top customer questions');
+      return [];
+    }
+  }
+
+  /**
    * Export analytics data as CSV
    */
   async exportToCSV(shop: string, period: AnalyticsPeriod): Promise<string> {
@@ -683,37 +758,76 @@ export class AnalyticsService {
 
   /**
    * Helper: Get period from preset
+   * FIX: Use UTC timezone consistently to match database storage
    */
   static getPeriodFromPreset(preset: string): AnalyticsPeriod {
-    const endDate = new Date();
-    endDate.setHours(23, 59, 59, 999);
+    // Use UTC to ensure consistent date filtering across timezones
+    const now = new Date();
 
-    let startDate = new Date();
+    // Set end date to end of current UTC day
+    const endDate = new Date(Date.UTC(
+      now.getUTCFullYear(),
+      now.getUTCMonth(),
+      now.getUTCDate(),
+      23, 59, 59, 999
+    ));
+
+    let startDate: Date;
     let days = 0;
 
     switch (preset) {
       case 'today':
-        startDate.setHours(0, 0, 0, 0);
+        // Start of current UTC day
+        startDate = new Date(Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+          0, 0, 0, 0
+        ));
         days = 1;
         break;
       case 'week':
-        startDate.setDate(endDate.getDate() - 7);
-        startDate.setHours(0, 0, 0, 0);
+        // 7 days ago at midnight UTC
+        startDate = new Date(endDate.getTime() - (7 * 24 * 60 * 60 * 1000));
+        startDate = new Date(Date.UTC(
+          startDate.getUTCFullYear(),
+          startDate.getUTCMonth(),
+          startDate.getUTCDate(),
+          0, 0, 0, 0
+        ));
         days = 7;
         break;
       case 'month':
-        startDate.setDate(endDate.getDate() - 30);
-        startDate.setHours(0, 0, 0, 0);
+        // 30 days ago at midnight UTC
+        startDate = new Date(endDate.getTime() - (30 * 24 * 60 * 60 * 1000));
+        startDate = new Date(Date.UTC(
+          startDate.getUTCFullYear(),
+          startDate.getUTCMonth(),
+          startDate.getUTCDate(),
+          0, 0, 0, 0
+        ));
         days = 30;
         break;
       case 'quarter':
-        startDate.setDate(endDate.getDate() - 90);
-        startDate.setHours(0, 0, 0, 0);
+        // 90 days ago at midnight UTC
+        startDate = new Date(endDate.getTime() - (90 * 24 * 60 * 60 * 1000));
+        startDate = new Date(Date.UTC(
+          startDate.getUTCFullYear(),
+          startDate.getUTCMonth(),
+          startDate.getUTCDate(),
+          0, 0, 0, 0
+        ));
         days = 90;
         break;
       default:
-        startDate.setDate(endDate.getDate() - 7);
-        startDate.setHours(0, 0, 0, 0);
+        // Default to 7 days (week)
+        startDate = new Date(endDate.getTime() - (7 * 24 * 60 * 60 * 1000));
+        startDate = new Date(Date.UTC(
+          startDate.getUTCFullYear(),
+          startDate.getUTCMonth(),
+          startDate.getUTCDate(),
+          0, 0, 0, 0
+        ));
         days = 7;
     }
 

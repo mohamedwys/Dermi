@@ -65,13 +65,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       });
 
     // Fetch all analytics data
-    const [overview, intents, sentiments, workflowUsage, topProducts, trends, engagement, activeUsers] =
+    const [overview, intents, sentiments, workflowUsage, topProducts, topQuestions, trends, engagement, activeUsers] =
       await Promise.all([
         analyticsService.getOverview(session.shop, period),
         analyticsService.getIntentDistribution(session.shop, period),
         analyticsService.getSentimentBreakdown(session.shop, period),
         analyticsService.getWorkflowUsage(session.shop, period),
         analyticsService.getTopProducts(session.shop, period, 10),
+        analyticsService.getTopQuestions(session.shop, period, 10),
         analyticsService.getDailyTrends(session.shop, period),
         analyticsService.getUserEngagement(session.shop, period),
         analyticsService.getActiveUsers(session.shop, period),
@@ -87,6 +88,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       activeUsers,
       intentsCount: intents.length,
       sentimentsCount: sentiments.length,
+      topQuestionsCount: topQuestions.length,
       trendsCount: trends.length,
     });
 
@@ -96,6 +98,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       sentiments,
       workflowUsage,
       topProducts,
+      topQuestions,
       trends,
       engagement,
       activeUsers,
@@ -128,6 +131,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       sentiments: [],
       workflowUsage: [],
       topProducts: [],
+      topQuestions: [],
       trends: [],
       engagement: {
         totalSessions: 0,
@@ -519,6 +523,52 @@ export default function AnalyticsPage() {
               <Box background="bg-surface-secondary" padding="400" borderRadius="200">
                 <Text variant="bodyMd" as="p" tone="subdued" alignment="center">
                   {t("analytics.noIntentData")}
+                </Text>
+              </Box>
+            )}
+          </BlockStack>
+        </Card>
+
+        {/* Top Customer Questions */}
+        <Card>
+          <BlockStack gap="400">
+            <Text variant="headingMd" as="h2">
+              Top Customer Questions
+            </Text>
+
+            {data.topQuestions && data.topQuestions.length > 0 ? (
+              <BlockStack gap="300">
+                {data.topQuestions.map((item, index) => (
+                  <Box key={index}>
+                    <InlineStack align="space-between" blockAlign="start">
+                      <Box width="100%">
+                        <BlockStack gap="100">
+                          <Text variant="bodyMd" as="p" fontWeight="medium">
+                            {item.question}
+                          </Text>
+                          {item.intent && (
+                            <Text variant="bodySm" as="p" tone="subdued">
+                              Intent: {item.intent.replace(/_/g, " ")}
+                            </Text>
+                          )}
+                        </BlockStack>
+                      </Box>
+                      <Badge tone="info">
+                        {item.count} {item.count === 1 ? "time" : "times"}
+                      </Badge>
+                    </InlineStack>
+                    {index < data.topQuestions.length - 1 && (
+                      <Box paddingBlockStart="300">
+                        <Divider />
+                      </Box>
+                    )}
+                  </Box>
+                ))}
+              </BlockStack>
+            ) : (
+              <Box background="bg-surface-secondary" padding="400" borderRadius="200">
+                <Text variant="bodyMd" as="p" tone="subdued" alignment="center">
+                  No customer questions available for this period
                 </Text>
               </Box>
             )}
