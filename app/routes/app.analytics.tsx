@@ -271,6 +271,16 @@ export default function AnalyticsPage() {
         onAction: handleExport,
         icon: CalendarIcon,
       }}
+      secondaryActions={[
+        {
+          content: "Sync Analytics",
+          url: "/app/sync-analytics",
+        },
+        {
+          content: "Debug View",
+          url: "/app/analytics-debug",
+        },
+      ]}
     >
       <BlockStack gap="500">
         {/* ✅ FIX: Show loading indicator when data is being refreshed */}
@@ -281,6 +291,34 @@ export default function AnalyticsPage() {
                 {t("analytics.refreshingData", { defaultValue: "Refreshing analytics data..." })}
               </Text>
             </InlineStack>
+          </Banner>
+        )}
+
+        {/* ✅ NEW: Show helpful banner when no data exists */}
+        {!isLoading && data.overview.totalMessages === 0 && data.overview.totalSessions === 0 && (
+          <Banner
+            title="No analytics data found"
+            action={{
+              content: "Sync Analytics",
+              url: "/app/sync-analytics",
+            }}
+            secondaryAction={{
+              content: "View Debug Info",
+              url: "/app/analytics-debug",
+            }}
+            tone="warning"
+          >
+            <p>
+              Your dashboard is not showing data. This could mean:
+            </p>
+            <ul>
+              <li>Your chatbot hasn't been used yet in the selected time period</li>
+              <li>Analytics data needs to be synced from existing chat messages</li>
+              <li>There may be a configuration issue</li>
+            </ul>
+            <p>
+              Click "Sync Analytics" to backfill data from your chat history, or "View Debug Info" to see raw database counts.
+            </p>
           </Banner>
         )}
 
