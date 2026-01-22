@@ -1,7 +1,7 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData, useRevalidator } from "@remix-run/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Page,
   Layout,
@@ -202,6 +202,36 @@ export default function Index() {
   const { stats, billingStatus } = useLoaderData<typeof loader>();
   const { t } = useTranslation(); // ✅ Safe: runs only on client
   const revalidator = useRevalidator();
+  const [generatingData, setGeneratingData] = useState(false);
+  const [generateResult, setGenerateResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  // Handle test data generation
+  const handleGenerateTestData = async () => {
+    setGeneratingData(true);
+    setGenerateResult(null);
+
+    try {
+      const response = await fetch('/api/generate-test-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const result = await response.json();
+      setGenerateResult(result);
+
+      if (result.success) {
+        // Refresh the dashboard to show new data
+        setTimeout(() => revalidator.revalidate(), 1000);
+      }
+    } catch (error) {
+      setGenerateResult({
+        success: false,
+        message: 'Failed to generate test data',
+      });
+    } finally {
+      setGeneratingData(false);
+    }
+  };
 
   // ✅ FIX: Auto-refresh dashboard data every 60 seconds
   // Reduced from 30s to 60s to prevent database connection pool exhaustion
@@ -230,6 +260,43 @@ export default function Index() {
             </Banner>
           </Layout.Section>
         )}
+
+        {/* ✅ TEST: Show test data generator when no data exists */}
+        {stats.totalConversations === 0 && stats.activeToday === 0 && (
+          <Layout.Section>
+            <Banner
+              title="No Data Found"
+              tone="warning"
+            >
+              <BlockStack gap="200">
+                <Text as="p" variant="bodyMd">
+                  The dashboard is showing 0 because there's no data in the database yet.
+                  This usually means the widget hasn't been used or isn't installed.
+                </Text>
+                <Text as="p" variant="bodyMd" tone="subdued">
+                  You can generate test data to verify the dashboard is working correctly.
+                </Text>
+                <InlineStack gap="200">
+                  <Button
+                    onClick={handleGenerateTestData}
+                    loading={generatingData}
+                    variant="primary"
+                  >
+                    Generate Test Data
+                  </Button>
+                </InlineStack>
+                {generateResult && (
+                  <Banner tone={generateResult.success ? "success" : "critical"}>
+                    <Text as="p" variant="bodyMd">
+                      {generateResult.message}
+                    </Text>
+                  </Banner>
+                )}
+              </BlockStack>
+            </Banner>
+          </Layout.Section>
+        )}
+
         {/* Billing Status Banner */}
         {!billingStatus.hasActivePayment && (
           <Layout.Section>
