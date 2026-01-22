@@ -284,6 +284,25 @@ export default function Index() {
           </Layout.Section>
         )}
 
+        {/* Test Data Warning */}
+        {stats.totalConversations > 100 && (
+          <Layout.Section>
+            <Banner
+              tone="warning"
+              title="Possible Test Data Detected"
+              action={{
+                content: "Clean Up Test Data",
+                url: "/app/cleanup-data",
+              }}
+            >
+              <Text as="p">
+                Your dashboard shows {stats.totalConversations} conversations. If this includes test data,
+                you can clean it up to see only real customer interactions.
+              </Text>
+            </Banner>
+          </Layout.Section>
+        )}
+
         {/* ✅ TEST: Show test data generator when no data exists */}
         {stats.totalConversations === 0 && stats.activeToday === 0 && (
           <Layout.Section>

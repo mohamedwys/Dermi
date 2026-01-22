@@ -12,6 +12,7 @@ import {
   Banner,
   InlineStack,
   Box,
+  Divider,
 } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
 import { prisma as db } from "../db.server";
