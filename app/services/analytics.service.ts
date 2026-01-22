@@ -79,12 +79,17 @@ export class AnalyticsService {
       });
 
       // Enhanced logging for debugging
-      this.logger.debug({
+      this.logger.info({
         shop,
         periodStart: period.startDate.toISOString(),
         periodEnd: period.endDate.toISOString(),
         recordsFound: currentData.length,
-      }, 'Fetching analytics overview');
+        sampleRecords: currentData.slice(0, 3).map(r => ({
+          date: r.date.toISOString(),
+          totalSessions: r.totalSessions,
+          totalMessages: r.totalMessages,
+        }))
+      }, '🔍 DEBUG: ChatAnalytics records fetched in analytics service');
 
       // Calculate previous period for comparison
       const periodLength = period.endDate.getTime() - period.startDate.getTime();

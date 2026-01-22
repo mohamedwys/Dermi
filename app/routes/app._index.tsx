@@ -53,11 +53,40 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     const now = new Date();
 
     try {
+    // 🔍 DEBUG: Check if tables have any data for this shop
+    const analyticsRecordCount = await db.chatAnalytics.count({
+      where: { shop: session.shop }
+    });
+    const chatSessionCount = await db.chatSession.count({
+      where: { shop: session.shop }
+    });
+    const chatMessageCount = await db.chatMessage.count({
+      where: { session: { shop: session.shop } }
+    });
+
+    logger.info({
+      shop: session.shop,
+      analyticsRecordCount,
+      chatSessionCount,
+      chatMessageCount,
+      periodStart: thirtyDaysAgo.toISOString(),
+      periodEnd: now.toISOString(),
+    }, '🔍 DEBUG: Database record counts for shop');
+
     const overview = await analyticsService.getOverview(session.shop, {
       startDate: thirtyDaysAgo,
       endDate: now,
       days: 30,
     });
+
+    // 🔍 DEBUG: Log overview results
+    logger.info({
+      shop: session.shop,
+      totalSessions: overview.totalSessions,
+      totalMessages: overview.totalMessages,
+      avgResponseTime: overview.avgResponseTime,
+      avgConfidence: overview.avgConfidence,
+    }, '🔍 DEBUG: Overview fetched from analytics service');
 
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
@@ -68,6 +97,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         lastMessageAt: { gte: todayStart },
       },
     });
+
+    // 🔍 DEBUG: Log today's sessions
+    logger.info({
+      shop: session.shop,
+      todaySessionsCount: todaySessions,
+      todayStart: todayStart.toISOString(),
+    }, '🔍 DEBUG: Today sessions counted');
 
     type RecentMessage = {
       content: string | null;
@@ -84,6 +120,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       orderBy: { timestamp: "desc" },
       take: 100,
     });
+
+    // 🔍 DEBUG: Log recent messages count
+    logger.info({
+      shop: session.shop,
+      recentMessagesCount: recentMessages.length,
+    }, '🔍 DEBUG: Recent messages fetched');
 
     const intentCounts: Record<string, { count: number; example: string }> = {};
 
