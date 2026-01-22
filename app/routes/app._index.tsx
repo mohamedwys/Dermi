@@ -349,9 +349,23 @@ export default function Index() {
                 {generateResult && (
                   <Box paddingBlockStart="400">
                     <Banner tone={generateResult.success ? "success" : "critical"}>
-                      <Text as="p" variant="bodyMd">
-                        {generateResult.message}
-                      </Text>
+                      <BlockStack gap="200">
+                        <Text as="p" variant="bodyMd" fontWeight="semibold">
+                          {generateResult.message}
+                        </Text>
+                        {!generateResult.success && (generateResult as any).error && (
+                          <Text as="p" variant="bodySm" tone="subdued">
+                            Error: {(generateResult as any).error}
+                          </Text>
+                        )}
+                        {generateResult.success && (generateResult as any).data && (
+                          <Text as="p" variant="bodySm">
+                            Created: {(generateResult as any).data.analyticsRecords} analytics records, {' '}
+                            {(generateResult as any).data.chatSessions} sessions, {' '}
+                            {(generateResult as any).data.chatMessages} messages
+                          </Text>
+                        )}
+                      </BlockStack>
                     </Banner>
                   </Box>
                 )}

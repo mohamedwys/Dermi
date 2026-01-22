@@ -43,21 +43,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         totalMessages,
         avgResponseTime: Math.floor(Math.random() * 2000) + 500, // 500-2500ms
         avgConfidence: 0.7 + Math.random() * 0.25, // 0.7-0.95
-        intentBreakdown: JSON.stringify({
+        topIntents: JSON.stringify({
           PRODUCT_SEARCH: Math.floor(totalMessages * 0.4),
           GENERAL_CHAT: Math.floor(totalMessages * 0.3),
           SUPPORT: Math.floor(totalMessages * 0.2),
           OTHER: Math.floor(totalMessages * 0.1),
         }),
+        topProducts: JSON.stringify({}), // Empty for now
         sentimentBreakdown: JSON.stringify({
           positive: Math.floor(totalMessages * 0.6),
           neutral: Math.floor(totalMessages * 0.3),
           negative: Math.floor(totalMessages * 0.1),
         }),
-        workflowBreakdown: JSON.stringify({
+        workflowUsage: JSON.stringify({
           default: totalMessages,
           custom: 0,
         }),
+        conversionsTracked: 0,
       });
     }
 
