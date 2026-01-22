@@ -204,6 +204,8 @@ export default function Index() {
   const revalidator = useRevalidator();
   const [generatingData, setGeneratingData] = useState(false);
   const [generateResult, setGenerateResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyResult, setVerifyResult] = useState<any>(null);
 
   // Handle test data generation
   const handleGenerateTestData = async () => {
@@ -230,6 +232,25 @@ export default function Index() {
       });
     } finally {
       setGeneratingData(false);
+    }
+  };
+
+  // Handle database verification
+  const handleVerifyDatabase = async () => {
+    setVerifying(true);
+    setVerifyResult(null);
+
+    try {
+      const response = await fetch('/api/verify-database');
+      const result = await response.json();
+      setVerifyResult(result);
+    } catch (error) {
+      setVerifyResult({
+        success: false,
+        error: 'Failed to verify database',
+      });
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -268,15 +289,21 @@ export default function Index() {
               title="No Data Found"
               tone="warning"
             >
-              <BlockStack gap="200">
+              <BlockStack gap="400">
                 <Text as="p" variant="bodyMd">
                   The dashboard is showing 0 because there's no data in the database yet.
                   This usually means the widget hasn't been used or isn't installed.
                 </Text>
                 <Text as="p" variant="bodyMd" tone="subdued">
-                  You can generate test data to verify the dashboard is working correctly.
+                  You can verify your database setup or generate test data to confirm everything is working.
                 </Text>
                 <InlineStack gap="200">
+                  <Button
+                    onClick={handleVerifyDatabase}
+                    loading={verifying}
+                  >
+                    Verify Database
+                  </Button>
                   <Button
                     onClick={handleGenerateTestData}
                     loading={generatingData}
@@ -285,12 +312,48 @@ export default function Index() {
                     Generate Test Data
                   </Button>
                 </InlineStack>
+
+                {/* Database Verification Results */}
+                {verifyResult && (
+                  <Box paddingBlockStart="400">
+                    <Banner tone={verifyResult.success ? "success" : "critical"}>
+                      <BlockStack gap="200">
+                        <Text variant="bodyMd" as="p" fontWeight="semibold">
+                          Database Status: {verifyResult.overallStatus || 'unknown'}
+                        </Text>
+                        {verifyResult.shopData && (
+                          <Text variant="bodySm" as="p">
+                            ChatAnalytics: {verifyResult.shopData.chatAnalytics || 0} records<br />
+                            ChatSessions: {verifyResult.shopData.chatSessions || 0} records<br />
+                            ChatMessages: {verifyResult.shopData.chatMessages || 0} records
+                          </Text>
+                        )}
+                        {verifyResult.recommendations && verifyResult.recommendations.length > 0 && (
+                          <BlockStack gap="100">
+                            <Text variant="bodyMd" as="p" fontWeight="semibold">
+                              Recommendations:
+                            </Text>
+                            {verifyResult.recommendations.map((rec: any, idx: number) => (
+                              <Text key={idx} variant="bodySm" as="p">
+                                • {rec.issue}: {rec.solutions?.[0] || 'See logs'}
+                              </Text>
+                            ))}
+                          </BlockStack>
+                        )}
+                      </BlockStack>
+                    </Banner>
+                  </Box>
+                )}
+
+                {/* Test Data Generation Result */}
                 {generateResult && (
-                  <Banner tone={generateResult.success ? "success" : "critical"}>
-                    <Text as="p" variant="bodyMd">
-                      {generateResult.message}
-                    </Text>
-                  </Banner>
+                  <Box paddingBlockStart="400">
+                    <Banner tone={generateResult.success ? "success" : "critical"}>
+                      <Text as="p" variant="bodyMd">
+                        {generateResult.message}
+                      </Text>
+                    </Banner>
+                  </Box>
                 )}
               </BlockStack>
             </Banner>
