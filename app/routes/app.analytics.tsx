@@ -285,7 +285,7 @@ export default function AnalyticsPage() {
         )}
 
         {/* Test Data Warning */}
-        {overview.totalSessions > 100 && (
+        {overview && overview.totalSessions > 100 && (
           <Banner
             tone="warning"
             title="Possible Test Data Detected"

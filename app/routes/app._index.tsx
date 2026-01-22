@@ -285,7 +285,7 @@ export default function Index() {
         )}
 
         {/* Test Data Warning */}
-        {stats.totalConversations > 100 && (
+        {stats && stats.totalConversations > 100 && (
           <Layout.Section>
             <Banner
               tone="warning"
@@ -304,7 +304,7 @@ export default function Index() {
         )}
 
         {/* ✅ TEST: Show test data generator when no data exists */}
-        {stats.totalConversations === 0 && stats.activeToday === 0 && (
+        {stats && stats.totalConversations === 0 && stats.activeToday === 0 && (
           <Layout.Section>
             <Banner
               title="No Data Found"
