@@ -1,6 +1,7 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useRevalidator } from "@remix-run/react";
+import { useEffect } from "react";
 import {
   Page,
   Layout,
@@ -29,22 +30,29 @@ export const handle = {
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { billing, session } = await authenticate.admin(request);
-
-  // Require active billing subscription to access dashboard
-  await requireBilling(billing);
-
-  logger.debug({ shop: session.shop }, 'Session authenticated');
-  const locale = await getLocaleFromRequest(request);
-  const t = i18nServer.getFixedT(locale, "common");
-
-  const billingStatus = await checkBillingStatus(billing);
-  const analyticsService = new AnalyticsService();
-
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const now = new Date();
-
   try {
+    const { billing, session } = await authenticate.admin(request);
+
+    // Require active billing subscription to access dashboard
+    await requireBilling(billing);
+
+    logger.debug({ shop: session.shop }, 'Session authenticated');
+    logger.info({
+      shop: session.shop,
+      locale: session.locale,
+      url: request.url
+    }, '🔍 Dashboard loader - Session details');
+
+    const locale = await getLocaleFromRequest(request);
+    const t = i18nServer.getFixedT(locale, "common");
+
+    const billingStatus = await checkBillingStatus(billing);
+    const analyticsService = new AnalyticsService();
+
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const now = new Date();
+
+    try {
     const overview = await analyticsService.getOverview(session.shop, {
       startDate: thirtyDaysAgo,
       endDate: now,
@@ -119,27 +127,66 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
     return json({ stats, billingStatus, locale });
   } catch (error) {
+    logger.error({
+      error: error instanceof Error ? error.message : String(error),
+      shop: session.shop,
+    }, 'Error fetching dashboard analytics');
     return json({
       stats: {
         totalConversations: 0,
         activeToday: 0,
         avgResponseTime: "0.0s",
         customerSatisfaction: 0,
+        satisfactionRatingCount: 0,
         topQuestions: [{ question: t("dashboard.noDataAvailable"), count: 0 }],
       },
       billingStatus,
       locale,
     });
   }
+  } catch (authError) {
+    // ✅ FIX: Handle authentication errors gracefully (e.g., locale changes)
+    logger.error({
+      error: authError instanceof Error ? authError.message : String(authError),
+      url: request.url,
+    }, 'Dashboard authentication error');
+
+    // Re-throw to let Shopify handle the redirect
+    throw authError;
+  }
 };
 
 export default function Index() {
   const { stats, billingStatus } = useLoaderData<typeof loader>();
   const { t } = useTranslation(); // ✅ Safe: runs only on client
+  const revalidator = useRevalidator();
+
+  // ✅ FIX: Auto-refresh dashboard data every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (revalidator.state === "idle") {
+        revalidator.revalidate();
+      }
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [revalidator]);
 
   return (
     <Page title={t("dashboard.title")} subtitle={t("dashboard.subtitle")}>
       <Layout>
+        {/* ✅ FIX: Show loading indicator when data is being refreshed */}
+        {revalidator.state === "loading" && (
+          <Layout.Section>
+            <Banner tone="info">
+              <InlineStack gap="200" blockAlign="center">
+                <Text variant="bodyMd" as="p">
+                  {t("dashboard.refreshingData", { defaultValue: "Refreshing dashboard data..." })}
+                </Text>
+              </InlineStack>
+            </Banner>
+          </Layout.Section>
+        )}
         {/* Billing Status Banner */}
         {!billingStatus.hasActivePayment && (
           <Layout.Section>

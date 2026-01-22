@@ -1,8 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
 import { logger } from "../lib/logger.server";
 import { json } from "@remix-run/node";
-import { useLoaderData, useSubmit, useNavigation } from "@remix-run/react";
+import { useLoaderData, useSubmit, useNavigation, useRevalidator } from "@remix-run/react";
 import {
   Page,
   Layout,
@@ -36,26 +36,33 @@ export const handle = {
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { billing, session } = await authenticate.admin(request);
-
-  // Require active billing subscription to access analytics
-  await requireBilling(billing);
-
-  // Get period from query params or default to last 7 days
-  const url = new URL(request.url);
-  const periodPreset = url.searchParams.get("period") || "week";
-
-  const period = AnalyticsService.getPeriodFromPreset(periodPreset);
-
   try {
-    // Enhanced logging for debugging
-    logger.info("Analytics loader started", "Loading analytics data", {
+    const { billing, session } = await authenticate.admin(request);
+
+    // Require active billing subscription to access analytics
+    await requireBilling(billing);
+
+    logger.info({
       shop: session.shop,
-      periodPreset,
-      startDate: period.startDate.toISOString(),
-      endDate: period.endDate.toISOString(),
-      days: period.days,
-    });
+      locale: session.locale,
+      url: request.url
+    }, '🔍 Analytics loader - Session details');
+
+    // Get period from query params or default to last 7 days
+    const url = new URL(request.url);
+    const periodPreset = url.searchParams.get("period") || "week";
+
+    const period = AnalyticsService.getPeriodFromPreset(periodPreset);
+
+    try {
+      // Enhanced logging for debugging
+      logger.info("Analytics loader started", "Loading analytics data", {
+        shop: session.shop,
+        periodPreset,
+        startDate: period.startDate.toISOString(),
+        endDate: period.endDate.toISOString(),
+        days: period.days,
+      });
 
     // Fetch all analytics data
     const [overview, intents, sentiments, workflowUsage, topProducts, trends, engagement, activeUsers] =
@@ -100,7 +107,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       },
     });
   } catch (error: any) {
-    logger.error("Analytics loader error:", error);
+    logger.error({
+      error: error instanceof Error ? error.message : String(error),
+      shop: session.shop,
+    }, 'Error fetching analytics data');
     return json({
       overview: {
         totalSessions: 0,
@@ -133,6 +143,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         days: 7,
       },
     });
+  }
+  } catch (authError) {
+    // ✅ FIX: Handle authentication errors gracefully (e.g., locale changes)
+    logger.error({
+      error: authError instanceof Error ? authError.message : String(authError),
+      url: request.url,
+    }, 'Analytics authentication error');
+
+    // Re-throw to let Shopify handle the redirect
+    throw authError;
   }
 };
 
@@ -168,10 +188,22 @@ export default function AnalyticsPage() {
   const submit = useSubmit();
   const navigation = useNavigation();
   const { t } = useTranslation();
+  const revalidator = useRevalidator();
 
   const [selectedPeriod, setSelectedPeriod] = useState(data.periodPreset);
 
   const isLoading = navigation.state === "loading";
+
+  // ✅ FIX: Auto-refresh analytics data every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (revalidator.state === "idle" && navigation.state === "idle") {
+        revalidator.revalidate();
+      }
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [revalidator, navigation.state]);
 
   const handlePeriodChange = useCallback(
     (value: string) => {
@@ -240,6 +272,17 @@ export default function AnalyticsPage() {
       }}
     >
       <BlockStack gap="500">
+        {/* ✅ FIX: Show loading indicator when data is being refreshed */}
+        {(revalidator.state === "loading" || isLoading) && (
+          <Banner tone="info">
+            <InlineStack gap="200" blockAlign="center">
+              <Text variant="bodyMd" as="p">
+                {t("analytics.refreshingData", { defaultValue: "Refreshing analytics data..." })}
+              </Text>
+            </InlineStack>
+          </Banner>
+        )}
+
         {/* Period Selector */}
         <Card>
           <InlineStack align="space-between" blockAlign="center">
