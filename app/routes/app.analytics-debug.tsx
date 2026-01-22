@@ -21,7 +21,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   startDate.setDate(endDate.getDate() - 7);
   startDate.setHours(0, 0, 0, 0);
 
-  // Query all relevant tables
+  // Query all relevant tables including ratings
   const [
     chatAnalyticsCount,
     chatAnalyticsRecords,
@@ -30,6 +30,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     chatMessageCount,
     chatMessages,
     userProfileCount,
+    ratedSessionsCount,
+    ratedSessions,
   ] = await Promise.all([
     // ChatAnalytics
     db.chatAnalytics.count({ where: { shop } }),
@@ -74,6 +76,31 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
     // UserProfile
     db.userProfile.count({ where: { shop } }),
+
+    // Rated Sessions Count
+    db.chatSession.count({
+      where: {
+        shop,
+        rating: { not: null },
+      },
+    }),
+
+    // Rated Sessions
+    db.chatSession.findMany({
+      where: {
+        shop,
+        rating: { not: null },
+      },
+      orderBy: { ratedAt: 'desc' },
+      take: 20,
+      select: {
+        id: true,
+        rating: true,
+        ratingComment: true,
+        ratedAt: true,
+        createdAt: true,
+      },
+    }),
   ]);
 
   // Query with date filter
@@ -111,6 +138,34 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     },
   });
 
+  // Calculate ratings statistics
+  const ratedSessionsInPeriod = await db.chatSession.findMany({
+    where: {
+      shop,
+      rating: { not: null },
+      ratedAt: {
+        gte: startDate,
+        lte: endDate,
+      },
+    },
+    select: {
+      rating: true,
+      ratedAt: true,
+    },
+  });
+
+  const avgRating = ratedSessions.length > 0
+    ? ratedSessions.reduce((sum, s) => sum + (s.rating || 0), 0) / ratedSessions.length
+    : 0;
+
+  const ratingDistribution = {
+    1: ratedSessions.filter(s => s.rating === 1).length,
+    2: ratedSessions.filter(s => s.rating === 2).length,
+    3: ratedSessions.filter(s => s.rating === 3).length,
+    4: ratedSessions.filter(s => s.rating === 4).length,
+    5: ratedSessions.filter(s => s.rating === 5).length,
+  };
+
   return json({
     shop,
     dateRange: {
@@ -122,6 +177,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       chatSessions: chatSessionCount,
       chatMessages: chatMessageCount,
       userProfiles: userProfileCount,
+      ratedSessions: ratedSessionsCount,
+    },
+    ratings: {
+      total: ratedSessionsCount,
+      average: avgRating,
+      distribution: ratingDistribution,
+      inPeriod: ratedSessionsInPeriod.length,
     },
     inPeriod: {
       chatAnalytics: chatAnalyticsInPeriod.length,
@@ -152,6 +214,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         intent: m.intent,
         sentiment: m.sentiment,
         contentPreview: m.content.substring(0, 50),
+      })),
+      ratedSessions: ratedSessions.map(r => ({
+        id: r.id,
+        rating: r.rating,
+        ratingComment: r.ratingComment,
+        ratedAt: r.ratedAt?.toISOString(),
+        createdAt: r.createdAt.toISOString(),
       })),
     },
   });
@@ -193,6 +262,43 @@ export default function AnalyticsDebugPage() {
                 </Text>
                 <Text variant="bodyMd" as="p">
                   User Profiles: {data.totals.userProfiles}
+                </Text>
+                <Text variant="bodyMd" as="p" fontWeight="semibold">
+                  Rated Sessions: {data.totals.ratedSessions}
+                </Text>
+              </BlockStack>
+            </Card>
+          </Layout.Section>
+
+          <Layout.Section variant="oneHalf">
+            <Card>
+              <BlockStack gap="300">
+                <Text variant="headingMd" as="h2">
+                  Ratings Statistics (All Time)
+                </Text>
+                <Text variant="bodyMd" as="p">
+                  Total Ratings: {data.ratings.total}
+                </Text>
+                <Text variant="bodyMd" as="p">
+                  Average Rating: {data.ratings.average.toFixed(1)} / 5.0
+                </Text>
+                <Text variant="bodyMd" as="p">
+                  Distribution:
+                </Text>
+                <Text variant="bodySm" as="p">
+                  ⭐ 5 stars: {data.ratings.distribution[5]}
+                </Text>
+                <Text variant="bodySm" as="p">
+                  ⭐ 4 stars: {data.ratings.distribution[4]}
+                </Text>
+                <Text variant="bodySm" as="p">
+                  ⭐ 3 stars: {data.ratings.distribution[3]}
+                </Text>
+                <Text variant="bodySm" as="p">
+                  ⭐ 2 stars: {data.ratings.distribution[2]}
+                </Text>
+                <Text variant="bodySm" as="p">
+                  ⭐ 1 star: {data.ratings.distribution[1]}
                 </Text>
               </BlockStack>
             </Card>
@@ -253,6 +359,17 @@ export default function AnalyticsDebugPage() {
             </Text>
             <pre style={{ fontSize: "12px", overflow: "auto" }}>
               {JSON.stringify(data.samples.chatMessages, null, 2)}
+            </pre>
+          </BlockStack>
+        </Card>
+
+        <Card>
+          <BlockStack gap="300">
+            <Text variant="headingMd" as="h2">
+              All Rated Sessions (Up to 20 most recent)
+            </Text>
+            <pre style={{ fontSize: "12px", overflow: "auto" }}>
+              {JSON.stringify(data.samples.ratedSessions, null, 2)}
             </pre>
           </BlockStack>
         </Card>

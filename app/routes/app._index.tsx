@@ -147,6 +147,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       }));
 
     // Use real satisfaction rating if available, otherwise fall back to sentiment-based calculation
+    // NOTE: satisfactionRating contains ALL-TIME ratings, not period-specific
+    // This ensures all collected ratings are displayed, regardless of when they were submitted
     const satisfaction = overview.satisfactionRating?.averageRating
       ? overview.satisfactionRating.averageRating.toFixed(1)
       : overview.sentimentBreakdown?.positive && overview.totalMessages > 0

@@ -158,8 +158,9 @@ export class AnalyticsService {
         ? ((avgConfidence - prevAvgConfidence) / prevAvgConfidence) * 100
         : 0;
 
-      // Get satisfaction rating data
-      const satisfactionRating = await this.getSatisfactionRating(shop, period);
+      // Get satisfaction rating data (use all-time ratings for satisfaction score)
+      // FIX: Satisfaction ratings should show all-time data, not period-specific
+      const satisfactionRating = await this.getSatisfactionRating(shop, period, true);
 
       return {
         totalSessions,
@@ -201,29 +202,57 @@ export class AnalyticsService {
 
   /**
    * Get satisfaction rating statistics for a shop
+   * @param shop - Shop domain
+   * @param period - Time period (used only if useAllTime is false)
+   * @param useAllTime - If true, gets all-time ratings instead of period-specific
    */
-  async getSatisfactionRating(shop: string, period: AnalyticsPeriod): Promise<{
+  async getSatisfactionRating(
+    shop: string,
+    period: AnalyticsPeriod,
+    useAllTime: boolean = false
+  ): Promise<{
     averageRating: number;
     totalRatings: number;
     distribution: { 1: number; 2: number; 3: number; 4: number; 5: number };
   } | null> {
     try {
-      // Get all rated chat sessions in the period
-      const ratedSessions = await db.chatSession.findMany({
-        where: {
-          shop,
-          rating: {
-            not: null,
-          },
-          ratedAt: {
-            gte: period.startDate,
-            lte: period.endDate,
-          },
+      // Build where clause
+      const whereClause: any = {
+        shop,
+        rating: {
+          not: null,
         },
+      };
+
+      // Only add date filter if not using all-time
+      if (!useAllTime) {
+        whereClause.ratedAt = {
+          gte: period.startDate,
+          lte: period.endDate,
+        };
+      }
+
+      this.logger.info({
+        shop,
+        useAllTime,
+        periodStart: !useAllTime ? period.startDate.toISOString() : 'N/A (all-time)',
+        periodEnd: !useAllTime ? period.endDate.toISOString() : 'N/A (all-time)',
+      }, '🔍 getSatisfactionRating: Fetching ratings');
+
+      // Get all rated chat sessions
+      const ratedSessions = await db.chatSession.findMany({
+        where: whereClause,
         select: {
           rating: true,
+          ratedAt: true,
         },
       });
+
+      this.logger.info({
+        shop,
+        useAllTime,
+        ratedSessionsFound: ratedSessions.length,
+      }, '⭐ getSatisfactionRating: Query completed');
 
       if (ratedSessions.length === 0) {
         return null; // No ratings yet
@@ -242,12 +271,13 @@ export class AnalyticsService {
         5: ratedSessions.filter(s => s.rating === 5).length,
       };
 
-      this.logger.debug({
+      this.logger.info({
         shop,
-        averageRating,
+        useAllTime,
+        averageRating: Math.round(averageRating * 10) / 10,
         totalRatings: ratedSessions.length,
         distribution,
-      }, 'Calculated satisfaction rating');
+      }, '⭐ Satisfaction rating calculated successfully');
 
       return {
         averageRating: Math.round(averageRating * 10) / 10, // Round to 1 decimal
