@@ -161,13 +161,14 @@ export default function Index() {
   const { t } = useTranslation(); // ✅ Safe: runs only on client
   const revalidator = useRevalidator();
 
-  // ✅ FIX: Auto-refresh dashboard data every 30 seconds
+  // ✅ FIX: Auto-refresh dashboard data every 60 seconds
+  // Reduced from 30s to 60s to prevent database connection pool exhaustion
   useEffect(() => {
     const interval = setInterval(() => {
       if (revalidator.state === "idle") {
         revalidator.revalidate();
       }
-    }, 30000); // Refresh every 30 seconds
+    }, 60000); // Refresh every 60 seconds
 
     return () => clearInterval(interval);
   }, [revalidator]);
