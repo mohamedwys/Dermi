@@ -1,9 +1,9 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, Link } from "@remix-run/react";
 import { authenticate } from "../shopify.server";
 import { prisma as db } from "../db.server";
-import { Page, Card, BlockStack, Text, Layout } from "@shopify/polaris";
+import { Page, Card, BlockStack, Text, Layout, Banner, Button } from "@shopify/polaris";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   // ✅ SECURITY FIX: Block access to debug routes in production
@@ -243,6 +243,22 @@ export default function AnalyticsDebugPage() {
             </Text>
           </BlockStack>
         </Card>
+
+        {data.totals.chatAnalytics > 0 && (
+          <Banner
+            tone="warning"
+            title="Test Data Detected"
+            action={{
+              content: "Clean Up Test Data",
+              url: "/app/cleanup-data",
+            }}
+          >
+            <Text as="p">
+              Found {data.totals.chatAnalytics} analytics records. If this includes test data,
+              you can clean it up to start fresh with real data.
+            </Text>
+          </Banner>
+        )}
 
         <Layout>
           <Layout.Section variant="oneHalf">
