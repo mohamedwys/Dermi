@@ -284,23 +284,6 @@ export default function AnalyticsPage() {
           </Banner>
         )}
 
-        {/* Test Data Warning */}
-        {overview && overview.totalSessions > 100 && (
-          <Banner
-            tone="warning"
-            title="Possible Test Data Detected"
-            action={{
-              content: "Clean Up Test Data",
-              url: "/app/cleanup-data",
-            }}
-          >
-            <Text as="p">
-              Your analytics show {overview.totalSessions} sessions. If this includes test data,
-              click the button above to clean it up.
-            </Text>
-          </Banner>
-        )}
-
         {/* Period Selector */}
         <Card>
           <InlineStack align="space-between" blockAlign="center">

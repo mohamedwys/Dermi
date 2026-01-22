@@ -239,22 +239,6 @@ export default function AnalyticsDebugPage() {
           </BlockStack>
         </Card>
 
-        {data.totals.chatAnalytics > 0 && (
-          <Banner
-            tone="warning"
-            title="Test Data Detected"
-            action={{
-              content: "Clean Up Test Data",
-              url: "/app/cleanup-data",
-            }}
-          >
-            <Text as="p">
-              Found {data.totals.chatAnalytics} analytics records. If this includes test data,
-              you can clean it up to start fresh with real data.
-            </Text>
-          </Banner>
-        )}
-
         <Layout>
           <Layout.Section variant="oneHalf">
             <Card>
