@@ -293,14 +293,10 @@ export default function AnalyticsPage() {
               content: "Clean Up Test Data",
               url: "/app/cleanup-data",
             }}
-            secondaryAction={{
-              content: "View Debug Info",
-              url: "/app/analytics-debug",
-            }}
           >
             <Text as="p">
-              Your analytics show {overview.totalSessions} sessions. If this includes test data
-              from the data generator, you can clean it up to see only real customer data.
+              Your analytics show {overview.totalSessions} sessions. If this includes test data,
+              click the button above to clean it up.
             </Text>
           </Banner>
         )}
