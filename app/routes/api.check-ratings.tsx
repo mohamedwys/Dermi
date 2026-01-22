@@ -85,7 +85,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   } catch (error: any) {
     console.error('Error checking ratings:', error);
     return json(
-      { error: 'Failed to check ratings', details: error.message },
+      {
+        error: 'Failed to check ratings',
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+        note: 'Make sure you are logged into Shopify admin first'
+      },
       { status: 500 }
     );
   }

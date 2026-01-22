@@ -596,6 +596,15 @@ function showRatingModal() {
 async function submitRatingToBackend(rating, overlay) {
   try {
     const chatSessionId = currentChatSessionId || sessionId;
+
+    // ✅ FIX: Check if this session was already rated
+    const sessionRatingKey = `ai_session_rated_${chatSessionId}`;
+    if (sessionStorage.getItem(sessionRatingKey)) {
+      console.log('[Rating] Session already rated, preventing duplicate');
+      closeRatingModal(overlay);
+      return;
+    }
+
     const response = await fetch('https://shopibot.vercel.app/api/submit-rating', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -609,6 +618,10 @@ async function submitRatingToBackend(rating, overlay) {
     const data = await response.json();
 
     if (data.success) {
+      // ✅ FIX: Mark this specific session as rated
+      sessionStorage.setItem(sessionRatingKey, 'true');
+      console.log('[Rating] Session marked as rated:', chatSessionId);
+
       showSuccessConfirmation(overlay);
     } else {
       console.error('Rating submission failed:', data.error);
