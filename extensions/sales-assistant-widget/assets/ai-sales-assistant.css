@@ -229,7 +229,7 @@
   background: linear-gradient(135deg, var(--ai-primary-color, #3b82f6) 0%, var(--ai-primary-color-dark, #2563eb) 100%);
   border: none;
   border-radius: var(--radius-full);
-  color: var(--color-text-inverse);
+  color: #000000 !important;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -344,7 +344,7 @@
 .ai-chat-header {
   position: relative;
   background: linear-gradient(135deg, var(--ai-primary-color, #3b82f6) 0%, var(--ai-primary-color-dark, #2563eb) 100%);
-  color: var(--color-text-inverse);
+  color: #000000 !important;
   padding: var(--space-6) var(--space-5) var(--space-3) var(--space-5);
   overflow: visible;
   min-height: 110px;
@@ -592,7 +592,7 @@
 }
 .user-message .message-content {
   background: linear-gradient(135deg, var(--ai-primary-color, #3b82f6) 0%, var(--ai-primary-color-dark, #2563eb) 100%);
-  color: var(--color-text-inverse);
+  color: #000000 !important;
   border-radius: var(--radius-lg) var(--radius-lg) var(--radius-xs) var(--radius-lg);
   box-shadow: var(--shadow-sm), 0 2px 8px rgba(var(--ai-primary-color-rgb), 0.2);
   margin-left: auto;
