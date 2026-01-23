@@ -73,6 +73,37 @@ export class AnalyticsService {
    */
   async getOverview(shop: string, period: AnalyticsPeriod): Promise<AnalyticsOverview> {
     try {
+      // 🔍 ENHANCED DEBUG: Log query parameters BEFORE executing
+      this.logger.info({
+        shop,
+        periodStart: period.startDate.toISOString(),
+        periodEnd: period.endDate.toISOString(),
+        periodStartUTC: period.startDate.toUTCString(),
+        periodEndUTC: period.endDate.toUTCString(),
+      }, '🔍 DEBUG: Starting getOverview query with parameters');
+
+      // Get ALL ChatAnalytics records for this shop (to verify shop parameter)
+      const allShopRecords = await db.chatAnalytics.findMany({
+        where: { shop },
+        select: {
+          date: true,
+          totalSessions: true,
+          totalMessages: true,
+        },
+        orderBy: { date: 'desc' },
+        take: 10,
+      });
+
+      this.logger.info({
+        shop,
+        totalRecordsForShop: allShopRecords.length,
+        latestRecords: allShopRecords.slice(0, 3).map(r => ({
+          date: r.date.toISOString(),
+          totalSessions: r.totalSessions,
+          totalMessages: r.totalMessages,
+        })),
+      }, '🔍 DEBUG: Total ChatAnalytics records for this shop (all time)');
+
       // Get current period data
       const currentData = await db.chatAnalytics.findMany({
         where: {
@@ -95,7 +126,7 @@ export class AnalyticsService {
           totalSessions: r.totalSessions,
           totalMessages: r.totalMessages,
         }))
-      }, '🔍 DEBUG: ChatAnalytics records fetched in analytics service');
+      }, '🔍 DEBUG: ChatAnalytics records fetched for period');
 
       // Calculate previous period for comparison
       const periodLength = period.endDate.getTime() - period.startDate.getTime();
@@ -111,6 +142,36 @@ export class AnalyticsService {
           },
         },
       });
+
+      // 🔍 ENHANCED DEBUG: Check raw chat data to compare with analytics
+      const rawSessionCount = await db.chatSession.count({
+        where: {
+          shop,
+          createdAt: {
+            gte: period.startDate,
+            lte: period.endDate,
+          },
+        },
+      });
+
+      const rawMessageCount = await db.chatMessage.count({
+        where: {
+          session: { shop },
+          timestamp: {
+            gte: period.startDate,
+            lte: period.endDate,
+          },
+        },
+      });
+
+      this.logger.info({
+        shop,
+        analyticsRecords: currentData.length,
+        analyticsAggregatedSessions: currentData.reduce((sum: any, d: any) => sum + d.totalSessions, 0),
+        analyticsAggregatedMessages: currentData.reduce((sum: any, d: any) => sum + d.totalMessages, 0),
+        rawSessionsInPeriod: rawSessionCount,
+        rawMessagesInPeriod: rawMessageCount,
+      }, '🔍 DEBUG: Comparing analytics aggregated data vs raw chat data');
 
       // Aggregate current period
       const totalSessions = currentData.reduce((sum: any, d: any) => sum + d.totalSessions, 0);

@@ -7,23 +7,32 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 /**
  * Create Prisma client with optimized configuration for serverless
  *
- * CRITICAL FIX FOR VERCEL DEPLOYMENT:
- * Connection pooling must be configured via DATABASE_URL with these parameters:
+ * ⚠️ CRITICAL: DATABASE_URL MUST INCLUDE CONNECTION POOLING PARAMETERS ⚠️
  *
- * For Vercel/Serverless (REQUIRED):
+ * IF YOU SEE THIS ERROR:
+ * "PrismaClientInitializationError: Timed out fetching a new connection from the connection pool"
+ *
+ * YOUR DATABASE_URL IS MISSING POOLING PARAMETERS!
+ *
+ * ✅ SOLUTION - Update your DATABASE_URL environment variable:
+ *
+ * OPTION 1 (RECOMMENDED): With PgBouncer
  * postgresql://user:password@host/db?pgbouncer=true&connection_limit=1
  *
- * OR with direct connection (less optimal):
- * postgresql://user:password@host/db?connection_limit=1&pool_timeout=10
+ * OPTION 2: Direct connection with pooling
+ * postgresql://user:password@host/db?connection_limit=10&pool_timeout=20&connect_timeout=30
  *
- * Why connection_limit=1?
- * - Each serverless function should use only 1 connection
- * - Prevents connection pool exhaustion
- * - Allows more concurrent Lambda functions
- * - Use PgBouncer/connection pooler at database level for true pooling
+ * Why connection pooling is critical:
+ * - Each serverless function instance creates a Prisma client
+ * - Without pooling, connections accumulate and exhaust the pool
+ * - With proper pooling, each instance uses only necessary connections
+ * - PgBouncer provides connection pooling at the database level
  *
- * See: https://www.prisma.io/docs/guides/performance-and-optimization/connection-management
- * See: https://vercel.com/docs/storage/vercel-postgres/using-an-orm#prisma
+ * For detailed instructions, see: docs/FIX_CONNECTION_POOL.md
+ *
+ * See also:
+ * - https://www.prisma.io/docs/guides/performance-and-optimization/connection-management
+ * - https://vercel.com/docs/storage/vercel-postgres/using-an-orm#prisma
  */
 const createPrismaClient = () => {
   const client = new PrismaClient({
