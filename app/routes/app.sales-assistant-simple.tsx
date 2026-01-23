@@ -136,7 +136,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // If image is provided, analyze it
     if (imageData) {
       try {
-        const analyzeResponse = await fetch('https://dermi.vercel.app/api/analyze-image', {
+        const analyzeResponse = await fetch('https://dermi.vercel.app/app/api/analyze-image', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

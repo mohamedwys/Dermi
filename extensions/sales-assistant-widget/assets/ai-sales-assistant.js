@@ -1038,7 +1038,7 @@ async function handleFileUpload(file) {
       const base64Image = e.target.result;
       
       // Send to your n8n workflow via backend
-      const response = await fetch('https://dermi.vercel.app/api/analyze-image', {
+      const response = await fetch('https://dermi.vercel.app/app/api/analyze-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
