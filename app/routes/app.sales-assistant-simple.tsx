@@ -439,7 +439,7 @@ export default function SalesAssistantSimple() {
                       allowMultiple={false}
                     >
                       <DropZone.FileUpload
-                        actionTitle="Analyse Cutanée"
+                        actionTitle="Diagnostic de Peau"
                         actionHint="or drop image to upload"
                       />
                     </DropZone>

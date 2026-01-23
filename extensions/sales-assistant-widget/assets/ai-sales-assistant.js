@@ -2040,9 +2040,9 @@ function createWidget() {
               </svg>
             </button>
           </div>
-          <button id="ai-upload-btn" class="ai-upload-btn" aria-label="Upload image" style="display: flex !important; width: 100% !important; margin-top: 12px !important; padding: 12px 16px !important; background: linear-gradient(135deg, var(--ai-primary-color, #4c71d6) 0%, var(--ai-primary-color-dark, #3b5bb5) 100%) !important; color: white !important; border: none !important; border-radius: 12px !important; cursor: pointer !important; align-items: center !important; justify-content: center !important; gap: 8px !important; font-size: 14px !important; font-weight: 500 !important; opacity: 1 !important; visibility: visible !important; position: relative !important; z-index: 9999 !important; box-shadow: 0 2px 8px rgba(76, 113, 214, 0.3) !important; transition: all 0.2s ease !important;">
+          <button id="ai-upload-btn" class="ai-upload-btn" aria-label="Upload image" style="display: flex !important; width: 100% !important; margin-top: 12px !important; padding: 12px 16px !important; background: linear-gradient(135deg, var(--ai-primary-color, #4c71d6) 0%, var(--ai-primary-color-dark, #3b5bb5) 100%) !important; color: black !important; border: none !important; border-radius: 12px !important; cursor: pointer !important; align-items: center !important; justify-content: center !important; gap: 8px !important; font-size: 14px !important; font-weight: 500 !important; opacity: 1 !important; visibility: visible !important; position: relative !important; z-index: 9999 !important; box-shadow: 0 2px 8px rgba(76, 113, 214, 0.3) !important; transition: all 0.2s ease !important;">
             </svg>
-             Analyse Cutanée
+             Diagnostic de Peau
           </button>
           <input type="file" id="ai-file-input" accept="image/*" style="display: none;" />
           <div class="ai-powered-footer">${escapeHTML(t('poweredByAI'))}</div>
