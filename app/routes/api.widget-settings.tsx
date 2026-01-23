@@ -1346,7 +1346,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     try {
       const sessionId = context.sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
+      routeLogger.info({
+        shop: shopDomain,
+        sessionId,
+        hasContext: !!context,
+        contextKeys: Object.keys(context || {})
+      }, '🔍 DEBUG: Starting database persistence');
+
       // Step 1: Get or create UserProfile
+      routeLogger.debug({ shop: shopDomain, sessionId }, '🔍 DEBUG: Step 1 - Looking for UserProfile');
+
       let userProfile = await db.userProfile.findUnique({
         where: {
           shop_sessionId: {
@@ -1357,6 +1366,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       });
 
       if (!userProfile) {
+        routeLogger.debug({ shop: shopDomain, sessionId }, '🔍 DEBUG: Step 1 - UserProfile not found, creating new one');
+
         userProfile = await db.userProfile.create({
           data: {
             shop: shopDomain,
@@ -1368,10 +1379,24 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             interactions: JSON.stringify([])
           }
         });
-        routeLogger.debug({ sessionId }, 'Created new UserProfile');
+        routeLogger.info({
+          sessionId,
+          userProfileId: userProfile.id,
+          shop: shopDomain
+        }, '✅ DEBUG: Step 1 - Created new UserProfile');
+      } else {
+        routeLogger.debug({
+          sessionId,
+          userProfileId: userProfile.id
+        }, '✅ DEBUG: Step 1 - Found existing UserProfile');
       }
 
       // Step 2: Get or create ChatSession
+      routeLogger.debug({
+        shop: shopDomain,
+        userProfileId: userProfile.id
+      }, '🔍 DEBUG: Step 2 - Looking for active ChatSession');
+
       // FIX: Don't reuse sessions that have already been rated (to enable accurate rating counts)
       chatSession = await db.chatSession.findFirst({
         where: {
@@ -1392,6 +1417,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       let isNewSession = false;
 
       if (!chatSession) {
+        routeLogger.debug({
+          shop: shopDomain,
+          userProfileId: userProfile.id
+        }, '🔍 DEBUG: Step 2 - ChatSession not found, creating new one');
+
         chatSession = await db.chatSession.create({
           data: {
             shop: shopDomain,
@@ -1405,8 +1435,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           }
         });
         isNewSession = true; // FIX: Track new session creation
-        routeLogger.debug({ sessionId }, 'Created new ChatSession');
+        routeLogger.info({
+          sessionId,
+          chatSessionId: chatSession.id,
+          userProfileId: userProfile.id
+        }, '✅ DEBUG: Step 2 - Created new ChatSession');
       } else {
+        routeLogger.debug({
+          chatSessionId: chatSession.id
+        }, '✅ DEBUG: Step 2 - Found existing ChatSession, updating');
+
         // Update existing session
         chatSession = await db.chatSession.update({
           where: { id: chatSession.id },
@@ -1419,10 +1457,20 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             })
           }
         });
+
+        routeLogger.debug({
+          chatSessionId: chatSession.id
+        }, '✅ DEBUG: Step 2 - Updated existing ChatSession');
       }
 
       // Step 3: Save user message
-      await db.chatMessage.create({
+      routeLogger.debug({
+        chatSessionId: chatSession.id,
+        messageLength: finalMessage.length,
+        intent: intent.type
+      }, '🔍 DEBUG: Step 3 - Saving user message');
+
+      const userMessage = await db.chatMessage.create({
         data: {
           sessionId: chatSession.id,
           role: 'user',
@@ -1438,8 +1486,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         }
       });
 
+      routeLogger.info({
+        chatSessionId: chatSession.id,
+        userMessageId: userMessage.id
+      }, '✅ DEBUG: Step 3 - Saved user message');
+
       // Step 4: Save assistant message
-      await db.chatMessage.create({
+      routeLogger.debug({
+        chatSessionId: chatSession.id,
+        responseLength: (n8nResponse.message || "").length,
+        recommendationCount: recommendations.length
+      }, '🔍 DEBUG: Step 4 - Saving assistant message');
+
+      const assistantMessage = await db.chatMessage.create({
         data: {
           sessionId: chatSession.id,
           role: 'assistant',
@@ -1458,6 +1517,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           })
         }
       });
+
+      routeLogger.info({
+        chatSessionId: chatSession.id,
+        assistantMessageId: assistantMessage.id
+      }, '✅ DEBUG: Step 4 - Saved assistant message');
 
       routeLogger.info({
         sessionId,
@@ -1485,8 +1549,25 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       // Log error but don't break the chatbot
       routeLogger.error({
         error: dbError instanceof Error ? dbError.message : String(dbError),
-        stack: dbError instanceof Error ? dbError.stack : undefined
-      }, '❌ Failed to save chat data to database (non-blocking)');
+        stack: dbError instanceof Error ? dbError.stack : undefined,
+        errorName: dbError instanceof Error ? dbError.name : 'Unknown',
+        shop: shopDomain,
+        sessionId: context.sessionId,
+        hasN8nResponse: !!n8nResponse,
+        intent: intent.type,
+        sentiment: sentiment
+      }, '❌ CRITICAL: Failed to save chat data to database (non-blocking)');
+
+      // Additional context logging
+      routeLogger.error({
+        dbErrorDetails: {
+          message: dbError instanceof Error ? dbError.message : String(dbError),
+          name: dbError instanceof Error ? dbError.name : 'Unknown',
+          cause: (dbError as any)?.cause || 'No cause specified',
+          code: (dbError as any)?.code || 'No error code'
+        }
+      }, '❌ CRITICAL: Database error details');
+
       // Continue - chatbot still works even if analytics fails
     }
 
