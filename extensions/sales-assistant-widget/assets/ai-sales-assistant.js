@@ -47,7 +47,7 @@ const elements = {
 
 async function loadTranslations(lang) {
   try {
-    const response = await fetch(`https://dermi.vercel.app/app/api/chatbot-translations?lang=${lang}`);
+    const response = await fetch(`https://dermi.vercel.app/api/chatbot-translations?lang=${lang}`);
     if (!response.ok) throw new Error('Failed to load translations');
     const data = await response.json();
     translations = data.translations;
@@ -605,7 +605,7 @@ async function submitRatingToBackend(rating, overlay) {
       return;
     }
 
-    const response = await fetch('https://dermi.vercel.app/app/api/submit-rating', {
+    const response = await fetch('https://dermi.vercel.app/api/submit-rating', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1038,7 +1038,7 @@ async function handleFileUpload(file) {
       const base64Image = e.target.result;
       
       // Send to your n8n workflow via backend
-      const response = await fetch('https://dermi.vercel.app/app/api/analyze-image', {
+      const response = await fetch('https://dermi.vercel.app/api/analyze-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1084,7 +1084,7 @@ async function sendMessageToServer(message) {
     };
 
     // ✅ CORRECT - Public API endpoint
-    const url = `https://dermi.vercel.app/app/api/widget-settings?shop=${encodeURIComponent(widgetSettings.shopDomain)}`;
+    const url = `https://dermi.vercel.app/api/widget-settings?shop=${encodeURIComponent(widgetSettings.shopDomain)}`;
     const response = await fetchWithRetry(url, {
       method: 'POST',
       headers: {
@@ -1652,7 +1652,7 @@ function displayProductRecommendations(recommendations) {
       // Backend tracking
       try {
         const productId = product.id || product.handle;
-        await fetch('https://dermi.vercel.app/app/api/track-product-click', {
+        await fetch('https://dermi.vercel.app/api/track-product-click', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
