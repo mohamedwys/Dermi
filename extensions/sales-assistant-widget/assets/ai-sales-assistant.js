@@ -1998,12 +1998,12 @@ function createWidget() {
                     <button class="quick-action-btn" data-prompt="${escapeHTML(t('bestSellersPrompt'))}">
                       <span class="quick-action-text">${escapeHTML(widgetSettings.bestSellersText || t('bestSellers'))}</span>
                     </button>
-                    <button class="quick-action-btn" data-prompt="${escapeHTML(t('newArrivalsPrompt'))}">
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.newArrivalsText || t('newArrivals'))}</span>
-                    </button>
-                    <button class="quick-action-btn" data-prompt="${escapeHTML(t('onSalePrompt'))}">
-                      <span class="quick-action-text">${escapeHTML(widgetSettings.onSaleText || t('onSale'))}</span>
-                    </button>
+                    // <button class="quick-action-btn" data-prompt="${escapeHTML(t('newArrivalsPrompt'))}">
+                    //   <span class="quick-action-text">${escapeHTML(widgetSettings.newArrivalsText || t('newArrivals'))}</span>
+                    // </button>
+                    // <button class="quick-action-btn" data-prompt="${escapeHTML(t('onSalePrompt'))}">
+                    //   <span class="quick-action-text">${escapeHTML(widgetSettings.onSaleText || t('onSale'))}</span>
+                    // </button>
                     <button class="quick-action-btn" data-prompt="${escapeHTML(t('recommendedPrompt'))}">
                       <span class="quick-action-text">${escapeHTML(widgetSettings.recommendationsText || t('recommended'))}</span>
                     </button>
