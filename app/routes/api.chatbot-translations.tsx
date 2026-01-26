@@ -11,8 +11,6 @@ const translations: Record<string, any> = {
     poweredByAI: "Powered by AI",
     inputPlaceholder: "Ask me anything about our products...",
     bestSellers: "Best Sellers",
-    // newArrivals: "New Arrivals",
-    // onSale: "On Sale",
     recommended: "Recommended",
     shipping: "Shipping",
     returns: "Returns",
@@ -26,8 +24,6 @@ const translations: Record<string, any> = {
     trackOrderPrompt: "How can I track my order?",
     // 🛍️ Discovery button prompts
     bestSellersPrompt: "Show me your popular products",
-    // newArrivalsPrompt: "Show me new arrivals",
-    // onSalePrompt: "What products are on sale?",
     recommendedPrompt: "Show me recommendations for me",
     // ⭐ Rating prompts
     ratingTitle: "How was your experience?",
@@ -46,8 +42,6 @@ const translations: Record<string, any> = {
     poweredByAI: "Impulsado por IA",
     inputPlaceholder: "Pregúntame sobre nuestros productos...",
     bestSellers: "Más vendidos",
-    // newArrivals: "Novedades",
-    // onSale: "En oferta",
     recommended: "Recomendado",
     shipping: "Envío",
     returns: "Devoluciones",
@@ -61,8 +55,6 @@ const translations: Record<string, any> = {
     trackOrderPrompt: "¿Cómo puedo rastrear mi pedido?",
     // 🛍️ Discovery button prompts
     bestSellersPrompt: "Muéstrame tus productos populares",
-    // newArrivalsPrompt: "Muéstrame novedades",
-    // onSalePrompt: "¿Qué productos están en oferta?",
     recommendedPrompt: "Muéstrame recomendaciones para mí",
     // ⭐ Rating prompts
     ratingTitle: "¿Cómo fue tu experiencia?",
@@ -81,8 +73,6 @@ const translations: Record<string, any> = {
     poweredByAI: "Propulsé par IA",
     inputPlaceholder: "Posez-moi des questions sur nos produits...",
     bestSellers: "Meilleures ventes",
-    // newArrivals: "Nouveautés",
-    // onSale: "En promotion",
     recommended: "Recommandé",
     shipping: "Livraison",
     returns: "Retours",
@@ -96,8 +86,6 @@ const translations: Record<string, any> = {
     trackOrderPrompt: "Comment puis-je suivre ma commande ?",
     // 🛍️ Discovery button prompts
     bestSellersPrompt: "Montrez-moi vos produits populaires",
-    // newArrivalsPrompt: "Montrez-moi les nouveautés",
-    // onSalePrompt: "Quels produits sont en promotion ?",
     recommendedPrompt: "Montrez-moi des recommandations pour moi",
     // ⭐ Rating prompts
     ratingTitle: "Comment était votre expérience ?",
@@ -116,8 +104,6 @@ const translations: Record<string, any> = {
     poweredByAI: "Powered by KI",
     inputPlaceholder: "Fragen Sie mich zu unseren Produkten...",
     bestSellers: "Bestseller",
-    // newArrivals: "Neuheiten",
-    // onSale: "Im Angebot",
     recommended: "Empfohlen",
     shipping: "Versand",
     returns: "Rücksendungen",
@@ -131,8 +117,6 @@ const translations: Record<string, any> = {
     trackOrderPrompt: "Wie kann ich meine Bestellung verfolgen?",
     // 🛍️ Discovery button prompts
     bestSellersPrompt: "Zeigen Sie mir Ihre beliebten Produkte",
-    // newArrivalsPrompt: "Zeigen Sie mir Neuheiten",
-    // onSalePrompt: "Welche Produkte sind im Angebot?",
     recommendedPrompt: "Zeigen Sie mir Empfehlungen für mich",
     // ⭐ Rating prompts
     ratingTitle: "Wie war Ihre Erfahrung?",
@@ -151,8 +135,6 @@ const translations: Record<string, any> = {
     poweredByAI: "AI搭載",
     inputPlaceholder: "製品について質問してください...",
     bestSellers: "ベストセラー",
-    // newArrivals: "新着商品",
-    // onSale: "セール中",
     recommended: "おすすめ",
     shipping: "配送",
     returns: "返品",
@@ -166,8 +148,6 @@ const translations: Record<string, any> = {
     trackOrderPrompt: "注文を追跡するにはどうすればよいですか？",
     // 🛍️ Discovery button prompts
     bestSellersPrompt: "人気商品を見せてください",
-    // newArrivalsPrompt: "新着商品を見せてください",
-    // onSalePrompt: "セール中の商品は何ですか？",
     recommendedPrompt: "おすすめを見せてください",
     // ⭐ Rating prompts
     ratingTitle: "ご体験はいかがでしたか？",
@@ -186,8 +166,6 @@ const translations: Record<string, any> = {
     poweredByAI: "Powered by IA",
     inputPlaceholder: "Chiedimi dei nostri prodotti...",
     bestSellers: "Più venduti",
-    // newArrivals: "Novità",
-    // onSale: "In offerta",
     recommended: "Consigliato",
     shipping: "Spedizione",
     returns: "Resi",
@@ -201,8 +179,6 @@ const translations: Record<string, any> = {
     trackOrderPrompt: "Come posso tracciare il mio ordine?",
     // 🛍️ Discovery button prompts
     bestSellersPrompt: "Mostrami i tuoi prodotti popolari",
-    // newArrivalsPrompt: "Mostrami le novità",
-    // onSalePrompt: "Quali prodotti sono in offerta?",
     recommendedPrompt: "Mostrami raccomandazioni per me",
     // ⭐ Rating prompts
     ratingTitle: "Come è stata la tua esperienza?",
@@ -221,8 +197,6 @@ const translations: Record<string, any> = {
     poweredByAI: "Powered by IA",
     inputPlaceholder: "Pergunte-me sobre nossos produtos...",
     bestSellers: "Mais vendidos",
-    // newArrivals: "Novidades",
-    // onSale: "Em promoção",
     recommended: "Recomendado",
     shipping: "Envio",
     returns: "Devoluções",
@@ -236,8 +210,6 @@ const translations: Record<string, any> = {
     trackOrderPrompt: "Como posso rastrear meu pedido?",
     // 🛍️ Discovery button prompts
     bestSellersPrompt: "Mostre-me seus produtos populares",
-    // newArrivalsPrompt: "Mostre-me novidades",
-    // onSalePrompt: "Quais produtos estão em promoção?",
     recommendedPrompt: "Mostre-me recomendações para mim",
     // ⭐ Rating prompts
     ratingTitle: "Como foi sua experiência?",
@@ -256,8 +228,6 @@ const translations: Record<string, any> = {
     poweredByAI: "AI驱动",
     inputPlaceholder: "询问我们的产品...",
     bestSellers: "畅销商品",
-    // newArrivals: "新品上市",
-    // onSale: "促销中",
     recommended: "推荐",
     shipping: "配送",
     returns: "退货",
@@ -271,8 +241,6 @@ const translations: Record<string, any> = {
     trackOrderPrompt: "我如何追踪我的订单？",
     // 🛍️ Discovery button prompts
     bestSellersPrompt: "给我看你们的热门产品",
-    // newArrivalsPrompt: "给我看新品上市",
-    // onSalePrompt: "哪些产品在促销？",
     recommendedPrompt: "给我看推荐产品",
     // ⭐ Rating prompts
     ratingTitle: "您的体验如何？",

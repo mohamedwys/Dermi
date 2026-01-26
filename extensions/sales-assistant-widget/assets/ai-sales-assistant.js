@@ -63,8 +63,6 @@ async function loadTranslations(lang) {
       poweredByAI: 'Powered by AI',
       inputPlaceholder: 'Ask me anything about our products...',
       bestSellers: 'Best Sellers',
-      // newArrivals: 'New Arrivals',
-      // onSale: 'On Sale',
       recommended: 'Recommended',
       shipping: 'Shipping',
       returns: 'Returns',
@@ -76,8 +74,6 @@ async function loadTranslations(lang) {
       returnsPrompt: 'What is your return policy?',
       trackOrderPrompt: 'How can I track my order?',
       bestSellersPrompt: 'Show me your popular products',
-      // newArrivalsPrompt: 'Show me new arrivals',
-      // onSalePrompt: 'What products are on sale?',
       recommendedPrompt: 'Show me recommendations for me'
     };
     return translations;
@@ -1998,12 +1994,6 @@ function createWidget() {
                     <button class="quick-action-btn" data-prompt="${escapeHTML(t('bestSellersPrompt'))}">
                       <span class="quick-action-text">${escapeHTML(widgetSettings.bestSellersText || t('bestSellers'))}</span>
                     </button>
-                    // <button class="quick-action-btn" data-prompt="${escapeHTML(t('newArrivalsPrompt'))}">
-                    //   <span class="quick-action-text">${escapeHTML(widgetSettings.newArrivalsText || t('newArrivals'))}</span>
-                    // </button>
-                    // <button class="quick-action-btn" data-prompt="${escapeHTML(t('onSalePrompt'))}">
-                    //   <span class="quick-action-text">${escapeHTML(widgetSettings.onSaleText || t('onSale'))}</span>
-                    // </button>
                     <button class="quick-action-btn" data-prompt="${escapeHTML(t('recommendedPrompt'))}">
                       <span class="quick-action-text">${escapeHTML(widgetSettings.recommendationsText || t('recommended'))}</span>
                     </button>
