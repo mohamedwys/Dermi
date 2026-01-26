@@ -11,6 +11,7 @@ import { personalizationService } from "../services/personalization.service";
 import { checkConversationLimit, getConversationUsage } from "../lib/conversation-usage.server";
 import { normalizePlanCode, PlanCode } from "../lib/plans.config";
 import type { WidgetSettings } from "../lib/types";
+import { fetchShopPolicies, toShopPoliciesFormat, type ShopPolicies } from "../services/policy-cache.service.server";
 
 // Default settings (same as in settings page)
 const DEFAULT_SETTINGS: Partial<WidgetSettings> = {
@@ -509,6 +510,40 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }, 'Intent, sentiment, and language detected');
 
     // ========================================
+    // EARLY POLICY FETCH (for ALL intents)
+    // ========================================
+    // CRITICAL: Fetch policies EARLY so they're available for:
+    // 1. Normal N8N operation (passed to AI)
+    // 2. Fallback processing (when N8N fails/times out)
+    // This uses the REST API because GraphQL doesn't expose shop policies
+    let shopPolicies: ShopPolicies | null = null;
+
+    try {
+      // Get session with access token for REST API call
+      const { session } = await unauthenticated.admin(shopDomain);
+
+      if (session?.accessToken) {
+        const cachedPolicies = await fetchShopPolicies(shopDomain, session.accessToken);
+        shopPolicies = toShopPoliciesFormat(cachedPolicies);
+
+        routeLogger.info({
+          shop: shopDomain,
+          hasReturns: !!shopPolicies?.returns,
+          hasShipping: !!shopPolicies?.shipping,
+          hasPrivacy: !!shopPolicies?.privacy
+        }, '✅ Fetched shop policies early for all intents');
+      } else {
+        routeLogger.warn({ shop: shopDomain }, '⚠️ No access token available for policy fetch');
+      }
+    } catch (policyError) {
+      // Non-blocking - continue without policies, fallback will use defaults
+      routeLogger.warn({
+        shop: shopDomain,
+        error: policyError instanceof Error ? policyError.message : String(policyError)
+      }, '⚠️ Early policy fetch failed (non-blocking)');
+    }
+
+    // ========================================
     // HANDLE SUPPORT INTENTS (NO PRODUCTS)
     // ========================================
 
@@ -713,6 +748,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       timestamp: new Date().toISOString(),
       userAgent: request.headers.get('user-agent') || undefined,
       referer: request.headers.get('referer') || undefined,
+      // ✅ NEW: Pass shop policies for dynamic fallback responses
+      shopPolicies: shopPolicies || undefined,
     };
 
     // ✅ CRITICAL FIX: Fetch conversation history to prevent repeated greetings
@@ -919,65 +956,22 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 
     // ✅ AI-POWERED: Send support intents to N8N for shop-specific AI responses
+    // Now using early-fetched policies (via REST API, not GraphQL)
     if (isSupportIntent) {
-      routeLogger.info({ intent: intent.type }, '✅ Sending support query to N8N with shop policies');
+      routeLogger.info({
+        intent: intent.type,
+        hasPolicies: !!shopPolicies,
+        hasReturns: !!shopPolicies?.returns,
+        hasShipping: !!shopPolicies?.shipping
+      }, '✅ Sending support query to N8N with pre-fetched shop policies');
 
       try {
-        // 🏪 FETCH REAL SHOP POLICIES from Shopify
-        let shopPolicies: any = null;
-
-        try {
-          const { admin: shopAdmin } = await unauthenticated.admin(shopDomain);
-
-          const policiesQuery = `
-            #graphql
-            query getShopPolicies {
-              shop {
-                name
-                refundPolicy { body }
-                shippingPolicy { body }
-                privacyPolicy { body }
-              }
-            }
-          `;
-
-          // ✅ PERFORMANCE FIX: Add 10-second timeout to prevent hanging GraphQL requests
-          const policiesPromise = shopAdmin.graphql(policiesQuery);
-          const policiesTimeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Policies GraphQL query timeout')), 10000)
-          );
-
-          let policiesResponse;
-          try {
-            policiesResponse = await Promise.race([policiesPromise, policiesTimeoutPromise]) as any;
-          } catch (timeoutError: any) {
-            if (timeoutError.message === 'Policies GraphQL query timeout') {
-              routeLogger.warn({ shop: shopDomain }, 'Shop policies GraphQL query timed out after 10 seconds');
-              // Continue without policies rather than failing
-              shopPolicies = null;
-            } else {
-              throw timeoutError;
-            }
-          }
-
-          if (policiesResponse) {
-            const policiesData = await policiesResponse.json();
-
-            if (policiesData?.data?.shop) {
-              shopPolicies = {
-                shopName: policiesData.data.shop.name,
-                returns: policiesData.data.shop.refundPolicy?.body || null,
-                shipping: policiesData.data.shop.shippingPolicy?.body || null,
-                privacy: policiesData.data.shop.privacyPolicy?.body || null
-              };
-            }
-          }
-        } catch (policyError) {
-          console.error('⚠️ Failed to fetch shop policies, using defaults:', policyError);
-        }
-
         const { N8NService } = await import("../services/n8n.service.server");
+        const { getDefaultPolicyMessage } = await import("../services/policy-cache.service.server");
         const customN8NService = new N8NService(webhookUrl);
+
+        // Get language for fallback messages
+        const lang = enhancedContext.locale?.toLowerCase().split('-')[0] || 'en';
 
         // Send to N8N with intent context so AI knows it's a support query
         // 🆘 CRITICAL FIX: Support questions don't need products - they need store policies
@@ -987,28 +981,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           products: [], // NO PRODUCTS - support questions don't need inventory
           context: {
             ...enhancedContext,
-            ...(({ supportCategory: intent.type }) as any), // SHIPPING_INFO, RETURNS, TRACK_ORDER, or HELP_FAQ
-            // ✅ Pass REAL shop policies from Shopify (or defaults if not available)
+            supportCategory: intent.type, // SHIPPING_INFO, RETURNS, TRACK_ORDER, or HELP_FAQ
+            // ✅ Pass REAL shop policies from early REST API fetch (or defaults if not available)
             storePolicies: {
               shopName: shopPolicies?.shopName || shopDomain,
-              returns: shopPolicies?.returns || (
-                enhancedContext.locale === 'fr'
-                  ? "Politique de retour non configurée. Veuillez contacter notre service client pour plus d'informations."
-                  : enhancedContext.locale === 'es'
-                  ? "Política de devoluciones no configurada. Póngase en contacto con atención al cliente para más información."
-                  : enhancedContext.locale === 'de'
-                  ? "Rückgaberichtlinie nicht konfiguriert. Bitte kontaktieren Sie unseren Kundenservice für weitere Informationen."
-                  : "Return policy not configured. Please contact customer support for more information."
-              ),
-              shipping: shopPolicies?.shipping || (
-                enhancedContext.locale === 'fr'
-                  ? "Politique de livraison non configurée. Veuillez contacter notre service client pour plus d'informations."
-                  : enhancedContext.locale === 'es'
-                  ? "Política de envío no configurada. Póngase en contacto con atención al cliente para más información."
-                  : enhancedContext.locale === 'de'
-                  ? "Versandrichtlinie nicht konfiguriert. Bitte kontaktieren Sie unseren Kundenservice für weitere Informationen."
-                  : "Shipping policy not configured. Please contact customer support for more information."
-              ),
+              returns: shopPolicies?.returns || getDefaultPolicyMessage('returns', lang),
+              shipping: shopPolicies?.shipping || getDefaultPolicyMessage('shipping', lang),
               privacy: shopPolicies?.privacy || null
             }
           }
@@ -1019,20 +997,49 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
         routeLogger.info({
           intent: intent.type,
-          hasProducts: products.length > 0,
-          productsForContext: products.length,
+          hasRealPolicies: !!shopPolicies,
           aiResponseLength: n8nResponse?.message?.length || 0
-        }, '✅ Support intent handled by AI with product context');
+        }, '✅ Support intent handled by AI with real shop policies');
 
       } catch (error) {
-        routeLogger.error({ error: String(error), intent: intent.type }, '❌ N8N support handler error - using fallback');
+        routeLogger.error({ error: String(error), intent: intent.type }, '❌ N8N support handler error - using dynamic fallback');
 
-        // Fallback: Simple helpful message
+        // Import fallback message generator
+        const { getDefaultPolicyMessage } = await import("../services/policy-cache.service.server");
+        const lang = enhancedContext.locale?.toLowerCase().split('-')[0] || 'en';
+
+        // Generate dynamic fallback message based on intent and available policies
+        let fallbackMessage: string;
+
+        if (intent.type === 'SHIPPING_INFO') {
+          fallbackMessage = shopPolicies?.shipping
+            ? `Here's our shipping policy:\n\n${shopPolicies.shipping.substring(0, 500)}${shopPolicies.shipping.length > 500 ? '...' : ''}`
+            : getDefaultPolicyMessage('shipping', lang);
+        } else if (intent.type === 'RETURNS') {
+          fallbackMessage = shopPolicies?.returns
+            ? `Here's our return policy:\n\n${shopPolicies.returns.substring(0, 500)}${shopPolicies.returns.length > 500 ? '...' : ''}`
+            : getDefaultPolicyMessage('returns', lang);
+        } else {
+          // Generic support fallback
+          const genericMessages: Record<string, string> = {
+            en: "I'm here to help! Please ask me your question and I'll do my best to assist you.",
+            fr: "Je suis là pour vous aider ! Posez-moi votre question et je ferai de mon mieux pour vous assister.",
+            es: "¡Estoy aquí para ayudar! Por favor, hágame su pregunta y haré mi mejor esfuerzo para asistirle.",
+            de: "Ich bin hier, um zu helfen! Bitte stellen Sie mir Ihre Frage und ich werde mein Bestes tun, um Ihnen zu helfen.",
+            pt: "Estou aqui para ajudar! Por favor, faça sua pergunta e farei o meu melhor para ajudá-lo.",
+            it: "Sono qui per aiutarti! Per favore, fammi la tua domanda e farò del mio meglio per assisterti."
+          };
+          const defaultMessage = "I'm here to help! Please ask me your question and I'll do my best to assist you.";
+          fallbackMessage = genericMessages[lang] ?? defaultMessage;
+        }
+
         n8nResponse = {
-          message: "I'm here to help! Please ask me your question and I'll do my best to assist you. 😊",
+          message: fallbackMessage,
           recommendations: [],
-          quickReplies: ["Shipping info", "Return policy", "Track order", "Browse products"],
-          confidence: 0.5,
+          quickReplies: lang === 'fr'
+            ? ["Info livraison", "Politique de retour", "Suivre commande", "Parcourir produits"]
+            : ["Shipping info", "Return policy", "Track order", "Browse products"],
+          confidence: 0.6, // Higher confidence when using real policies
           messageType: "support"
         };
       }
@@ -1060,7 +1067,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             pt: "⚠️ A conexão com a loja expirou. O administrador da loja precisa reinstalar o aplicativo para que eu possa acessar o catálogo de produtos. Enquanto isso, posso ajudar a responder perguntas gerais sobre a loja.",
             it: "⚠️ La connessione al negozio è scaduta. L'amministratore del negozio deve reinstallare l'app in modo che io possa accedere al catalogo prodotti. Nel frattempo, posso aiutare a rispondere a domande generali sul negozio."
           };
-          errorMessage = sessionErrorMessages[lang] || sessionErrorMessages['en'];
+          errorMessage = sessionErrorMessages[lang] ?? sessionErrorMessages['en']!;
           quickReplies = lang === 'fr'
             ? ["Aide générale", "Informations boutique"]
             : ["General help", "Store information"];
@@ -1076,7 +1083,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             pt: "Não consigo acessar o catálogo de produtos no momento devido a um problema temporário. Tente novamente em alguns instantes.",
             it: "Non riesco ad accedere al catalogo prodotti in questo momento a causa di un problema temporaneo. Riprova tra qualche istante."
           };
-          errorMessage = generalErrorMessages[lang] || generalErrorMessages['en'];
+          errorMessage = generalErrorMessages[lang] ?? generalErrorMessages['en']!;
           quickReplies = lang === 'fr'
             ? ["Réessayer", "Aide"]
             : ["Try again", "Help"];
@@ -1117,7 +1124,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
             "product": "📦 Here are some products you might like:"
           };
           const query = (intent as any).query || "product";
-          responseText = messages[query] || messages["product"];
+          responseText = messages[query] ?? messages["product"]!;
           quickReplies = ["Show bestsellers", "What's on sale?", "New arrivals"];
         } else {
           responseText = "📦 Here are some products you might like:";
