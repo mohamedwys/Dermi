@@ -595,67 +595,67 @@ export const action = async ({ request }: ActionFunctionArgs) => {
               }
             }
           `;
-          delete variables.query; // Remove query parameter for sortKey queries
-        } else if (intent.type === "NEW_ARRIVALS") {
-          // New Arrivals: Sort by creation date, newest first
-          graphqlQuery = `
-            #graphql
-            query getNewArrivals($first: Int!) {
-              products(first: $first, sortKey: CREATED_AT, reverse: true) {
-                edges {
-                  node {
-                    id
-                    title
-                    handle
-                    description
-                    totalInventory
-                    tags
-                    featuredImage { url }
-                    variants(first: 1) {
-                      edges {
-                        node {
-                          price
-                          compareAtPrice
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          `;
-          delete variables.query;
-        } else if (intent.type === "ON_SALE") {
-          // On Sale: Products with sale/discount tags
-          variables.query = "tag:sale OR tag:discount OR tag:promo";
-        } else if (intent.type === "RECOMMENDATIONS") {
-          // Recommendations: Use RELEVANCE or show featured products
-          graphqlQuery = `
-            #graphql
-            query getRecommendations($first: Int!) {
-              products(first: $first, sortKey: RELEVANCE) {
-                edges {
-                  node {
-                    id
-                    title
-                    handle
-                    description
-                    totalInventory
-                    tags
-                    featuredImage { url }
-                    variants(first: 1) {
-                      edges {
-                        node {
-                          price
-                          compareAtPrice
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          `;
+        //   delete variables.query; // Remove query parameter for sortKey queries
+        // } else if (intent.type === "NEW_ARRIVALS") {
+        //   // New Arrivals: Sort by creation date, newest first
+        //   graphqlQuery = `
+        //     #graphql
+        //     query getNewArrivals($first: Int!) {
+        //       products(first: $first, sortKey: CREATED_AT, reverse: true) {
+        //         edges {
+        //           node {
+        //             id
+        //             title
+        //             handle
+        //             description
+        //             totalInventory
+        //             tags
+        //             featuredImage { url }
+        //             variants(first: 1) {
+        //               edges {
+        //                 node {
+        //                   price
+        //                   compareAtPrice
+        //                 }
+        //               }
+        //             }
+        //           }
+        //         }
+        //       }
+        //     }
+        //   `;
+        //   delete variables.query;
+        // } else if (intent.type === "ON_SALE") {
+        //   // On Sale: Products with sale/discount tags
+        //   variables.query = "tag:sale OR tag:discount OR tag:promo";
+        // } else if (intent.type === "RECOMMENDATIONS") {
+        //   // Recommendations: Use RELEVANCE or show featured products
+        //   graphqlQuery = `
+        //     #graphql
+        //     query getRecommendations($first: Int!) {
+        //       products(first: $first, sortKey: RELEVANCE) {
+        //         edges {
+        //           node {
+        //             id
+        //             title
+        //             handle
+        //             description
+        //             totalInventory
+        //             tags
+        //             featuredImage { url }
+        //             variants(first: 1) {
+        //               edges {
+        //                 node {
+        //                   price
+        //                   compareAtPrice
+        //                 }
+        //               }
+        //             }
+        //           }
+        //         }
+        //       }
+        //     }
+        //   `;
           delete variables.query;
         } else if (intent.type === "PRODUCT_SEARCH") {
           // Generic product search

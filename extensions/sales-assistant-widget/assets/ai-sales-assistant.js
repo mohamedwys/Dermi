@@ -63,8 +63,8 @@ async function loadTranslations(lang) {
       poweredByAI: 'Powered by AI',
       inputPlaceholder: 'Ask me anything about our products...',
       bestSellers: 'Best Sellers',
-      newArrivals: 'New Arrivals',
-      onSale: 'On Sale',
+      // newArrivals: 'New Arrivals',
+      // onSale: 'On Sale',
       recommended: 'Recommended',
       shipping: 'Shipping',
       returns: 'Returns',
@@ -76,8 +76,8 @@ async function loadTranslations(lang) {
       returnsPrompt: 'What is your return policy?',
       trackOrderPrompt: 'How can I track my order?',
       bestSellersPrompt: 'Show me your popular products',
-      newArrivalsPrompt: 'Show me new arrivals',
-      onSalePrompt: 'What products are on sale?',
+      // newArrivalsPrompt: 'Show me new arrivals',
+      // onSalePrompt: 'What products are on sale?',
       recommendedPrompt: 'Show me recommendations for me'
     };
     return translations;
